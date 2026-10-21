@@ -77,5 +77,7 @@ ECS's configured paths do not expand the CLI's explicit selected file list.
 
 See [policy and differences](docs/policy.md), [workflow/ref adoption](docs/automation.md)
 and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
+The [architecture decision](docs/architecture.md) defines library/tool dependency
+directions and CPX/autoload limits.
 Rector/custom PHPDoc transformations and deeper static analysis are separate,
 unimplemented increments; this package does not assert extraction parity yet.
