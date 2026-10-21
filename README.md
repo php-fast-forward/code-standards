@@ -24,7 +24,7 @@ composer test
 `check` reports violations with a nonzero status and does not change source.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
 Recheck and inspect the diff afterward; failures can leave already applied fixes.
-No selected PHP files is a successful no-op. Invalid options, configuration paths,
+An empty PHP selection is a successful no-op. Invalid options, configuration paths,
 Git history or head mismatch fail closed with exit 2. Syntax/style tool failures,
 including executable configuration errors inside ECS, retain their tool status.
 Changed mode requires a clean tracked checkout of the requested head.
