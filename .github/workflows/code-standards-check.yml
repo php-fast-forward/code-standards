@@ -2,9 +2,6 @@ name: 'Internal: Check Changed PHP'
 on:
   workflow_call:
     inputs:
-      runtime-ref:
-        required: true
-        type: string
       php-version:
         default: '8.3'
         type: string
@@ -21,19 +18,21 @@ jobs:
       - name: Reject privileged events and invalid refs
         env:
           STANDARDS_EVENT: ${{ github.event_name }}
-          STANDARDS_RUNTIME: ${{ inputs.runtime-ref }}
+          STANDARDS_RUNTIME: ${{ fromJSON(toJSON(job)).workflow_sha }}
+          STANDARDS_REPOSITORY: ${{ fromJSON(toJSON(job)).workflow_repository }}
           STANDARDS_BASE: ${{ github.event.pull_request.base.sha }}
           STANDARDS_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
+          [[ "$STANDARDS_REPOSITORY" == php-fast-forward/code-standards ]] || exit 1
           [[ "$STANDARDS_RUNTIME" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
       - name: Check out reviewed tool runtime
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: php-fast-forward/code-standards
-          ref: ${{ inputs.runtime-ref }}
+          repository: ${{ fromJSON(toJSON(job)).workflow_repository }}
+          ref: ${{ fromJSON(toJSON(job)).workflow_sha }}
           path: tool
           persist-credentials: false
       - name: Set up PHP

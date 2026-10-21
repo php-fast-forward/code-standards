@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 jobs:
+  reusable-check:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/code-standards.yml
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
