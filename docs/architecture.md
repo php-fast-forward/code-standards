@@ -60,7 +60,7 @@ Code Standards follows that separation with Symfony Console 7.4-compatible APIs,
 matching this project's PHP 8.3 minimum. Symfony owns argument binding, help and
 global options. Commands are plain invocable PHP objects with `AsCommand` and
 mapped `Option` attributes, adapted by native `Application::addCommand()`; they
-do not extend Symfony Command. These APIs are present in published Console7.4.
+do not extend Symfony Command. These APIs are present in published Console 7.4.
 There is no custom parser or speculative lazy-command layer.
 Fast Forward Container autowires the concrete application, commands, scan
 orchestration, file selector and PHP filter. The module's service provider binds
@@ -116,7 +116,7 @@ This increment consumes `fast-forward/container` 1.10.1 (release commit
 `container-interop/service-provider` 0.4.1 through the actual Composer graph.
 These are runtime library dependencies of the tool. Their development tools
 are not transitively installed. No unpublished branch/PR or future Container
-PR49 behavior is required. The provider API is experimental0.4 and distinct
+PR #49 behavior is required. The provider API is experimental (0.4) and distinct
 from PSR-11's lookup contract; inspect compatibility when updating dependencies.
 
 Use the published `ContainerFactory::create()` for composition. Consumers needing
