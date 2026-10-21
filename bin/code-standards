@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FastForward\CodeStandards\Console\Application;
+
+$autoload = $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
+require $autoload;
+
+$vendor = dirname($autoload);
+exit((new Application($vendor . '/symplify/easy-coding-standard/bin/ecs'))->run(array_slice($argv, 1)));

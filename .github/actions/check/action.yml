@@ -1,0 +1,32 @@
+name: Check PHP standards
+description: Invoke the installed tool without writes to consumer sources.
+inputs:
+  directory:
+    required: true
+    description: Absolute consumer checkout directory.
+  base-sha:
+    required: true
+    description: Exact PR base commit.
+  head-sha:
+    required: true
+    description: Exact PR head commit.
+  config:
+    required: false
+    default: ''
+    description: Optional consumer-relative ECS config; executable PHP in an unprivileged job only.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        STANDARDS_ROOT: ${{ github.action_path }}/../../..
+        STANDARDS_DIRECTORY: ${{ inputs.directory }}
+        STANDARDS_BASE: ${{ inputs.base-sha }}
+        STANDARDS_HEAD: ${{ inputs.head-sha }}
+        STANDARDS_CONFIG: ${{ inputs.config }}
+      run: |
+        arguments=(check "--directory=$STANDARDS_DIRECTORY" "--base=$STANDARDS_BASE" "--head=$STANDARDS_HEAD")
+        if [[ -n "$STANDARDS_CONFIG" ]]; then
+          arguments+=("--config=$STANDARDS_CONFIG")
+        fi
+        php "$STANDARDS_ROOT/bin/code-standards" "${arguments[@]}"
