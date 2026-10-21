@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Config;
 
+use PhpCsFixer\Fixer\FunctionNotation\MethodArgumentSpaceFixer;
 use PhpCsFixer\Fixer\Import\GlobalNamespaceImportFixer;
 use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
 use PhpCsFixer\Fixer\Phpdoc\NoEmptyPhpdocFixer;
@@ -34,6 +35,7 @@ final class ECSConfig
                 GlobalNamespaceImportFixer::class,
                 GeneralPhpdocAnnotationRemoveFixer::class,
             ])
+            ->withConfiguredRule(MethodArgumentSpaceFixer::class, ['on_multiline' => 'ignore'])
             ->withConfiguredRule(PhpdocAlignFixer::class, ['align' => 'left'])
             ->withoutParallel();
         if (null !== $customize) {
