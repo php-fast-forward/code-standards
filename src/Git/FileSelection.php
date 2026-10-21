@@ -21,11 +21,7 @@ final class FileSelection
      */
     public function select(string $directory, ?string $base, ?string $head, ?string $config = null): array
     {
-        // A nested prefix always ends in '/'; no absolute pathname needs trimming or unquoting.
-        $prefix = rtrim($this->process->capture(['git', 'rev-parse', '--show-prefix'], $directory), "\r\n");
-        if ('' !== $prefix) {
-            throw new \InvalidArgumentException('Project directory must be the Git checkout root.');
-        }
+        $this->assertCheckoutRoot($directory);
         if (null === $base && null === $head) {
             return $this->paths($this->process->capture(['git', 'ls-files', '-z'], $directory));
         }
@@ -58,6 +54,22 @@ final class FileSelection
         return $this->paths($this->process->capture([
             'git', 'diff', '--name-only', '--diff-filter=ACMRT', '--find-renames', '-z', $base . '...' . $head, '--',
         ], $directory));
+    }
+
+    /**
+     * Validates Git's scope metadata without interpreting the absolute root pathname.
+     *
+     * @throws \InvalidArgumentException When the directory is nested, bare or inside Git metadata.
+     */
+    private function assertCheckoutRoot(string $directory): void
+    {
+        $inside = trim($this->process->capture(['git', 'rev-parse', '--is-inside-work-tree'], $directory));
+        // A nested prefix always ends in '/'; removing line terminators cannot turn it into a root.
+        $prefix = rtrim($this->process->capture(['git', 'rev-parse', '--show-prefix'], $directory), "\r\n");
+
+        if ('true' !== $inside || '' !== $prefix) {
+            throw new \InvalidArgumentException('Project directory must be the Git checkout root.');
+        }
     }
 
     /** @return list<string> Decodes Git's binary path protocol without trimming file names. */

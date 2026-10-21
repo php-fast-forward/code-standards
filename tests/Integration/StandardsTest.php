@@ -94,6 +94,19 @@ final class StandardsTest extends TestCase
         self::assertSame($source, file_get_contents($this->directory . '/source.php'));
     }
 
+    /** Rejects metadata/bare repositories instead of silently checking an empty source selection. */
+    public function testGitMetadataAndBareRepositoriesAreNotSourceCheckoutRoots(): void
+    {
+        $this->git(['init', '--bare', '--initial-branch=main', 'bare.git']);
+
+        foreach (['.git', 'bare.git'] as $directory) {
+            $check = $this->cli(['check', '--all', '--directory=' . $this->directory . '/' . $directory]);
+
+            self::assertSame(2, $check->getExitCode(), $directory);
+            self::assertStringContainsString('Git checkout root', $check->getErrorOutput(), $directory);
+        }
+    }
+
     /** Ensures removing a policy file cannot limit checking to an empty changed-file set. */
     public function testDeletedConfigurationStillTriggersFullScan(): void
     {
