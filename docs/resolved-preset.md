@@ -38,7 +38,7 @@ updating the fixture; do not regenerate it merely to silence a failure.
 | `line_ending` | `default` |
 | `lowercase_cast` | `default` |
 | `lowercase_keywords` | `default` |
-| `method_argument_space` | `{"on_multiline":"ensure_fully_multiline"}` |
+| `method_argument_space` | `{"on_multiline":"ignore"}` |
 | `new_with_parentheses` | `default` |
 | `no_blank_lines_after_class_opening` | `default` |
 | `no_break_comment` | `default` |
@@ -84,3 +84,8 @@ compatible dependency graphs, compare all rules and header/Finder behavior, and
 decide separately authorized opt-in profiles. The CoiSA source snapshot does not
 track a Composer lock; an ignored local lock is not a reproducible published
 dependency graph. This initial evidence cannot authorize consumer migration.
+
+Reviewed policy update: the attributed-command spacing regression requires the
+native method_argument_space multiline policy to preserve deliberate blank
+lines. The old snapshot failed on exactly this one option after refreshing the
+base; only that reviewed configuration entry was updated. No risk flag changed.

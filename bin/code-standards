@@ -4,7 +4,9 @@
 declare(strict_types=1);
 
 use FastForward\CodeStandards\Console\Application;
-use FastForward\CodeStandards\Console\Command\StandardsCommand;
+use FastForward\CodeStandards\Console\Command\CheckCommand;
+use FastForward\CodeStandards\Console\Command\FixCommand;
+use FastForward\CodeStandards\Console\StandardsOperation;
 use FastForward\CodeStandards\Filesystem\PhpFiles;
 use FastForward\CodeStandards\Git\FileSelection;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
@@ -26,6 +28,6 @@ $projects = new ProjectScopeResolver(dirname(__DIR__) . '/config/ecs.php');
 $selection = new FileSelection($process);
 $files = new PhpFiles();
 $standards = new StandardsRunner($process, $vendor . '/symplify/easy-coding-standard/bin/ecs');
-$command = static fn (bool $fix): StandardsCommand => new StandardsCommand($fix, $projects, $selection, $files, $standards);
+$operation = new StandardsOperation($projects, $selection, $files, $standards);
 
-exit((new Application($command(false), $command(true)))->run(output: $output));
+exit((new Application(new CheckCommand($operation), new FixCommand($operation)))->run(output: $output));

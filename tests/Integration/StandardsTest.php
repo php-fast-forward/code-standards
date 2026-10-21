@@ -293,6 +293,45 @@ final class StandardsTest extends TestCase
         }
     }
 
+    /** Both formatter modes retain the owner's spacing between attributed command parameter groups. */
+    public function testFormatterPreservesAttributedParameterSpacing(): void
+    {
+        $source = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
+
+#[AsCommand(
+    name: 'example',
+    description: 'Formatting fixture; never executed.',
+)]
+final class ExampleCommand
+{
+    public function __invoke(
+        #[Option(description: 'All tracked files.')]
+        bool $all = false,
+
+        #[Option(description: 'Immutable base commit.')]
+        ?string $base = null,
+    ): int {
+        return 0;
+    }
+}
+PHP;
+        $source .= "\n";
+        $this->put('example.php', $source);
+        $this->commit();
+
+        $check = $this->cli(['check', '--all']);
+        self::assertSame(0, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame($source, file_get_contents($this->directory . '/example.php'));
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        self::assertSame($source, file_get_contents($this->directory . '/example.php'));
+    }
+
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {
