@@ -30,6 +30,9 @@ final class PhpFiles
             if ([] !== array_intersect($segments, self::EXCLUDED)) {
                 continue;
             }
+            if (!str_ends_with($path, '.php') && !str_starts_with($path, 'bin/')) {
+                continue;
+            }
             $current = $root;
             foreach ($segments as $segment) {
                 $current .= '/' . $segment;

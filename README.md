@@ -68,7 +68,8 @@ ECS's configured paths do not expand the CLI's explicit selected file list.
 - Tracked `*.php` and PHP entrypoints under `bin/` are included.
 - `vendor`, `.git`, `.build`, `.dev-tools`, `backup`, `cache`, `public`,
   `resources`, `tmp`, `node_modules` directory components are excluded.
-- Symlink paths fail closed. Spaces, tabs, newlines and leading dashes remain
+- Candidate PHP/bin symlink paths fail closed; unrelated non-PHP aliases are ignored.
+  Spaces, tabs, newlines and leading dashes remain
   individual subprocess arguments; deleted files are omitted, renames use destinations.
 - Changed mode uses `base...head`, so unrelated base-branch changes are excluded.
   Composer, ECS and EditorConfig changes escalate to a complete tracked scan.

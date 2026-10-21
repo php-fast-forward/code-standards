@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class StandardsRunnerTest extends TestCase
 {
+    /** Proves write authority comes only from explicit fix and paths remain separate arguments. */
     public function testOnlyExplicitFixAddsWriteFlagAndFilesRemainIndividualArguments(): void
     {
         foreach ([false, true] as $fix) {
@@ -23,6 +24,7 @@ final class StandardsRunnerTest extends TestCase
         }
     }
 
+    /** Verifies batch bounds and immediate propagation of a failed style subprocess. */
     public function testBatchesAreBoundedAndEcsFailureIsNotSwallowed(): void
     {
         $process = new RecordingProcess(23);
@@ -32,6 +34,7 @@ final class StandardsRunnerTest extends TestCase
         self::assertCount(57, $process->commands[101]);
     }
 
+    /** Rejects malformed source before writes and makes empty selection a subprocess-free no-op. */
     public function testSyntaxFailurePreventsFixAndNoFilesExecutesNothing(): void
     {
         $process = new RecordingProcess(0, 17);
@@ -47,15 +50,18 @@ final class RecordingProcess implements ProcessRunner
 {
     public array $commands = [];
 
+    /** Configures deterministic transport outcomes without executing real tools. */
     public function __construct(private readonly int $ecsStatus = 0, private readonly int $syntaxStatus = 0)
     {
     }
 
+    /** Fails if standards orchestration unexpectedly performs a capture operation. */
     public function capture(array $arguments, string $directory): string
     {
         throw new \LogicException('Not expected.');
     }
 
+    /** Records argument boundaries and returns the selected synthetic tool status. */
     public function run(array $arguments, string $directory): int
     {
         $this->commands[] = $arguments;

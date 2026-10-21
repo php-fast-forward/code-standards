@@ -15,6 +15,7 @@ final class StandardsTest extends TestCase
 {
     private string $directory;
 
+    /** Creates a disposable repository with synthetic author and no inherited signing requirement. */
     protected function setUp(): void
     {
         $this->directory = realpath(sys_get_temp_dir()) . '/standards-' . bin2hex(random_bytes(8));
@@ -26,6 +27,7 @@ final class StandardsTest extends TestCase
         $this->commit();
     }
 
+    /** Removes only this test's disposable tree, unlinking symlinks without following them. */
     protected function tearDown(): void
     {
         $files = new \RecursiveIteratorIterator(
@@ -42,6 +44,7 @@ final class StandardsTest extends TestCase
         rmdir($this->directory);
     }
 
+    /** Exercises divergence, rename destinations, deleted sources and binary-safe path arguments. */
     public function testChangedFilesUseMergeBaseDestinationsAndNulSafePaths(): void
     {
         $this->put('old name.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'old';\n");
@@ -72,6 +75,7 @@ final class StandardsTest extends TestCase
         self::assertContains($this->directory . '/-leading.php', $filtered);
     }
 
+    /** Ensures removing a policy file cannot limit checking to an empty changed-file set. */
     public function testDeletedConfigurationStillTriggersFullScan(): void
     {
         $this->put('unchanged.php', '<?php echo 1;');
@@ -82,6 +86,7 @@ final class StandardsTest extends TestCase
         self::assertSame(['unchanged.php'], (new FileSelection(new NativeProcessRunner()))->select($this->directory, $base, $head));
     }
 
+    /** Prevents checks from reporting on a different commit or dirty tracked source snapshot. */
     public function testInvalidHeadAndDirtyCheckoutFailClosed(): void
     {
         $this->put('a.php', '<?php echo 1;');
@@ -97,6 +102,7 @@ final class StandardsTest extends TestCase
         self::assertStringContainsString('clean tracked checkout', $dirty->getErrorOutput());
     }
 
+    /** Uses real ECS to prove violation status, source preservation and second-pass fix stability. */
     public function testStyleCheckDoesNotWriteAndExplicitFixIsIdempotent(): void
     {
         $path = "some source.php";
@@ -116,6 +122,7 @@ final class StandardsTest extends TestCase
         self::assertSame($fixed, file_get_contents($this->directory . '/' . $path));
     }
 
+    /** Proves parsing never executes selected source and syntax failures leave its bytes intact. */
     public function testSyntaxIsParsedWithoutExecutingSource(): void
     {
         $this->put('a.php', "<?php\nfile_put_contents(__DIR__ . '/executed', 'bad');\n");
@@ -128,6 +135,7 @@ final class StandardsTest extends TestCase
         self::assertSame($bad, file_get_contents($this->directory . '/a.php'));
     }
 
+    /** Allows documentation-only PRs to complete without invoking the style tool. */
     public function testEmptyPhpSelectionSucceedsWithoutEcs(): void
     {
         $this->put('README.md', 'No PHP');
@@ -139,6 +147,7 @@ final class StandardsTest extends TestCase
         self::assertStringContainsString('Selected 0 PHP', $check->getOutput());
     }
 
+    /** Preserves complete policy-change checks and rejects ambiguous nested-project Git paths. */
     public function testExplicitCustomConfigChangesTriggerFullScanAndSubdirectoryIsRejected(): void
     {
         $this->put('unchanged.php', '<?php echo 1;');
@@ -159,6 +168,7 @@ final class StandardsTest extends TestCase
         self::assertStringContainsString('Git checkout root', $check->getErrorOutput());
     }
 
+    /** Keeps PHP symlinks and parent-directory paths outside the permitted source boundary. */
     public function testSymlinksAndTraversalAreRejected(): void
     {
         $this->put('a.php', '<?php echo 1;');
@@ -173,6 +183,23 @@ final class StandardsTest extends TestCase
         (new PhpFiles())->filter($this->directory, ['../a.php']);
     }
 
+    /** Checks that documentation aliases cannot block PHP checks or admit executable symlinks. */
+    public function testNonPhpSymlinksAreIgnoredButBinSymlinksAreRejected(): void
+    {
+        $this->put('AGENTS.md', 'Repository instructions.');
+        $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        symlink('AGENTS.md', $this->directory . '/CLAUDE.md');
+        $this->commit();
+        $check = $this->cli(['check', '--all']);
+        self::assertSame(0, $check->getExitCode(), $check->getErrorOutput());
+        self::assertStringContainsString('Selected 1 PHP', $check->getOutput());
+        mkdir($this->directory . '/bin');
+        symlink('../source.php', $this->directory . '/bin/tool');
+        $this->expectException(\InvalidArgumentException::class);
+        (new PhpFiles())->filter($this->directory, ['bin/tool']);
+    }
+
+    /** Checks invalid invocations, unavailable history and executable config failures return errors. */
     public function testMalformedArgumentsConfigurationAndHistoryFail(): void
     {
         foreach ([
@@ -193,6 +220,7 @@ final class StandardsTest extends TestCase
         self::assertNotSame(0, $this->cli(['check', '--all', '--config=ecs.php'])->getExitCode());
     }
 
+    /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {
         $parent = dirname($this->directory . '/' . $path);
@@ -202,11 +230,13 @@ final class StandardsTest extends TestCase
         file_put_contents($this->directory . '/' . $path, $content);
     }
 
+    /** Captures Git fixture output through the production shell-free transport. */
     private function git(array $arguments): string
     {
         return (new NativeProcessRunner())->capture(['git', ...$arguments], $this->directory);
     }
 
+    /** Commits fixture changes without hooks and returns the exact resulting commit identity. */
     private function commit(): string
     {
         $this->git(['add', '--all']);
@@ -215,6 +245,7 @@ final class StandardsTest extends TestCase
         return trim($this->git(['rev-parse', 'HEAD']));
     }
 
+    /** Runs the real packaged binary in the fixture with a bounded timeout and captured diagnostics. */
     private function cli(array $arguments): Process
     {
         $process = new Process([PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', ...$arguments], $this->directory, timeout: 60);
@@ -223,6 +254,7 @@ final class StandardsTest extends TestCase
         return $process;
     }
 
+    /** Lists both tracked files and unexpected new files to detect incidental check writes. */
     private function trackedAndUntrackedSources(): array
     {
         return array_values(array_filter(explode("\0", $this->git(['ls-files', '-z', '--cached', '--others', '--exclude-standard']))));
