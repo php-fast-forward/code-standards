@@ -298,6 +298,23 @@ PHP;
         self::assertSame($source, file_get_contents($this->directory . '/example.php'));
     }
 
+    /** ECS already loads the installation autoloader; a symlinked preset needs no vendor beside its real source. */
+    public function testPresetCanLoadThroughSymlinkWithoutAnAdjacentVendor(): void
+    {
+        $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $this->put('package-source/config/ecs.php', file_get_contents(dirname(__DIR__, 2) . '/config/ecs.php'));
+        mkdir($this->directory . '/linked');
+        symlink('../package-source', $this->directory . '/linked/package');
+        $this->commit();
+
+        foreach (['check', 'fix'] as $command) {
+            $result = $this->cli([$command, '--all', '--config=linked/package/config/ecs.php']);
+            self::assertSame(0, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+        }
+        self::assertFileDoesNotExist($this->directory . '/package-source/vendor');
+        self::assertSame("<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n", file_get_contents($this->directory . '/source.php'));
+    }
+
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {
