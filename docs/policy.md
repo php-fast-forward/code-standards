@@ -46,3 +46,8 @@ Composer metadata normalization and existing public DevTools APIs stay untouched
 Static quality in this first increment means parseable PHP and formatting
 conformance. Type analysis, dead-code analysis and semantic refactors are not
 claimed. Application tests, coverage and complete reports remain outside this domain.
+
+The [PHPDoc comparison](phpdoc-comparison.md) records actual custom Rector
+activation and the fixtures required before adopting a documentation policy.
+The [static-analysis evaluation](static-analysis-evaluation.md) distinguishes
+candidate engines and their analysis scopes without deciding domain ownership.

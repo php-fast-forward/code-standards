@@ -61,6 +61,8 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 
 - [README.md](README.md): library/CLI adoption, explicit fix and tool scope.
 - [Policy comparison](docs/policy.md): evidence, rule differences and extraction gates.
+- [PHPDoc comparison](docs/phpdoc-comparison.md): actual custom-rule registration, source contracts and remaining golden decisions.
+- [Static-analysis evaluation](docs/static-analysis-evaluation.md): candidate engines, whole-project analysis and unresolved domain ownership.
 - [Architecture decision](docs/architecture.md): library/tool dependencies, CPX/autoload limits and bootstrap without circular prerequisites.
 - [Automation](docs/automation.md): trust, ref/bootstrap contracts and consumer adoption.
 - [Instruction map](docs/instruction-map.md): single root scope and skill ownership.
