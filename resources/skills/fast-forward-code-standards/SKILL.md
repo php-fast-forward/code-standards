@@ -30,3 +30,5 @@ metadata:
 
 This directory is the sole source payload. Installation/host activation is explicit;
 copying this skill does not install the runtime or authorize consumer rollout.
+LLM Skills owns discovery/install/update; follow the selected ref's distribution
+contract rather than adding another copy/symlink installer in this tool.
