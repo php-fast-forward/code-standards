@@ -259,6 +259,40 @@ final class StandardsTest extends TestCase
         self::assertSame($bad, file_get_contents($this->directory . '/source.php'));
     }
 
+    /** Golden files expose style drift, preserved public documentation and explicit second-pass stability. */
+    public function testGoldenPresetIsReadOnlyUntilFixAndPreservesContracts(): void
+    {
+        $fixtures = dirname(__DIR__) . '/Fixtures/';
+        $original = [];
+
+        foreach (['style', 'preservation'] as $name) {
+            $original[$name] = file_get_contents($fixtures . $name . '.before.php.inc');
+            $this->put($name . '.php', $original[$name]);
+        }
+
+        $this->commit();
+        self::assertNotSame(0, $this->cli(['check', '--all'])->getExitCode());
+        foreach ($original as $name => $bytes) {
+            self::assertSame($bytes, file_get_contents($this->directory . '/' . $name . '.php'));
+        }
+
+        $fixed = $this->cli(['fix', '--all']);
+        self::assertSame(0, $fixed->getExitCode(), $fixed->getOutput() . $fixed->getErrorOutput());
+        foreach (array_keys($original) as $name) {
+            self::assertSame(
+                file_get_contents($fixtures . $name . '.after.php.inc'),
+                file_get_contents($this->directory . '/' . $name . '.php'),
+                $name,
+            );
+        }
+
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        foreach (array_keys($original) as $name) {
+            self::assertSame(file_get_contents($fixtures . $name . '.after.php.inc'), file_get_contents($this->directory . '/' . $name . '.php'));
+        }
+    }
+
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {

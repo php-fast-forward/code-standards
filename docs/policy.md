@@ -36,6 +36,11 @@ ECS 13.3.8 deprecates `withPhpCsFixerSets()` as a no-op. The initial implementat
 therefore uses the supported prepared PSR-12 set and proves violations with a
 real fixture instead of inheriting the legacy dynamic-set call blindly.
 
+The [resolved initial preset](resolved-preset.md) records the compiled ECS rule
+list and effective options for the locked version. Golden fixtures make style,
+documentation/semantic preservation and second-pass stability reviewable. This
+is a first bounded part of #5, not equivalence with the legacy engines.
+
 This is not a rule-by-rule equivalence proof for the complete
 legacy ECS + Rector + PHPDoc stack. No consumers may be automatically migrated
 on the strength of this comparison. Before migration, expand resolved rule lists,
