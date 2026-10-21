@@ -58,8 +58,10 @@ No automatic PHP migrations derive authority from the host tool's PHP version.
 Changelog's console separates commands, input definitions and injected services.
 Code Standards follows that separation with Symfony Console 7.4-compatible APIs,
 matching this project's PHP 8.3 minimum. Symfony owns argument binding, help and
-global options. Two inexpensive commands are composed directly in the binary;
-there is no custom parser, service container or speculative lazy-command layer.
+global options. Commands are plain invocable PHP objects with `AsCommand` and
+mapped `Option` attributes, adapted by native `Application::addCommand()`; they
+do not extend Symfony Command. These APIs are present in published Console7.4.
+There is no custom parser or speculative lazy-command layer.
 Project-scope validation, Git selection, PHP filtering and tool execution have
 separate responsibilities. The process transport receives its output sink;
 reusable services do not write to global standard-output handles.
@@ -93,6 +95,13 @@ Separate logical blocks with whitespace and add PHPDoc that explains contracts,
 failure conditions and meaningful collection/callback types. Avoid comments
 that merely repeat syntax. Regression tests assert observable behavior, errors,
 exit statuses and source preservation rather than private implementation shape.
+Follow Changelog's attribute layout: multiline command metadata, an attribute
+immediately above its target, and a blank line between parameter groups with
+attributes and the preceding group. Keep logical blocks visibly separated.
+The formatter regression verifies both check and fix retain that spacing.
+The initial preset overrides `method_argument_space.on_multiline` to `ignore`:
+the upstream `ensure_fully_multiline` mode collapses these deliberate blank
+lines. Standard comma spacing still applies; no custom fixer is introduced.
 
 ## Consequences and next gates
 

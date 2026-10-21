@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Console;
 
-use FastForward\CodeStandards\Console\Command\StandardsCommand;
+use FastForward\CodeStandards\Console\Command\CheckCommand;
+use FastForward\CodeStandards\Console\Command\FixCommand;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\ExceptionInterface;
@@ -16,12 +17,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class Application extends SymfonyApplication
 {
     /** Registers the two explicitly composed operations without resolving project state or executing tools. */
-    public function __construct(StandardsCommand $check, StandardsCommand $fix)
+    public function __construct(CheckCommand $check, FixCommand $fix)
     {
         parent::__construct('Fast Forward Code Standards');
 
-        $this->add($check);
-        $this->add($fix);
+        $this->addCommand($check);
+        $this->addCommand($fix);
         $this->setAutoExit(false);
     }
 
