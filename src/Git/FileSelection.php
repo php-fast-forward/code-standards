@@ -21,8 +21,9 @@ final class FileSelection
      */
     public function select(string $directory, ?string $base, ?string $head, ?string $config = null): array
     {
-        $top = trim($this->process->capture(['git', 'rev-parse', '--show-toplevel'], $directory));
-        if (realpath($top) !== realpath($directory)) {
+        // A nested prefix always ends in '/'; no absolute pathname needs trimming or unquoting.
+        $prefix = rtrim($this->process->capture(['git', 'rev-parse', '--show-prefix'], $directory), "\r\n");
+        if ('' !== $prefix) {
             throw new \InvalidArgumentException('Project directory must be the Git checkout root.');
         }
         if (null === $base && null === $head) {
