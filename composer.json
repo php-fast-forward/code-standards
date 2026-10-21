@@ -18,6 +18,9 @@
         "psr-4": {"FastForward\\CodeStandards\\Tests\\": "tests/"}
     },
     "bin": ["bin/code-standards"],
+    "archive": {
+        "exclude": ["/vendor", "/.build", "/.phpunit.cache", "/.git", "/packaging-consumer"]
+    },
     "scripts": {
         "test": "phpunit",
         "check": ["@test", "@php bin/code-standards check --all"],

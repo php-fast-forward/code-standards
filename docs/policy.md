@@ -31,7 +31,12 @@ from blocked PR #376 or composer-installers #15 was executed or changed.
 
 The explicit rule deltas above are intentional. Transitive upstream preset
 membership is dependency-version specific and fixed for contributor builds by
-`composer.lock`. This is not a rule-by-rule equivalence proof for the complete
+`composer.lock`.
+ECS 13.3.8 deprecates `withPhpCsFixerSets()` as a no-op. The initial implementation
+therefore uses the supported prepared PSR-12 set and proves violations with a
+real fixture instead of inheriting the legacy dynamic-set call blindly.
+
+This is not a rule-by-rule equivalence proof for the complete
 legacy ECS + Rector + PHPDoc stack. No consumers may be automatically migrated
 on the strength of this comparison. Before migration, expand resolved rule lists,
 exercise headers and overrides in golden fixtures and decide which semantic

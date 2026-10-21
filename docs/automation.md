@@ -37,6 +37,9 @@ and fresh Composer installations before claiming distribution readiness.
 
 A technical empty baseline commit permits an initial functional PR when a remote
 repository has no history. All functional content remains on its PR branch.
+The contribution deliberately does not create `CHANGELOG.md`: the normal
+contribution check forbids changes to consolidated history. The managed version
+PR creates it while consuming the initial fragment.
 The initial `.changelog` fragment is explicitly `minor`; Changelog's supported
 baseline `0.0.0` yields `0.1.0` without a manual tag or engine change. Before wiring
 publication, verify the selected published Changelog tag, source workflow inputs,
