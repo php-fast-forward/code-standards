@@ -16,7 +16,12 @@ use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 /** A deliberately non-risky PSR-12 starting point for extraction. */
 final class ECSConfig
 {
-    /** Consumer callbacks run last and may import local rules explicitly. */
+    /**
+     * Returns native ECS defaults with explicit consumer overrides applied last.
+     *
+     * @param callable(ECSConfigBuilder):void|null $customize Native rule imports, skips or overrides; null uses the preset unchanged.
+     * @return ECSConfigBuilder The native builder, ready to return from an explicit ECS configuration file.
+     */
     public static function configure(?callable $customize = null): ECSConfigBuilder
     {
         $config = (new ECSConfigBuilder())

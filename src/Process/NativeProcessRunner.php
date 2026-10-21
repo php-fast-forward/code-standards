@@ -9,6 +9,11 @@ use Symfony\Component\Process\Process;
 /** Native transport; callers own selection and operation policy. */
 final class NativeProcessRunner implements ProcessRunner
 {
+    /** @param \Closure(string,string):void|null $write Explicit output sink; null keeps this library transport silent. */
+    public function __construct(private readonly ?\Closure $write = null)
+    {
+    }
+
     /** Captures Git output as bytes, including NUL-delimited paths. */
     public function capture(array $arguments, string $directory): string
     {
@@ -27,8 +32,6 @@ final class NativeProcessRunner implements ProcessRunner
             'COMPOSER_AUTH' => false,
         ], timeout: 300);
 
-        return $process->run(static function (string $type, string $output): void {
-            fwrite(Process::ERR === $type ? STDERR : STDOUT, $output);
-        });
+        return $process->run($this->write);
     }
 }

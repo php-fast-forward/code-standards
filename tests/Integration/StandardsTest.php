@@ -207,9 +207,13 @@ final class StandardsTest extends TestCase
             ['check', '--all', '--head=' . str_repeat('a', 40)],
             ['check', '--base=main', '--head=' . str_repeat('a', 40)],
             ['check', '--base=' . str_repeat('a', 40), '--head=' . str_repeat('a', 40)],
-            ['check', '--all', '--all'],
             ['check', '--all', '--fix'],
             ['check', '--all', '--config=missing.php'],
+            ['check', '--all', '--directory='],
+            ['check', '--all', '--config='],
+            ['check', '--all', '--unknown'],
+            ['check', '--all', 'unexpected'],
+            ['check', '--all', '--config'],
             ['unknown'],
         ] as $arguments) {
             self::assertSame(2, $this->cli($arguments)->getExitCode(), json_encode($arguments));
@@ -218,6 +222,41 @@ final class StandardsTest extends TestCase
         $this->put('ecs.php', '<?php throw new RuntimeException("broken config");');
         $this->commit();
         self::assertNotSame(0, $this->cli(['check', '--all', '--config=ecs.php'])->getExitCode());
+
+        $this->put('ecs.php', '<?php return [];');
+        self::assertNotSame(0, $this->cli(['check', '--all', '--config=ecs.php'])->getExitCode());
+    }
+
+    /** Native help needs no checkout, and standard option forms share the same checked behavior. */
+    public function testNativeConsoleHelpAndSeparateOptionValues(): void
+    {
+        $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $this->commit();
+        $check = $this->cli(['check', '--all', '--directory', $this->directory, '--no-interaction']);
+        self::assertSame(0, $check->getExitCode(), $check->getErrorOutput());
+        self::assertStringContainsString('Selected 1 PHP', $check->getOutput());
+
+        $help = new Process([PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', 'help', 'check'], sys_get_temp_dir(), timeout: 10);
+        self::assertSame(0, $help->run());
+        self::assertStringContainsString('Usage:', $help->getOutput());
+        self::assertStringContainsString('--base', $help->getOutput());
+    }
+
+    /** A real native-builder override is applied last without replacing the default preset or source bytes. */
+    public function testExplicitPresetOverrideUsesNativeEcsConfiguration(): void
+    {
+        $bad = "<?php\n\ndeclare(strict_types=1);\n\n\$value=1;\n";
+        $this->put('source.php', $bad);
+        $this->commit();
+        self::assertNotSame(0, $this->cli(['check', '--all'])->getExitCode());
+
+        $autoload = var_export(dirname(__DIR__, 2) . '/vendor/autoload.php', true);
+        $this->put('local-policy.php', '<?php require ' . $autoload . '; return \\FastForward\\CodeStandards\\Config\\ECSConfig::configure('
+            . 'static function (\\Symplify\\EasyCodingStandard\\Configuration\\ECSConfigBuilder $config): void {'
+            . '$config->withSkip([\\PhpCsFixer\\Fixer\\Operator\\BinaryOperatorSpacesFixer::class]); });');
+        $check = $this->cli(['check', '--all', '--config', 'local-policy.php']);
+        self::assertSame(0, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame($bad, file_get_contents($this->directory . '/source.php'));
     }
 
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */

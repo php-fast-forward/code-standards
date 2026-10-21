@@ -53,6 +53,47 @@ runtime commits must match. Distinguish tool runtime requirements, Composer
 resolution and the consumer application's supported PHP language/API minimum.
 No automatic PHP migrations derive authority from the host tool's PHP version.
 
+## CLI composition and configuration contract
+
+Changelog's console separates commands, input definitions and injected services.
+Code Standards follows that separation with Symfony Console 7.4-compatible APIs,
+matching this project's PHP 8.3 minimum. Symfony owns argument binding, help and
+global options. Two inexpensive commands are composed directly in the binary;
+there is no custom parser, service container or speculative lazy-command layer.
+Project-scope validation, Git selection, PHP filtering and tool execution have
+separate responsibilities. The process transport receives its output sink;
+reusable services do not write to global standard-output handles.
+
+The supported configuration extension is the native ECS builder. A small PSR-4
+preset class returns that builder and applies an optional callback last. An array
+would require a second schema/translator; a global helper function would add an
+autoload convention without simplifying native ECS consumption. Neither is
+needed. Internal CLI classes are implementation details, not a promise of API
+compatibility with DevTools. No custom DSL or automatic configuration discovery
+is introduced.
+
+No configuration is needed for the default preset. A consumer selects an existing
+readable PHP file with `--config`; relative paths resolve from the project root.
+That file must return the configuration supported by the installed ECS version.
+Native builder methods define rule imports, skips and overrides. Invalid paths,
+unsupported options and conflicting scan modes fail with an objective error;
+empty paths are rejected rather than coerced to the current directory. ECS
+configuration errors propagate as failures. Standard Symfony flag semantics
+apply, including idempotent repeated boolean flags and both `--option=value`
+and `--option value`. Behavioral tests exercise the default preset, real rule
+overrides, help outside a checkout and invalid invocations.
+
+## Implementation quality
+
+Keep methods focused on one responsibility and use early returns for rejected
+inputs. Inject collaborators and execution/output boundaries explicitly. Reuse
+established library mechanisms when they solve an actual need; introduce no
+framework, duplicate configuration schema or abstraction for hypothetical work.
+Separate logical blocks with whitespace and add PHPDoc that explains contracts,
+failure conditions and meaningful collection/callback types. Avoid comments
+that merely repeat syntax. Regression tests assert observable behavior, errors,
+exit statuses and source preservation rather than private implementation shape.
+
 ## Consequences and next gates
 
 This small slice validates syntax and PSR-12 style. Type analysis and semantic

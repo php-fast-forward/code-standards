@@ -28,6 +28,9 @@ No selected PHP files is a successful no-op. Invalid options, configuration, Git
 history or head mismatch fail closed with exit 2. Otherwise tool exit status is
 propagated. Changed mode requires a clean tracked checkout of the requested head.
 `--all` includes tracked files and permits inspecting local tracked edits.
+Symfony Console provides `help check`, standard global flags and both
+`--option=value` and `--option value`. Error diagnostics use stderr. Empty paths,
+conflicting scan modes and unsupported arguments are rejected explicitly.
 
 ### Library and local configuration
 

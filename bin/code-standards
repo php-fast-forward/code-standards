@@ -4,9 +4,28 @@
 declare(strict_types=1);
 
 use FastForward\CodeStandards\Console\Application;
+use FastForward\CodeStandards\Console\Command\StandardsCommand;
+use FastForward\CodeStandards\Filesystem\PhpFiles;
+use FastForward\CodeStandards\Git\FileSelection;
+use FastForward\CodeStandards\Process\NativeProcessRunner;
+use FastForward\CodeStandards\Project\ProjectScopeResolver;
+use FastForward\CodeStandards\Standards\StandardsRunner;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Process\Process;
 
 $autoload = $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
 require $autoload;
 
 $vendor = dirname($autoload);
-exit((new Application($vendor . '/symplify/easy-coding-standard/bin/ecs'))->run(array_slice($argv, 1)));
+$output = new ConsoleOutput();
+$process = new NativeProcessRunner(static function (string $type, string $message) use ($output): void {
+    $stream = Process::ERR === $type ? $output->getErrorOutput() : $output;
+    $stream->write($message);
+});
+$projects = new ProjectScopeResolver(dirname(__DIR__) . '/config/ecs.php');
+$selection = new FileSelection($process);
+$files = new PhpFiles();
+$standards = new StandardsRunner($process, $vendor . '/symplify/easy-coding-standard/bin/ecs');
+$command = static fn (bool $fix): StandardsCommand => new StandardsCommand($fix, $projects, $selection, $files, $standards);
+
+exit((new Application($command(false), $command(true)))->run(output: $output));

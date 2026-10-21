@@ -18,6 +18,10 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
 ## Local Contracts
 
 - English for code and documentation. PHP runtime ^8.3; no DevTools dependency.
+- Keep methods focused, use early returns and inject execution/output boundaries.
+  Prefer established library APIs, native ECS configuration and useful PHPDoc.
+  Separate logical blocks with whitespace; avoid speculative abstractions, custom
+  parsers/DSLs and silent input coercions. See the architecture quality contract.
 - `check` MUST NOT pass `--fix`, update dependencies, execute application tests,
   publish or change source. Tool caches may live in the system temporary directory.
 - `fix` is explicit, local and potentially partial on failure; inspect its diff.
