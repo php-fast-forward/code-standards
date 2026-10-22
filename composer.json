@@ -1,0 +1,32 @@
+{
+    "name": "fast-forward/code-standards",
+    "description": "Focused PHP style presets, syntax checks and changed-file automation.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "fast-forward/container": "~1.10.1",
+        "symfony/console": "^7.4 || ^8.0",
+        "symfony/process": "^7.4 || ^8.0",
+        "symplify/easy-coding-standard": "^13.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload": {
+        "psr-4": {"FastForward\\CodeStandards\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"FastForward\\CodeStandards\\Tests\\": "tests/"}
+    },
+    "bin": ["bin/code-standards"],
+    "archive": {
+        "exclude": ["/vendor", "/.build", "/.phpunit.cache", "/.git", "/packaging-consumer"]
+    },
+    "scripts": {
+        "test": "phpunit",
+        "check": ["@test", "@php bin/code-standards check --all"],
+        "fix": "@php bin/code-standards fix --all"
+    },
+    "config": {"sort-packages": true, "allow-plugins": false, "platform": {"php": "8.3.0"}}
+}

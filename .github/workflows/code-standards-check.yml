@@ -1,0 +1,64 @@
+name: 'Internal: Check Changed PHP'
+on:
+  workflow_call:
+    inputs:
+      runtime-ref:
+        required: true
+        type: string
+      php-version:
+        default: '8.3'
+        type: string
+      config:
+        default: ''
+        type: string
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Reject privileged events and invalid refs
+        env:
+          STANDARDS_EVENT: ${{ github.event_name }}
+          STANDARDS_RUNTIME: ${{ inputs.runtime-ref }}
+          STANDARDS_BASE: ${{ github.event.pull_request.base.sha }}
+          STANDARDS_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
+          [[ "$STANDARDS_RUNTIME" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
+          [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
+          [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
+      - name: Check out reviewed tool runtime
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: php-fast-forward/code-standards
+          ref: ${{ inputs.runtime-ref }}
+          path: tool
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # 2.37.1
+        with:
+          php-version: ${{ inputs.php-version }}
+          coverage: none
+          tools: composer:v2
+      - name: Install only the reviewed tool
+        working-directory: tool
+        env:
+          COMPOSER_HOME: ${{ runner.temp }}/standards-composer-home
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
+        run: composer install --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
+      - name: Check out exact consumer head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: consumer
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check changed PHP
+        uses: ./tool/.github/actions/check
+        with:
+          directory: ${{ github.workspace }}/consumer
+          base-sha: ${{ github.event.pull_request.base.sha }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
+          config: ${{ inputs.config }}

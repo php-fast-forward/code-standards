@@ -1,0 +1,12 @@
+# Copy to .github/workflows/code-standards.yml and replace BOTH SHA placeholders.
+name: PHP standards
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  standards:
+    uses: php-fast-forward/code-standards/.github/workflows/code-standards.yml@REPLACE_WITH_REVIEWED_40_CHARACTER_SHA
+    with:
+      runtime-ref: REPLACE_WITH_REVIEWED_40_CHARACTER_SHA
+      php-version: '8.3'
