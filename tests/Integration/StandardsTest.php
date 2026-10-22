@@ -75,6 +75,38 @@ final class StandardsTest extends TestCase
         self::assertContains($this->directory . '/-leading.php', $filtered);
     }
 
+    /** Checks trailing root-path spaces/control bytes without weakening nested-checkout rejection. */
+    public function testCheckoutRootWhitespaceIsPreservedInAllAndChangedModes(): void
+    {
+        $renamed = $this->directory . " \t\n";
+        rename($this->directory, $renamed);
+        $this->directory = $renamed;
+
+        $base = $this->commit();
+        $source = "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n";
+        $this->put('source.php', $source);
+        $head = $this->commit();
+        $selection = new FileSelection(new NativeProcessRunner());
+
+        self::assertSame(['source.php'], $selection->select($this->directory, null, null));
+        self::assertSame(['source.php'], $selection->select($this->directory, $base, $head));
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+    }
+
+    /** Rejects metadata/bare repositories instead of silently checking an empty source selection. */
+    public function testGitMetadataAndBareRepositoriesAreNotSourceCheckoutRoots(): void
+    {
+        $this->git(['init', '--bare', '--initial-branch=main', 'bare.git']);
+
+        foreach (['.git', 'bare.git'] as $directory) {
+            $check = $this->cli(['check', '--all', '--directory=' . $this->directory . '/' . $directory]);
+
+            self::assertSame(2, $check->getExitCode(), $directory);
+            self::assertStringContainsString('Git checkout root', $check->getErrorOutput(), $directory);
+        }
+    }
+
     /** Ensures removing a policy file cannot limit checking to an empty changed-file set. */
     public function testDeletedConfigurationStillTriggersFullScan(): void
     {
