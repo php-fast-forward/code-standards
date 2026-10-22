@@ -60,8 +60,14 @@ Code Standards follows that separation with Symfony Console 7.4-compatible APIs,
 matching this project's PHP 8.3 minimum. Symfony owns argument binding, help and
 global options. Commands are plain invocable PHP objects with `AsCommand` and
 mapped `Option` attributes, adapted by native `Application::addCommand()`; they
-do not extend Symfony Command. These APIs are present in published Console7.4.
+do not extend Symfony Command. These APIs are present in published Console 7.4.
 There is no custom parser or speculative lazy-command layer.
+Fast Forward Container autowires the concrete application, commands, scan
+orchestration, file selector and PHP filter. The module's service provider binds
+only the process/output interfaces and services needing installation/config
+paths. The binary supplies the actual vendor directory and terminal output;
+there are no hidden construction defaults or service lookups inside domain
+services. The container is used only at this composition boundary.
 Project-scope validation, Git selection, PHP filtering and tool execution have
 separate responsibilities. The process transport receives its output sink;
 reusable services do not write to global standard-output handles.
@@ -102,6 +108,31 @@ The formatter regression verifies both check and fix retain that spacing.
 The initial preset overrides `method_argument_space.on_multiline` to `ignore`:
 the upstream `ensure_fully_multiline` mode collapses these deliberate blank
 lines. Standard comma spacing still applies; no custom fixer is introduced.
+
+## Published framework composition
+
+This increment consumes `fast-forward/container` 1.10.1 (release commit
+`a75dda2c8a9bd9cb2ef5bb25abc1a6b09de8a298`), `fast-forward/config` 1.7.3 and
+`container-interop/service-provider` 0.4.1 through the actual Composer graph.
+These are runtime library dependencies of the tool. Their development tools
+are not transitively installed. No unpublished branch/PR or future Container
+PR #49 behavior is required. The provider API is experimental (0.4) and distinct
+from PSR-11's lookup contract; inspect compatibility when updating dependencies.
+
+Use the published `ContainerFactory::create()` for composition. Consumers needing
+explicit bindings may pass one native `AggregateServiceProvider` containing the
+module provider first and their `ArrayServiceProvider` last. Later factories
+replace earlier factories before services are resolved. Keep replacements typed
+to the declared interface and apply them before first lookup. Tests exercise
+lazy construction, shared application identity, nested transport/output
+overrides, native command binding and exact failure status with the published
+adapter. No module-specific container, provider registry or override DSL exists.
+
+The default provider defines no extensions. This tool does not claim additional
+cross-provider decoration or alias guarantees beyond the published adapter.
+CPX installation isolation does not alter these in-process runtime/autoload
+boundaries. Command configuration does not double as dependency injection:
+check/fix are separate invocable entrypoints and transport authority is explicit.
 
 ## Consequences and next gates
 

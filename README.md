@@ -24,9 +24,10 @@ composer test
 `check` reports violations with a nonzero status and does not change source.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
 Recheck and inspect the diff afterward; failures can leave already applied fixes.
-No selected PHP files is a successful no-op. Invalid options, configuration, Git
-history or head mismatch fail closed with exit 2. Otherwise tool exit status is
-propagated. Changed mode requires a clean tracked checkout of the requested head.
+An empty PHP selection is a successful no-op. Invalid options, configuration paths,
+Git history or head mismatch fail closed with exit 2. Syntax/style tool failures,
+including executable configuration errors inside ECS, retain their tool status.
+Changed mode requires a clean tracked checkout of the requested head.
 `--all` includes tracked files and permits inspecting local tracked edits.
 Symfony Console provides `help check`, standard global flags and both
 `--option=value` and `--option value`. Error diagnostics use stderr. Empty paths,

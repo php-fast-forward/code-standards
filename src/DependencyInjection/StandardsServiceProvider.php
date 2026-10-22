@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace FastForward\CodeStandards\DependencyInjection;
+
+use FastForward\CodeStandards\Process\NativeProcessRunner;
+use FastForward\CodeStandards\Process\ProcessRunner;
+use FastForward\CodeStandards\Project\ProjectScopeResolver;
+use FastForward\CodeStandards\Standards\StandardsRunner;
+use Interop\Container\ServiceProviderInterface;
+use InvalidArgumentException;
+use Psr\Container\ContainerInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
+
+/** Supplies only interface/scalar bindings; Fast Forward Container autowires concrete application services. */
+final readonly class StandardsServiceProvider implements ServiceProviderInterface
+{
+    /**
+     * Captures external installation/output dependencies without opening a checkout or starting processes.
+     *
+     * @param string $vendorDirectory Absolute Composer vendor directory selected by the binary's autoload entrypoint.
+     * @param OutputInterface $output Invocation output; ConsoleOutput supports a separate stderr channel.
+     * @throws InvalidArgumentException When the supplied installation cannot provide a readable ECS entrypoint.
+     */
+    public function __construct(private string $vendorDirectory, private OutputInterface $output)
+    {
+        $entrypoint = $vendorDirectory . '/symplify/easy-coding-standard/bin/ecs';
+        if (!str_starts_with($vendorDirectory, '/') || !is_file($entrypoint) || !is_readable($entrypoint)) {
+            throw new InvalidArgumentException('Vendor directory must contain a readable installed ECS entrypoint.');
+        }
+    }
+
+    /** @return array<string, callable(ContainerInterface):object> Lazy bindings; later aggregate-provider factories may replace them. */
+    public function getFactories(): array
+    {
+        return [
+            OutputInterface::class => fn (): OutputInterface => $this->output,
+            ProcessRunner::class => fn (ContainerInterface $container): ProcessRunner => $this->process($container->get(OutputInterface::class)),
+            ProjectScopeResolver::class => static fn (): ProjectScopeResolver => new ProjectScopeResolver(dirname(__DIR__, 2) . '/config/ecs.php'),
+            StandardsRunner::class => fn (ContainerInterface $container): StandardsRunner => new StandardsRunner(
+                $container->get(ProcessRunner::class),
+                $this->vendorDirectory . '/symplify/easy-coding-standard/bin/ecs',
+            ),
+        ];
+    }
+
+    /** @return array<string, callable> No default decorators; consumer extensions use the published provider contract. */
+    public function getExtensions(): array
+    {
+        return [];
+    }
+
+    /** Binds raw subprocess bytes to the supplied output while retaining stderr when supported. */
+    private function process(OutputInterface $output): ProcessRunner
+    {
+        return new NativeProcessRunner(static function (string $type, string $message) use ($output): void {
+            $stream = Process::ERR === $type && $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
+            $stream->write($message, options: OutputInterface::OUTPUT_RAW);
+        });
+    }
+}
