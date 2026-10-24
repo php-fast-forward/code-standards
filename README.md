@@ -22,6 +22,11 @@ composer test
 ```
 
 `check` reports violations with a nonzero status and does not change source.
+The default preset stores its ECS cache beneath the system temporary directory,
+in `fast-forward-code-standards/<SHA-256 of the executing checkout path>`.
+Different checkouts cannot invalidate each other's cache. Native
+`withCache()` overrides remain supported and apply last; share cache directories
+only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
 Recheck and inspect the diff afterward; failures can leave already applied fixes.
 An empty PHP selection is a successful no-op. Invalid options, configuration paths,
