@@ -421,6 +421,25 @@ PHP;
         self::assertSame('project A cache', file_get_contents($cache . '/owned-marker'));
     }
 
+    /** A successful explicit fix must not hide a remaining violation after an EOF-sensitive formatter pass. */
+    public function testSuccessfulFixCannotHideRemainingStyleViolations(): void
+    {
+        $this->put('source.php', '<?php echo 1;');
+        $this->commit();
+        $fix = $this->cli(['fix', '--all']);
+        $after = file_get_contents($this->directory . '/source.php');
+        $check = $this->cli(['check', '--all']);
+
+        self::assertSame($check->getExitCode(), $fix->getExitCode(), $fix->getOutput() . $check->getOutput());
+        self::assertSame($after, file_get_contents($this->directory . '/source.php'));
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        $clean = file_get_contents($this->directory . '/source.php');
+
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        self::assertSame($clean, file_get_contents($this->directory . '/source.php'));
+    }
+
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {

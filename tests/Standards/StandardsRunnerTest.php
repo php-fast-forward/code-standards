@@ -34,6 +34,19 @@ final class StandardsRunnerTest extends TestCase
         self::assertCount(57, $process->commands[101]);
     }
 
+    /** Propagates residual style failures after explicit fix without silently applying another write pass. */
+    public function testFixSuccessIsVerifiedWithoutAnotherWritePass(): void
+    {
+        $process = new RecordingProcess(verificationStatus: 19);
+        $runner = new StandardsRunner($process, '/tools/ecs');
+
+        self::assertSame(19, $runner->run('/repo', ['/repo/a b.php'], '/config', true));
+        self::assertCount(3, $process->commands);
+        self::assertContains('--fix', $process->commands[1]);
+        self::assertNotContains('--fix', $process->commands[2]);
+        self::assertSame('/repo/a b.php', $process->commands[2][array_key_last($process->commands[2])]);
+    }
+
     /** Rejects malformed source before writes and makes empty selection a subprocess-free no-op. */
     public function testSyntaxFailurePreventsFixAndNoFilesExecutesNothing(): void
     {
@@ -51,8 +64,11 @@ final class RecordingProcess implements ProcessRunner
     public array $commands = [];
 
     /** Configures deterministic transport outcomes without executing real tools. */
-    public function __construct(private readonly int $ecsStatus = 0, private readonly int $syntaxStatus = 0)
-    {
+    public function __construct(
+        private readonly int $ecsStatus = 0,
+        private readonly int $syntaxStatus = 0,
+        private readonly ?int $verificationStatus = null,
+    ) {
     }
 
     /** Fails if standards orchestration unexpectedly performs a capture operation. */
@@ -66,6 +82,11 @@ final class RecordingProcess implements ProcessRunner
     {
         $this->commands[] = $arguments;
 
-        return in_array('-l', $arguments, true) ? $this->syntaxStatus : $this->ecsStatus;
+        if (in_array('-l', $arguments, true)) {
+            return $this->syntaxStatus;
+        }
+
+        return !in_array('--fix', $arguments, true) && null !== $this->verificationStatus
+            ? $this->verificationStatus : $this->ecsStatus;
     }
 }

@@ -39,6 +39,10 @@ Different checkouts cannot invalidate each other's cache. Native
 `withCache()` overrides remain supported and apply last; share cache directories
 only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
+After each successful formatter batch, a read-only check verifies the result.
+Any remaining violation or tool error is returned as a nonzero status. A formatter
+pass can expose another rule, such as EOF normalization preceding opening-tag
+spacing; inspect the partial diff before explicitly requesting another fix.
 Recheck and inspect the diff afterward; failures can leave already applied fixes.
 An empty PHP selection is a successful no-op. Invalid options, configuration paths,
 Git history or head mismatch fail closed with exit 2. Syntax/style tool failures,

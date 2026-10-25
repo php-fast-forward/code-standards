@@ -32,12 +32,16 @@ final class StandardsRunner
 
         // Bounded batches avoid ARG_MAX. Stop at the first failure; never report partial success.
         foreach (array_chunk($files, 50) as $batch) {
-            $command = [PHP_BINARY, $this->ecs, 'check', '--config=' . $config, '--no-progress-bar', '--no-interaction'];
+            $check = [PHP_BINARY, $this->ecs, 'check', '--config=' . $config, '--no-progress-bar', '--no-interaction'];
+            $command = $check;
             if ($fix) {
                 $command[] = '--fix';
             }
             $status = $this->process->run([...$command, '--', ...$batch], $directory);
             if (0 !== $status) {
+                return $status;
+            }
+            if ($fix && 0 !== $status = $this->process->run([...$check, '--', ...$batch], $directory)) {
                 return $status;
             }
         }
