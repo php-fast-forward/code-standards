@@ -7,7 +7,8 @@ style, not type correctness, application behavior or coverage.
 
 ## Local development and first adoption
 
-Requires PHP 8.3+ and Git. Composer resolves the tool runtime independently from
+Requires PHP 8.3+, Git and Composer runtime API 2.2+ for installed binary proxies.
+Composer resolves the tool runtime independently from
 the consumer application's PHP minimum; syntax is checked using the executing
 PHP binary. No PHP migration rules are enabled. Review compatibility with the
 application's minimum PHP before adopting a preset.
@@ -15,6 +16,12 @@ application's minimum PHP before adopting a preset.
 Workflow guards and their contributor tests additionally require Bash and jq.
 Hosted Ubuntu runners provide both; the Composer library and CLI use the PHP
 dependencies declared in this package.
+
+Composer exposes the portable skill through `extra.skills.source` at
+`resources/skills`. `llm/skills` is an optional consumer integration; installation
+and activation are explicit. The development `check` script validates Composer
+metadata and the actual platform before running this package's tests and style
+check. Operational channel dependencies remain development-only.
 
 ```sh
 composer install --no-plugins --no-scripts
