@@ -430,6 +430,7 @@ PHP;
         $after = file_get_contents($this->directory . '/source.php');
         $check = $this->cli(['check', '--all']);
 
+        self::assertNotSame(0, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
         self::assertSame($check->getExitCode(), $fix->getExitCode(), $fix->getOutput() . $check->getOutput());
         self::assertSame($after, file_get_contents($this->directory . '/source.php'));
         self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
