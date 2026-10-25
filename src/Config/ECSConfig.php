@@ -12,6 +12,7 @@ use PhpCsFixer\Fixer\Phpdoc\NoSuperfluousPhpdocTagsFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocAlignFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocNoEmptyReturnFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocToCommentFixer;
+use RuntimeException;
 use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 
 /** A deliberately non-risky PSR-12 starting point for extraction. */
@@ -22,6 +23,7 @@ final class ECSConfig
      *
      * @param callable(ECSConfigBuilder):void|null $customize Native rule imports, skips or overrides; null uses the preset unchanged.
      * @return ECSConfigBuilder The native builder, ready to return from an explicit ECS configuration file.
+     * @throws RuntimeException When the executing checkout cannot be identified for cache isolation.
      */
     public static function configure(?callable $customize = null): ECSConfigBuilder
     {
@@ -37,11 +39,23 @@ final class ECSConfig
             ])
             ->withConfiguredRule(MethodArgumentSpaceFixer::class, ['on_multiline' => 'ignore'])
             ->withConfiguredRule(PhpdocAlignFixer::class, ['align' => 'left'])
+            ->withCache(self::cacheDirectory())
             ->withoutParallel();
         if (null !== $customize) {
             $customize($config);
         }
 
         return $config;
+    }
+
+    /** Keeps ECS invalidation within the executing checkout's temporary cache; native overrides still run last. */
+    private static function cacheDirectory(): string
+    {
+        $directory = getcwd();
+        if (false === $directory) {
+            throw new RuntimeException('Cannot determine the checkout directory for the ECS cache.');
+        }
+
+        return sys_get_temp_dir() . '/fast-forward-code-standards/' . hash('sha256', $directory);
     }
 }
