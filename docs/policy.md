@@ -22,7 +22,7 @@ from blocked PR #376 or composer-installers #15 was executed or changed.
 | Runtime | PHP 8.3+ contract | PHP ^8.3 | PHP ^8.3 |
 | Consumer PHP target | Rector resolves Composer minimum | auto rules resolve minimum | No version-dependent migration sets |
 | PHPDoc preservation | skips conversion, empty/redundant tags removal, global imports, general annotation removal | removes author; preserves empty return/package | Same six ECS skips as DevTools; left alignment |
-| Extra risky policy | PHPUnit static calls self; missing typed params; refactoring sets | immutable date, private visibility, simplified null returns and migration | Deliberately absent pending separate profile/fixtures |
+| Additional behavior | PHPUnit static calls self; missing typed params; refactoring sets | immutable date, private visibility, simplified null returns and migration | Deliberately absent pending separate profile/fixtures |
 | Headers | `.docheader`, current year, after strict declaration | opening header extracted without executing config, updated year, after open | No automatic header rewrite |
 | Scope | source resolver excludes generated/resources/public/vendor | consumer Finder, hidden files, VCS ignores, path exclusions | Tracked PHP/bin scope, same generated exclusions plus node_modules; symlinks rejected |
 | Overrides | customize callback last | extraRules last | customize callback last; explicit config selection |
@@ -35,6 +35,16 @@ membership is dependency-version specific and fixed for contributor builds by
 ECS 13.3.8 deprecates `withPhpCsFixerSets()` as a no-op. The initial implementation
 therefore uses the supported prepared PSR-12 set and proves violations with a
 real fixture instead of inheriting the legacy dynamic-set call blindly.
+
+The [resolved initial preset](resolved-preset.md) records the compiled ECS rule
+list and effective options for the locked version. Golden fixtures make style,
+documentation/semantic preservation and second-pass stability reviewable. This
+is a first bounded part of #5, not equivalence with the legacy engines.
+
+The [resolved legacy fixer comparison](legacy-fixer-comparison.md) expands all
+three actual fixer profiles with normalized options, reported risk, priority
+and source hashes. It distinguishes bundled code from root Composer metadata
+and keeps the remaining full-pipeline decisions explicit.
 
 This is not a rule-by-rule equivalence proof for the complete
 legacy ECS + Rector + PHPDoc stack. No consumers may be automatically migrated
