@@ -4,30 +4,14 @@
 declare(strict_types=1);
 
 use FastForward\CodeStandards\Console\Application;
-use FastForward\CodeStandards\Console\Command\CheckCommand;
-use FastForward\CodeStandards\Console\Command\FixCommand;
-use FastForward\CodeStandards\Console\StandardsOperation;
-use FastForward\CodeStandards\Filesystem\PhpFiles;
-use FastForward\CodeStandards\Git\FileSelection;
-use FastForward\CodeStandards\Process\NativeProcessRunner;
-use FastForward\CodeStandards\Project\ProjectScopeResolver;
-use FastForward\CodeStandards\Standards\StandardsRunner;
+use FastForward\CodeStandards\DependencyInjection\StandardsServiceProvider;
+use FastForward\Container\ContainerFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Process\Process;
 
 $autoload = $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
 require $autoload;
 
-$vendor = dirname($autoload);
 $output = new ConsoleOutput();
-$process = new NativeProcessRunner(static function (string $type, string $message) use ($output): void {
-    $stream = Process::ERR === $type ? $output->getErrorOutput() : $output;
-    $stream->write($message);
-});
-$projects = new ProjectScopeResolver(dirname(__DIR__) . '/config/ecs.php');
-$selection = new FileSelection($process);
-$files = new PhpFiles();
-$standards = new StandardsRunner($process, $vendor . '/symplify/easy-coding-standard/bin/ecs');
-$operation = new StandardsOperation($projects, $selection, $files, $standards);
+$container = ContainerFactory::create(new StandardsServiceProvider(dirname($autoload), $output));
 
-exit((new Application(new CheckCommand($operation), new FixCommand($operation)))->run(output: $output));
+exit($container->get(Application::class)->run(output: $output));
