@@ -23,11 +23,27 @@ secrets; consumers must never call this check from a privileged workflow.
 
 The selected consumer interface uses `@v0` after a real stable 0.x release has
 established that GitHub branch. A reviewed full commit remains available for
-fixed adoption. The reusable obtains its own effective repository/SHA from
-`fromJSON(toJSON(job)).workflow_repository` and `.workflow_sha`, validates them,
-and checks out that exact implementation. It never resolves the moving branch
+fixed adoption. The reusable exports the native `job` context through the
+supported `toJSON(job)` expression in step environment variables. Before checkout,
+an inline jq guard validates exactly one JSON object, a string repository equal
+to `php-fast-forward/code-standards`, and a string SHA containing exactly 40
+lowercase hexadecimal characters. Only that validated identity is emitted as
+step outputs and used for checkout. Invalid, absent or multiple documents emit
+no checkout outputs and fail closed. The workflow never resolves the moving branch
 again. `github.workflow_sha` identifies the caller and is not used for this
 purpose; no caller-supplied runtime ref can silently drift from the workflow.
+The same protocol protects the channel publisher's trusted implementation.
+The four native workflow identity properties are GitHub.com features; a host
+without them, including GitHub Enterprise Server, fails this protocol.
+
+This is an explicit runtime JSON boundary. Actionlint still checks the supported
+context expression and step references; it does not validate fields inside
+the JSON string. Executable guard regressions own that schema and its failure
+modes. No dynamic `fromJSON` property dereference, ignored linter error or custom
+validator is used to make an unknown expression property appear supported. The
+short guard is inline in each bootstrap because no repository helper may run
+before its source identity has been verified and checked out. jq is provided by
+the hosted Ubuntu runner; neither workflow downloads an alternate validator.
 An explicit user-selected config remains executable code; only use it in this
 unprivileged sandbox. GitHub Actions private-repository sharing policies must
 already permit the caller. This project never broadens organization access.

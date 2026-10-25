@@ -16,23 +16,37 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Reject privileged events and invalid refs
+        id: runtime
         env:
           STANDARDS_EVENT: ${{ github.event_name }}
-          STANDARDS_RUNTIME: ${{ fromJSON(toJSON(job)).workflow_sha }}
-          STANDARDS_REPOSITORY: ${{ fromJSON(toJSON(job)).workflow_repository }}
+          STANDARDS_JOB_JSON: ${{ toJSON(job) }}
           STANDARDS_BASE: ${{ github.event.pull_request.base.sha }}
           STANDARDS_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
+          set -euo pipefail
           [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
-          [[ "$STANDARDS_REPOSITORY" == php-fast-forward/code-standards ]] || exit 1
-          [[ "$STANDARDS_RUNTIME" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
+          runtime=$(jq --slurp --raw-output --exit-status '
+            select(length == 1) | .[0] | select(type == "object")
+            | select(.workflow_repository | type == "string")
+            | select(.workflow_repository == "php-fast-forward/code-standards")
+            | select(.workflow_sha | type == "string")
+            | select(.workflow_sha | length == 40 and test("^[a-f0-9]+$"))
+            | .workflow_sha
+          ' <<< "$STANDARDS_JOB_JSON") || {
+            echo '::error::Invalid executing workflow identity in native job context.' >&2
+            exit 1
+          }
+          {
+            printf 'repository=php-fast-forward/code-standards\n'
+            printf 'sha=%s\n' "$runtime"
+          } >> "$GITHUB_OUTPUT"
       - name: Check out reviewed tool runtime
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: ${{ fromJSON(toJSON(job)).workflow_repository }}
-          ref: ${{ fromJSON(toJSON(job)).workflow_sha }}
+          repository: ${{ steps.runtime.outputs.repository }}
+          ref: ${{ steps.runtime.outputs.sha }}
           path: tool
           persist-credentials: false
       - name: Set up PHP

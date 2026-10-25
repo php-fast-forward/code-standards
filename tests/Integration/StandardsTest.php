@@ -75,6 +75,38 @@ final class StandardsTest extends TestCase
         self::assertContains($this->directory . '/-leading.php', $filtered);
     }
 
+    /** Checks trailing root-path spaces/control bytes without weakening nested-checkout rejection. */
+    public function testCheckoutRootWhitespaceIsPreservedInAllAndChangedModes(): void
+    {
+        $renamed = $this->directory . " \t\n";
+        rename($this->directory, $renamed);
+        $this->directory = $renamed;
+
+        $base = $this->commit();
+        $source = "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n";
+        $this->put('source.php', $source);
+        $head = $this->commit();
+        $selection = new FileSelection(new NativeProcessRunner());
+
+        self::assertSame(['source.php'], $selection->select($this->directory, null, null));
+        self::assertSame(['source.php'], $selection->select($this->directory, $base, $head));
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+    }
+
+    /** Rejects metadata/bare repositories instead of silently checking an empty source selection. */
+    public function testGitMetadataAndBareRepositoriesAreNotSourceCheckoutRoots(): void
+    {
+        $this->git(['init', '--bare', '--initial-branch=main', 'bare.git']);
+
+        foreach (['.git', 'bare.git'] as $directory) {
+            $check = $this->cli(['check', '--all', '--directory=' . $this->directory . '/' . $directory]);
+
+            self::assertSame(2, $check->getExitCode(), $directory);
+            self::assertStringContainsString('Git checkout root', $check->getErrorOutput(), $directory);
+        }
+    }
+
     /** Ensures removing a policy file cannot limit checking to an empty changed-file set. */
     public function testDeletedConfigurationStillTriggersFullScan(): void
     {
@@ -315,6 +347,46 @@ PHP;
         self::assertSame("<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n", file_get_contents($this->directory . '/source.php'));
     }
 
+    /** Runs the real default preset across two checkouts without erasing the first checkout's cache. */
+    public function testDefaultCachesDoNotInvalidateAnotherCheckout(): void
+    {
+        $source = "<?php\n\ndeclare(strict_types=1);\n\nreturn 1;\n";
+        $this->put('source.php', $source);
+        $this->commit();
+        $this->put('.build/project-b/source.php', $source);
+        $second = $this->directory . '/.build/project-b';
+        $temporary = $this->directory . '/.build/private-tmp';
+        mkdir($temporary);
+        $this->git(['init', '-b', 'main', $second]);
+        $this->git(['-C', $second, 'add', 'source.php']);
+        $environment = ['TMPDIR' => $temporary];
+        $cache = $temporary . '/fast-forward-code-standards/' . hash('sha256', $this->directory);
+
+        $first = $this->cli(['check', '--all'], $environment);
+        self::assertSame(0, $first->getExitCode(), $first->getOutput() . $first->getErrorOutput());
+        self::assertDirectoryExists($cache);
+        file_put_contents($cache . '/owned-marker', 'project A cache');
+
+        foreach (['check', 'fix', 'check', 'fix'] as $command) {
+            $result = $this->cli([$command, '--all', '--directory=' . $second], $environment);
+
+            self::assertSame(0, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+            self::assertSame('project A cache', file_get_contents($cache . '/owned-marker'));
+            self::assertSame($source, file_get_contents($second . '/source.php'));
+            self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+            self::assertFileDoesNotExist($second . '/composer.lock');
+        }
+
+        $this->put('.build/explicit-ecs.php', '<?php return \\FastForward\\CodeStandards\\Config\\ECSConfig::configure('
+            . 'static function (\\Symplify\\EasyCodingStandard\\Configuration\\ECSConfigBuilder $config): void {'
+            . '$config->withCache(__DIR__ . "/explicit-cache", "consumer");});');
+        $override = $this->cli(['check', '--all', '--config=.build/explicit-ecs.php'], $environment);
+
+        self::assertSame(0, $override->getExitCode(), $override->getOutput() . $override->getErrorOutput());
+        self::assertDirectoryExists($this->directory . '/.build/explicit-cache');
+        self::assertSame('project A cache', file_get_contents($cache . '/owned-marker'));
+    }
+
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {
@@ -340,10 +412,15 @@ PHP;
         return trim($this->git(['rev-parse', 'HEAD']));
     }
 
-    /** Runs the real packaged binary in the fixture with a bounded timeout and captured diagnostics. */
-    private function cli(array $arguments): Process
+    /**
+     * Runs the real packaged binary in the fixture with bounded timeout and captured diagnostics.
+     *
+     * @param list<string> $arguments Explicit CLI arguments.
+     * @param array<string, string> $environment Invocation-local overrides, including isolated test temp directories.
+     */
+    private function cli(array $arguments, array $environment = []): Process
     {
-        $process = new Process([PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', ...$arguments], $this->directory, timeout: 60);
+        $process = new Process([PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', ...$arguments], $this->directory, $environment, timeout: 60);
         $process->run();
 
         return $process;

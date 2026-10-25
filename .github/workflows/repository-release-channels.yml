@@ -32,10 +32,10 @@ jobs:
       contents: write
     steps:
       - name: Require a trusted repository workflow
+        id: runtime
         env:
           FF_REPOSITORY: ${{ github.repository }}
-          FF_RUNTIME_REPOSITORY: ${{ fromJSON(toJSON(job)).workflow_repository }}
-          FF_RUNTIME_SHA: ${{ fromJSON(toJSON(job)).workflow_sha }}
+          FF_JOB_JSON: ${{ toJSON(job) }}
           FF_EVENT: ${{ github.event_name }}
           FF_REF: ${{ github.ref }}
           FF_ACTION: ${{ github.event.action }}
@@ -47,27 +47,39 @@ jobs:
           FF_EXPECTED_SHA: ${{ inputs.expected-sha }}
         run: |
           set -euo pipefail
-          if [[ "$FF_REPOSITORY" != php-fast-forward/code-standards \
-              || "$FF_RUNTIME_REPOSITORY" != "$FF_REPOSITORY" \
-              || ! "$FF_RUNTIME_SHA" =~ ^[a-f0-9]{40}$ ]]; then
+          if [[ "$FF_REPOSITORY" != php-fast-forward/code-standards ]]; then
             echo '::error::Release channels belong only to the canonical repository.'
             exit 1
           fi
-          if [[ "$FF_EVENT" == workflow_dispatch && "$FF_REF" == refs/heads/main ]]; then
-            exit 0
-          fi
-          if [[ "$FF_EVENT" != pull_request_target || "$FF_ACTION" != closed \
+          if [[ "$FF_EVENT" == workflow_dispatch ]]; then
+            [[ "$FF_REF" == refs/heads/main ]] || exit 1
+          elif [[ "$FF_EVENT" != pull_request_target || "$FF_ACTION" != closed \
               || "$FF_MERGED" != true || "$FF_HEAD_REPOSITORY" != "$FF_REPOSITORY" \
               || "$FF_HEAD_BRANCH" != changelog/version || "$FF_BASE_BRANCH" != main \
               || "$FF_MERGE_SHA" != "$FF_EXPECTED_SHA" ]]; then
             echo '::error::Use verified managed-merge publication or manual recovery from main.'
             exit 1
           fi
+          runtime=$(jq --slurp --raw-output --exit-status '
+            select(length == 1) | .[0] | select(type == "object")
+            | select(.workflow_repository | type == "string")
+            | select(.workflow_repository == "php-fast-forward/code-standards")
+            | select(.workflow_sha | type == "string")
+            | select(.workflow_sha | length == 40 and test("^[a-f0-9]+$"))
+            | .workflow_sha
+          ' <<< "$FF_JOB_JSON") || {
+            echo '::error::Invalid executing workflow identity in native job context.' >&2
+            exit 1
+          }
+          {
+            printf 'repository=php-fast-forward/code-standards\n'
+            printf 'sha=%s\n' "$runtime"
+          } >> "$GITHUB_OUTPUT"
       - name: Check out this exact trusted implementation
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: ${{ fromJSON(toJSON(job)).workflow_repository }}
-          ref: ${{ fromJSON(toJSON(job)).workflow_sha }}
+          repository: ${{ steps.runtime.outputs.repository }}
+          ref: ${{ steps.runtime.outputs.sha }}
           persist-credentials: false
       - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # 2.37.1
         with:

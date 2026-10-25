@@ -12,6 +12,10 @@ the consumer application's PHP minimum; syntax is checked using the executing
 PHP binary. No PHP migration rules are enabled. Review compatibility with the
 application's minimum PHP before adopting a preset.
 
+Workflow guards and their contributor tests additionally require Bash and jq.
+Hosted Ubuntu runners provide both; the Composer library and CLI use the PHP
+dependencies declared in this package.
+
 ```sh
 composer install --no-plugins --no-scripts
 php bin/code-standards help
@@ -22,11 +26,17 @@ composer test
 ```
 
 `check` reports violations with a nonzero status and does not change source.
+The default preset stores its ECS cache beneath the system temporary directory,
+in `fast-forward-code-standards/<SHA-256 of the executing checkout path>`.
+Different checkouts cannot invalidate each other's cache. Native
+`withCache()` overrides remain supported and apply last; share cache directories
+only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
 Recheck and inspect the diff afterward; failures can leave already applied fixes.
-No selected PHP files is a successful no-op. Invalid options, configuration, Git
-history or head mismatch fail closed with exit 2. Otherwise tool exit status is
-propagated. Changed mode requires a clean tracked checkout of the requested head.
+An empty PHP selection is a successful no-op. Invalid options, configuration paths,
+Git history or head mismatch fail closed with exit 2. Syntax/style tool failures,
+including executable configuration errors inside ECS, retain their tool status.
+Changed mode requires a clean tracked checkout of the requested head.
 `--all` includes tracked files and permits inspecting local tracked edits.
 Symfony Console provides `help check`, standard global flags and both
 `--option=value` and `--option value`. Error diagnostics use stderr. Empty paths,

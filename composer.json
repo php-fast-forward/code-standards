@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "fast-forward/container": "~1.10.1",
         "symfony/console": "^7.4 || ^8.0",
         "symfony/process": "^7.4 || ^8.0",
         "symplify/easy-coding-standard": "^13.0"

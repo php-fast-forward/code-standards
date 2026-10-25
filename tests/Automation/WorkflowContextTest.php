@@ -15,22 +15,17 @@ final class WorkflowContextTest extends TestCase
     {
         $environment = [
             'STANDARDS_EVENT' => 'pull_request',
-            'STANDARDS_REPOSITORY' => 'php-fast-forward/code-standards',
-            'STANDARDS_RUNTIME' => str_repeat('1', 40),
+            'STANDARDS_JOB_JSON' => $this->identity(),
             'STANDARDS_BASE' => str_repeat('2', 40),
             'STANDARDS_HEAD' => str_repeat('3', 40),
         ];
         $script = $this->guard('code-standards-check.yml', 'Reject privileged events and invalid refs');
-        self::assertSame(0, $this->guardExitCode($script, $environment));
-        foreach (['STANDARDS_EVENT' => 'pull_request_target', 'STANDARDS_REPOSITORY' => 'foreign/tool',
-            'STANDARDS_RUNTIME' => 'v0', 'STANDARDS_BASE' => 'main', 'STANDARDS_HEAD' => 'v0'] as $key => $value) {
+        $valid = $this->guardResult($script, $environment);
+        self::assertSame(0, $valid['status']);
+        self::assertSame("repository=php-fast-forward/code-standards\nsha=" . str_repeat('1', 40) . "\n", $valid['output']);
+        foreach (['STANDARDS_EVENT' => 'pull_request_target', 'STANDARDS_BASE' => 'main', 'STANDARDS_HEAD' => 'v0'] as $key => $value) {
             self::assertNotSame(0, $this->guardExitCode($script, [...$environment, $key => $value]));
         }
-        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/code-standards-check.yml');
-        self::assertStringContainsString('fromJSON(toJSON(job)).workflow_sha', $workflow);
-        self::assertStringNotContainsString('inputs.runtime-ref', $workflow);
-        self::assertStringNotContainsString('github.workflow_sha', $workflow);
-        self::assertStringContainsString('ref: ${{ fromJSON(toJSON(job)).workflow_sha }}', $workflow);
     }
 
     /** Allows only verified managed merges or deliberate recovery from canonical main. */
@@ -38,8 +33,7 @@ final class WorkflowContextTest extends TestCase
     {
         $environment = [
             'FF_REPOSITORY' => 'php-fast-forward/code-standards',
-            'FF_RUNTIME_REPOSITORY' => 'php-fast-forward/code-standards',
-            'FF_RUNTIME_SHA' => str_repeat('1', 40),
+            'FF_JOB_JSON' => $this->identity(),
             'FF_EVENT' => 'pull_request_target', 'FF_REF' => 'refs/heads/main',
             'FF_ACTION' => 'closed', 'FF_MERGED' => 'true',
             'FF_HEAD_REPOSITORY' => 'php-fast-forward/code-standards',
@@ -48,14 +42,64 @@ final class WorkflowContextTest extends TestCase
         ];
         $script = $this->guard('repository-release-channels.yml', 'Require a trusted repository workflow');
         self::assertSame(0, $this->guardExitCode($script, $environment));
-        foreach (['FF_REPOSITORY' => 'foreign/repository', 'FF_RUNTIME_REPOSITORY' => 'foreign/tool',
-            'FF_RUNTIME_SHA' => 'v0', 'FF_EVENT' => 'pull_request', 'FF_ACTION' => 'opened',
+        foreach (['FF_REPOSITORY' => 'foreign/repository', 'FF_EVENT' => 'pull_request', 'FF_ACTION' => 'opened',
             'FF_MERGED' => 'false', 'FF_HEAD_REPOSITORY' => 'fork/tool',
             'FF_HEAD_BRANCH' => 'feature', 'FF_BASE_BRANCH' => 'other', 'FF_EXPECTED_SHA' => str_repeat('3', 40)] as $key => $value) {
             self::assertNotSame(0, $this->guardExitCode($script, [...$environment, $key => $value]), $key);
         }
         self::assertSame(0, $this->guardExitCode($script, [...$environment, 'FF_EVENT' => 'workflow_dispatch']));
         self::assertNotSame(0, $this->guardExitCode($script, [...$environment, 'FF_EVENT' => 'workflow_dispatch', 'FF_REF' => 'refs/heads/v0']));
+    }
+
+    /** Rejects malformed or ambiguous native identity protocols before emitting any checkout output. */
+    public function testIdentityProtocolFailsClosedWithoutOutput(): void
+    {
+        $invalid = [
+            'empty' => '', 'invalid JSON' => '{', 'missing identity' => '{}',
+            'null' => 'null', 'array' => '[]', 'string' => '"job"',
+            'multiple documents' => $this->identity() . "\n" . $this->identity(),
+            'missing SHA' => '{"workflow_repository":"php-fast-forward/code-standards"}',
+            'foreign repository' => $this->identity(['workflow_repository' => 'foreign/tool']),
+            'repository type' => $this->identity(['workflow_repository' => 1]),
+            'SHA type' => $this->identity(['workflow_sha' => 123]),
+            'SHA array' => $this->identity(['workflow_sha' => []]),
+            'moving ref' => $this->identity(['workflow_sha' => 'v0']),
+            'short SHA' => $this->identity(['workflow_sha' => str_repeat('a', 39)]),
+            'uppercase SHA' => $this->identity(['workflow_sha' => str_repeat('A', 40)]),
+            'SHA newline' => $this->identity(['workflow_sha' => str_repeat('a', 40) . "\n"]),
+            'output injection' => $this->identity(['workflow_sha' => "$(exit 0)\nrepository=foreign/tool"]),
+        ];
+
+        foreach ([
+            ['code-standards-check.yml', 'Reject privileged events and invalid refs', 'STANDARDS_JOB_JSON', [
+                'STANDARDS_EVENT' => 'pull_request', 'STANDARDS_BASE' => str_repeat('2', 40), 'STANDARDS_HEAD' => str_repeat('3', 40),
+            ]],
+            ['repository-release-channels.yml', 'Require a trusted repository workflow', 'FF_JOB_JSON', [
+                'FF_REPOSITORY' => 'php-fast-forward/code-standards', 'FF_EVENT' => 'workflow_dispatch', 'FF_REF' => 'refs/heads/main',
+            ]],
+        ] as [$file, $step, $variable, $environment]) {
+            $script = $this->guard($file, $step);
+            foreach ($invalid as $scenario => $json) {
+                $result = $this->guardResult($script, [...$environment, $variable => $json]);
+
+                self::assertNotSame(0, $result['status'], $file . ': ' . $scenario);
+                self::assertSame('', $result['output'], $file . ': ' . $scenario);
+            }
+        }
+    }
+
+    /**
+     * Encodes a synthetic native job context without installing or contacting a GitHub runner.
+     *
+     * @param array<string, mixed> $overrides Explicit malformed protocol fields for negative cases.
+     */
+    private function identity(array $overrides = []): string
+    {
+        return json_encode(array_replace([
+            'workflow_repository' => 'php-fast-forward/code-standards',
+            'workflow_sha' => str_repeat('1', 40),
+            'status' => 'success',
+        ], $overrides), JSON_THROW_ON_ERROR);
     }
 
     /** Extracts the named step's real run block, failing if its structural contract changes. */
@@ -88,6 +132,27 @@ final class WorkflowContextTest extends TestCase
     /** Runs synthetic event variables through a bounded shell with no network or write commands. */
     private function guardExitCode(string $script, array $environment): int
     {
-        return (new Process(['bash', '-euo', 'pipefail', '-c', $script], env: $environment, timeout: 10))->run();
+        return $this->guardResult($script, $environment)['status'];
+    }
+
+    /**
+     * Executes the actual guard with a private runner-output file.
+     *
+     * @param string $script The actual workflow step's executable body.
+     * @param array<string, string> $environment Synthetic job/event variables, never live credentials.
+     * @return array{status: int, output: string} Observable process result and emitted checkout outputs.
+     */
+    private function guardResult(string $script, array $environment): array
+    {
+        $output = tempnam(sys_get_temp_dir(), 'workflow-identity-');
+        self::assertIsString($output);
+
+        try {
+            $process = new Process(['bash', '-euo', 'pipefail', '-c', $script], env: [...$environment, 'GITHUB_OUTPUT' => $output], timeout: 10);
+
+            return ['status' => $process->run(), 'output' => file_get_contents($output)];
+        } finally {
+            unlink($output);
+        }
     }
 }
