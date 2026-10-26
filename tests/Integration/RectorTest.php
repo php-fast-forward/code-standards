@@ -36,10 +36,11 @@ final class RectorTest extends TestCase
         $config = $this->configuration('\\Rector\\Php54\\Rector\\Array_\\LongArrayToShortArrayRector', 70400);
         $before = $this->ownedBytes();
 
-        $preview = $this->cli();
+        $preview = $this->cli(environment: ['CI' => 'true', 'GITHUB_ACTIONS' => 'true']);
         self::assertSame(2, $preview->getExitCode(), $preview->getOutput() . $preview->getErrorOutput());
         self::assertSame($before, $this->ownedBytes());
-        self::assertDirectoryExists($this->directory . '/.cache');
+        // Native Rector chooses memory storage in CI even with a configured cache directory.
+        self::assertDirectoryDoesNotExist($this->directory . '/.cache');
         self::assertSame(0, $this->cli(['--apply'])->getExitCode());
         self::assertStringContainsString('[1, 2]', file_get_contents($this->directory . '/source.php'));
         $after = $this->ownedBytes();
@@ -127,10 +128,14 @@ final class RectorTest extends TestCase
         return $bytes;
     }
 
-    /** @param list<string> $options Additional explicit command options, never shell fragments. */
-    private function cli(array $options = []): Process
+    /**
+     * @param list<string> $options Additional explicit command options, never shell fragments.
+     *
+     * @param array<string, string> $environment Explicit fixture environment, inherited by the native child.
+     */
+    private function cli(array $options = [], array $environment = []): Process
     {
-        $process = new Process([PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', 'refactor', '--config=policy.php', ...$options], $this->directory, timeout: 90);
+        $process = new Process([PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', 'refactor', '--config=policy.php', ...$options], $this->directory, $environment, timeout: 90);
         $process->run();
 
         return $process;

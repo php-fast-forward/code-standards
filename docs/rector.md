@@ -41,6 +41,10 @@ PHP migration sets. Review any later `withPhpSets` selection separately. The
 command does not infer or overwrite target, rule, cache, bootstrap, parallelism
 or path choices. Configure generated caches separately from owned source, with
 a directory unique to the checkout. No consumer dependency/lock update occurs.
+Rector 2.4.2 defaults to memory cache storage when it detects CI, so setting a
+cache directory does not guarantee that directory will be created. Use native
+`withCache` backend options if persistent file storage is explicitly required;
+the command preserves Rector's selection.
 
 ```sh
 php bin/code-standards refactor --config=rector.php --directory=/project
