@@ -47,6 +47,7 @@
         "symplify/easy-coding-standard": "^13.0"
     },
     "require-dev": {
+        "llm/skills": "^1.15",
         "phpunit/phpunit": "^12.5",
         "symfony/filesystem": "^7.4 || ^8.0",
         "symfony/http-client": "^7.4 || ^8.0"
@@ -79,7 +80,8 @@
             "/.git",
             "/packaging-consumer",
             "/.github/ReleaseChannelUpdater.php",
-            "/.github/update-release-channels.php"
+            "/.github/update-release-channels.php",
+            "/.agents"
         ]
     },
     "scripts": {
@@ -94,7 +96,9 @@
     },
     "config": {
         "sort-packages": true,
-        "allow-plugins": false,
+        "allow-plugins": {
+            "llm/skills": true
+        },
         "platform": {
             "php": "8.3.0"
         }
