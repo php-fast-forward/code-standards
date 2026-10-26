@@ -10,9 +10,7 @@ use InvalidArgumentException;
 final readonly class ProjectScopeResolver
 {
     /** Injects the packaged preset location; resolution never discovers a competing consumer preset implicitly. */
-    public function __construct(private string $defaultConfig)
-    {
-    }
+    public function __construct(private string $defaultConfig) {}
 
     /**
      * Requires exactly one scan mode and existing project/config paths, without writing or loading config PHP.

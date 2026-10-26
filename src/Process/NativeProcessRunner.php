@@ -13,9 +13,7 @@ final class NativeProcessRunner implements ProcessRunner
     private const array ENVIRONMENT = ['GH_TOKEN' => false, 'GITHUB_TOKEN' => false, 'COMPOSER_AUTH' => false];
 
     /** @param \Closure(string,string):void|null $write Explicit output sink; null keeps this library transport silent. */
-    public function __construct(private readonly ?\Closure $write = null)
-    {
-    }
+    public function __construct(private readonly ?\Closure $write = null) {}
 
     /** Captures native output as bytes, including Git paths and Rector's JSON inventory. */
     public function capture(array $arguments, string $directory): string

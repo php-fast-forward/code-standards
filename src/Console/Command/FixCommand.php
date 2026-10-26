@@ -18,9 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final readonly class FixCommand
 {
     /** Injects the shared orchestration without parsing input or resolving a checkout. */
-    public function __construct(private StandardsOperation $operation)
-    {
-    }
+    public function __construct(private StandardsOperation $operation) {}
 
     /** Returns the exact fix status; callers must inspect the resulting source diff. */
     public function __invoke(
