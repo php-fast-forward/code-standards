@@ -9,7 +9,8 @@ public reusable workflow at ``@v0`` only after that released channel exists.
 A reviewed immutable commit is another adoption choice. GitHub refs and Composer
 constraints are different selections.
 
-The reusable accepts pull_request events on ephemeral hosted Ubuntu runners
+The consumer wrapper triggers the reusable through ``workflow_call`` on
+``pull_request`` events. The reusable runs on ephemeral hosted Ubuntu runners
 with read-only contents access. It checks out the exact consumer head and
 installs only the tool's locked dependencies with plugins/scripts disabled.
 It never runs the formatter in fix mode and accepts no consumer secrets.
