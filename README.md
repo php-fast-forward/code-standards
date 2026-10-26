@@ -92,6 +92,12 @@ ECS's configured paths do not expand the CLI's explicit selected file list.
 - Tracked `*.php` and PHP entrypoints under `bin/` are included.
 - `vendor`, `.git`, `.build`, `.dev-tools`, `backup`, `cache`, `public`,
   `resources`, `tmp`, `node_modules` directory components are excluded.
+- Git's tracked-file inventory is authoritative. Ignored untracked files are
+  excluded without translating `.gitignore` globs. Negated and nested ignore
+  rules remain Git's responsibility; untracked files are still outside `--all`.
+  Already tracked files, including force-added ignored files, remain checked
+  unless a manual directory-component exclusion above applies. `.git` is
+  excluded whether it is a metadata directory or a worktree metadata file.
 - Candidate PHP/bin symlink paths fail closed; unrelated non-PHP aliases are ignored.
   Spaces, tabs, newlines and leading dashes remain
   individual subprocess arguments; deleted files are omitted, renames use destinations.

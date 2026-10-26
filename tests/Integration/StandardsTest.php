@@ -441,6 +441,62 @@ PHP;
         self::assertSame($clean, file_get_contents($this->directory . '/source.php'));
     }
 
+    /** Git owns ignore semantics; forced tracked files remain source while untracked negations do not expand the contract. */
+    public function testGitIgnoresDoNotLeakUntrackedFilesOrHideForcedTrackedSource(): void
+    {
+        $source = "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n";
+        $this->put('.gitignore', "generated/*.php\n!generated/keep.php\n");
+        $this->put('nested/.gitignore', "*.php\n!keep.php\n");
+        $this->put('source.php', $source);
+        $this->put('generated/forced tracked.php', $source);
+        $this->put('vendor/manual.php', $source);
+        $this->git(['add', '-f', 'generated/forced tracked.php']);
+        $this->commit();
+
+        foreach (['generated/ignored.php', 'generated/keep.php', 'nested/ignored.php', 'nested/keep.php'] as $path) {
+            $this->put($path, '<?php broken source');
+        }
+
+        $selected = (new FileSelection(new NativeProcessRunner()))->select($this->directory, null, null);
+        $filtered = (new PhpFiles())->filter($this->directory, $selected);
+        self::assertSame([
+            $this->directory . '/generated/forced tracked.php',
+            $this->directory . '/source.php',
+        ], $filtered);
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertSame("generated/*.php\n!generated/keep.php\n", file_get_contents($this->directory . '/.gitignore'));
+    }
+
+    /** Linked worktrees use a .git file; a non-Git project still fails explicitly rather than silently passing. */
+    public function testLinkedWorktreeMetadataFileAndNonGitProjectScope(): void
+    {
+        $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $this->commit();
+        $linked = $this->directory . '/.build/linked';
+        $this->git(['worktree', 'add', '--detach', $linked, 'HEAD']);
+
+        self::assertFileExists($linked . '/.git');
+        self::assertFalse(is_dir($linked . '/.git'));
+        self::assertSame(0, $this->cli(['check', '--all', '--directory=' . $linked])->getExitCode());
+
+        $plain = $this->directory . '-plain';
+        mkdir($plain);
+        file_put_contents($plain . '/source.php', '<?php broken source');
+
+        try {
+            $identity = new Process(['git', 'rev-parse', '--is-inside-work-tree'], $plain);
+            $identity->run();
+            self::assertFalse($identity->isSuccessful(), 'The fixture must actually be outside Git.');
+
+            $result = $this->cli(['check', '--all', '--directory=' . $plain]);
+            self::assertSame(2, $result->getExitCode());
+            self::assertNotSame('', $result->getErrorOutput());
+        } finally {
+            unlink($plain . '/source.php');
+            rmdir($plain);
+        }
+    }
+
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */
     private function put(string $path, string $content): void
     {
