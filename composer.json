@@ -1,0 +1,107 @@
+{
+    "name": "fast-forward/code-standards",
+    "type": "library",
+    "description": "Focused PHP style presets, syntax checks and changed-file automation.",
+    "license": "MIT",
+    "keywords": [
+        "code-standards",
+        "code-style",
+        "ecs",
+        "fast-forward",
+        "php",
+        "symfony-console"
+    ],
+    "readme": "README.md",
+    "authors": [
+        {
+            "name": "Felipe Sayão Lobato Abreu",
+            "email": "github@mentordosnerds.com",
+            "homepage": "https://github.com/coisa",
+            "role": "Maintainer"
+        }
+    ],
+    "homepage": "https://github.com/php-fast-forward/code-standards",
+    "support": {
+        "issues": "https://github.com/php-fast-forward/code-standards/issues",
+        "source": "https://github.com/php-fast-forward/code-standards",
+        "docs": "https://github.com/php-fast-forward/code-standards#readme"
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/php-fast-forward"
+        },
+        {
+            "type": "custom",
+            "url": "https://www.paypal.com/donate/?business=JLDAF45XZ8D84"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "composer-runtime-api": "^2.2",
+        "container-interop/service-provider": "^0.4.1",
+        "fast-forward/container": "~1.10.1",
+        "psr/container": "^1.1 || ^2.0",
+        "symfony/console": "^7.4 || ^8.0",
+        "symfony/process": "^7.4 || ^8.0",
+        "symplify/easy-coding-standard": "^13.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5",
+        "symfony/filesystem": "^7.4 || ^8.0",
+        "symfony/http-client": "^7.4 || ^8.0"
+    },
+    "suggest": {
+        "llm/skills": "Optionally synchronize the bundled agent skill in consumer projects."
+    },
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "FastForward\\CodeStandards\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FastForward\\CodeStandards\\Tests\\": "tests/"
+        },
+        "exclude-from-classmap": [
+            "/tests/Fixtures/"
+        ]
+    },
+    "bin": [
+        "bin/code-standards"
+    ],
+    "archive": {
+        "exclude": [
+            "/vendor",
+            "/.build",
+            "/.phpunit.cache",
+            "/.git",
+            "/packaging-consumer",
+            "/.github/ReleaseChannelUpdater.php",
+            "/.github/update-release-channels.php"
+        ]
+    },
+    "scripts": {
+        "test": "phpunit",
+        "check": [
+            "@composer validate --strict",
+            "@composer check-platform-reqs",
+            "@test",
+            "@php bin/code-standards check --all"
+        ],
+        "fix": "@php bin/code-standards fix --all"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": false,
+        "platform": {
+            "php": "8.3.0"
+        }
+    },
+    "extra": {
+        "skills": {
+            "source": "resources/skills"
+        }
+    }
+}

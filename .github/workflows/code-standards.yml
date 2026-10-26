@@ -1,0 +1,21 @@
+name: 'Reusable: Code Standards'
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        description: Tool runtime PHP, at least 8.3; also used for syntax parsing.
+        default: '8.3'
+        type: string
+      config:
+        description: Optional consumer-relative ECS config.
+        default: ''
+        type: string
+permissions: {}
+jobs:
+  check:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/code-standards-check.yml
+    with:
+      php-version: ${{ inputs.php-version }}
+      config: ${{ inputs.config }}

@@ -1,0 +1,17 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FastForward\CodeStandards\Console\Application;
+use FastForward\CodeStandards\DependencyInjection\StandardsServiceProvider;
+use FastForward\Container\ContainerFactory;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
+$autoload = $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
+require $autoload;
+
+$output = new ConsoleOutput();
+$container = ContainerFactory::create(new StandardsServiceProvider(dirname($autoload), $output));
+
+exit($container->get(Application::class)->run(output: $output));

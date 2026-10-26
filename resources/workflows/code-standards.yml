@@ -1,0 +1,11 @@
+# Copy after the first real 0.x release has established the published v0 channel.
+name: PHP standards
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  standards:
+    uses: php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0
+    with:
+      php-version: '8.3'
