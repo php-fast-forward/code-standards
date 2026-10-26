@@ -3,7 +3,7 @@ Resolved legacy fixer comparison
 
 This reference extends issue #5 with actual fixer instances at fixed source and package references. It does not select a broader default profile or claim parity with the DevTools Rector/PHPDoc pipeline. The initial non-risky preset stays the default. No consumer migration follows from these results.
 
-The :download:`machine-readable inventory <reference/legacy-fixer-inventory.json>` contains every active fixer, fully resolved configuration including upstream defaults, priority, reported risky flag, package reference and source-file SHA-256. Paths are relative to source packages; no developer paths or credentials are included. This is recorded evidence, not executable configuration or a consumer DSL.
+The `machine-readable source inventory <https://github.com/php-fast-forward/code-standards/blob/main/docs/reference/legacy-fixer-inventory.json>`__ contains every active fixer, fully resolved configuration including upstream defaults, priority, reported risky flag, package reference and source-file SHA-256. Paths are relative to source packages; no developer paths or credentials are included. This is recorded evidence, not executable configuration or a consumer DSL.
 
 Reproduction boundaries
 -----------------------

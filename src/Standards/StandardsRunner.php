@@ -10,9 +10,7 @@ use FastForward\CodeStandards\Process\ProcessRunner;
 final class StandardsRunner
 {
     /** @param string $ecs Absolute ECS entrypoint from this tool's installation. */
-    public function __construct(private readonly ProcessRunner $process, private readonly string $ecs)
-    {
-    }
+    public function __construct(private readonly ProcessRunner $process, private readonly string $ecs) {}
 
     /**
      * Checks syntax before style; only explicit fix permits ECS source writes.

@@ -50,7 +50,7 @@ The default provider defines no extensions. This tool does not claim additional 
 Consequences and next gates
 ---------------------------
 
-This small slice validates syntax and PSR-12 style. Type analysis and semantic refactoring remain separate scoped issues with explicit opt-in and compatibility evidence. Changelog owns version PR/tag/release transactions; Code Standards does not duplicate its engine. Application tests, coverage and full reports remain outside this domain. No consumer migration follows implicitly from extraction.
+This small slice validates syntax and PER Coding Style 3.0. Type analysis and semantic refactoring remain separate scoped issues with explicit opt-in and compatibility evidence. Changelog owns version PR/tag/release transactions; Code Standards does not duplicate its engine. Application tests, coverage and full reports remain outside this domain. No consumer migration follows implicitly from extraction.
 
 Coordinated backlog boundaries
 ------------------------------

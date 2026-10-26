@@ -44,14 +44,26 @@ lookup. Use the published Container's provider contracts rather than a parallel
 registry. The architecture source documents the locked adapter and lazy,
 shared-service behavior. This package does not offer a custom DI DSL.
 
-Local docs build
-----------------
+Local documentation build
+-------------------------
 
-From an environment that already provides Sphinx:
+The guides use reStructuredText and the Fast Forward phpDocumentor template.
+Run the PHP DevTools documentation command from the project root, using an
+externally provisioned DevTools installation and template:
 
 .. code-block:: console
 
-   sphinx-build -n -W -b html docs /tmp/code-standards-docs
+   /path/to/dev-tools/bin/dev-tools reports:docs \
+       --source=docs \
+       --target=/tmp/code-standards-docs \
+       --cache-dir=/tmp/code-standards-phpdoc-cache \
+       --template=/path/to/phpdoc-bootstrap-template
 
-This is a local verification command, not a new deployment workflow. Coverage,
-application tests and documentation hosting remain separate responsibilities.
+The native command derives API sources from Composer autoload metadata and
+renders guides with phpDocumentor. DevTools and the template are documentation
+build tools; they are not runtime dependencies of this package. The output and
+cache paths must be writable and dedicated to this build. No Python renderer or
+project-specific documentation engine is required.
+
+This command builds local HTML. Hosting, coverage and application reports are
+separate operations; it does not configure a deployment workflow.

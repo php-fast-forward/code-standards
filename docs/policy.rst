@@ -47,12 +47,17 @@ The design reference is `DevTools #379 <https://github.com/php-fast-forward/dev-
 
 The explicit rule deltas above are intentional. Transitive upstream preset membership is dependency-version specific and fixed for contributor builds by ``composer.lock``. ECS 13.3.8 deprecates ``withPhpCsFixerSets()`` as a no-op. The initial implementation therefore uses the supported prepared PSR-12 set and proves violations with a real fixture instead of inheriting the legacy dynamic-set call blindly.
 
-The :doc:`resolved initial preset <resolved-preset>` records the compiled ECS rule list and effective options for the locked version. Golden fixtures make style, documentation/semantic preservation and second-pass stability reviewable. This is a first bounded part of #5, not equivalence with the legacy engines.
+The `resolved initial preset <resolved-preset.rst>`__ records the compiled ECS rule list and effective options for the locked version. Golden fixtures make style, documentation/semantic preservation and second-pass stability reviewable. This is a first bounded part of #5, not equivalence with the legacy engines.
 
-The :doc:`resolved legacy fixer comparison <legacy-fixer-comparison>` expands all three actual fixer profiles with normalized options, reported risk, priority and source hashes. It distinguishes bundled code from root Composer metadata and keeps the remaining full-pipeline decisions explicit.
+The `resolved legacy fixer comparison <legacy-fixer-comparison.rst>`__ expands all three actual fixer profiles with normalized options, reported risk, priority and source hashes. It distinguishes bundled code from root Composer metadata and keeps the remaining full-pipeline decisions explicit.
 
 This is not a rule-by-rule equivalence proof for the complete legacy ECS + Rector + PHPDoc stack. No consumers may be automatically migrated on the strength of this comparison. Before migration, expand resolved rule lists, exercise headers and overrides in golden fixtures and decide which semantic transformations belong in an opt-in profile. Optional Twig/magic-value policy, Composer metadata normalization and existing public DevTools APIs stay untouched.
 
 Static quality in this first increment means parseable PHP and formatting conformance. Type analysis, dead-code analysis and semantic refactors are not claimed. Application tests, coverage and complete reports remain outside this domain.
 
-The :doc:`PHPDoc comparison <phpdoc-comparison>` records actual custom Rector activation and the fixtures required before adopting a documentation policy. The :doc:`static-analysis evaluation <static-analysis-evaluation>` distinguishes candidate engines and their analysis scopes without deciding domain ownership.
+The `PHPDoc comparison <phpdoc-comparison.rst>`__ records actual custom Rector activation and the fixtures required before adopting a documentation policy. The `static-analysis evaluation <static-analysis-evaluation.rst>`__ distinguishes candidate engines and their analysis scopes without deciding domain ownership.
+
+Selected PER evolution
+----------------------
+
+The current preset replaces prepared PSR-12 with ECS 13.3.8's native non-risky PER Coding Style 3.0 set, then applies the owned preservation skips and explicit spacing overrides. It does not combine duplicate PSR/PER/common/docblock sets. The resolved snapshot records 63 rules:20 added and5 removed from the earlier 48-rule snapshot, with explicit option changes captured for review. PER supersedes several older checker choices; the two snapshots are not identical contracts. No migration or risky rule is enabled. See the resolved preset and PHPDoc golden fixture for information-preservation decisions. Earlier comparison tables above remain the initial extraction evidence rather than a claim of current parity.

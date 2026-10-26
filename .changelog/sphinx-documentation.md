@@ -4,4 +4,4 @@ type: patch
 pull_request: 29
 ---
 
-Add a Sphinx documentation entrypoint covering installation, commands, configuration, workflow trust and troubleshooting.
+Migrate the documentation to a single reStructuredText guide rendered by the existing PHP phpDocumentor tooling covering installation, commands, configuration, workflow trust and troubleshooting.
