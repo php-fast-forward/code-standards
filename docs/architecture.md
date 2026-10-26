@@ -144,7 +144,7 @@ check/fix are separate invocable entrypoints and transport authority is explicit
 
 ## Consequences and next gates
 
-This small slice validates syntax and PSR-12 style. Type analysis and semantic
+This small slice validates syntax and PER Coding Style 3.0. Type analysis and semantic
 refactoring remain separate scoped issues with explicit opt-in and compatibility
 evidence. Changelog owns version PR/tag/release transactions; Code Standards does
 not duplicate its engine. Application tests, coverage and full reports remain

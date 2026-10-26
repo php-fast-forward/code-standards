@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.1] - 2026-10-26
+## [0.2.0] - 2026-10-26
 
 ### Changed
 
 - Organize the README around verified installation, commands, configuration, integration and compatibility, with source-backed badges, API summary and contributor guidance. ([#34](https://github.com/php-fast-forward/code-standards/pull/34))
+- Use ECS 13.3's native non-risky PER Coding Style 3.0 set in place of PSR-12, preserving explicit command-attribute spacing and callback-last overrides. Keep destructive PHPDoc cleanup rules skipped so descriptions, inheritance markers, analysis types and intentional annotations survive formatting. Remove inactive conversion/global-import skips without implicitly enabling those rules. ([#40](https://github.com/php-fast-forward/code-standards/pull/40))
 
 ## [0.1.0] - 2026-10-26
 
@@ -79,5 +80,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
-[0.1.1]: https://github.com/php-fast-forward/code-standards/compare/v0.1.0...v0.1.1
+[0.2.0]: https://github.com/php-fast-forward/code-standards/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/php-fast-forward/code-standards/releases/tag/v0.1.0

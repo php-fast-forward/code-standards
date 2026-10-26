@@ -10,9 +10,7 @@ use FastForward\CodeStandards\Process\ProcessRunner;
 final class FileSelection
 {
     /** Injects the Git process boundary. */
-    public function __construct(private readonly ProcessRunner $process)
-    {
-    }
+    public function __construct(private readonly ProcessRunner $process) {}
 
     /**
      * Returns NUL-safe paths; config or dependency changes require a full scan.
@@ -75,6 +73,6 @@ final class FileSelection
     /** @return list<string> Decodes Git's binary path protocol without trimming file names. */
     private function paths(string $output): array
     {
-        return array_values(array_filter(explode("\0", $output), static fn (string $path): bool => '' !== $path));
+        return array_values(array_filter(explode("\0", $output), static fn(string $path): bool => '' !== $path));
     }
 }

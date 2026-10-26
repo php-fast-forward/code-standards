@@ -28,7 +28,7 @@ final class StandardsRunnerTest extends TestCase
     public function testBatchesAreBoundedAndEcsFailureIsNotSwallowed(): void
     {
         $process = new RecordingProcess(23);
-        $files = array_map(static fn (int $i): string => '/repo/' . $i . '.php', range(1, 101));
+        $files = array_map(static fn(int $i): string => '/repo/' . $i . '.php', range(1, 101));
         self::assertSame(23, (new StandardsRunner($process, '/tools/ecs'))->run('/repo', $files, '/config', false));
         self::assertCount(102, $process->commands);
         self::assertCount(57, $process->commands[101]);
@@ -68,8 +68,7 @@ final class RecordingProcess implements ProcessRunner
         private readonly int $ecsStatus = 0,
         private readonly int $syntaxStatus = 0,
         private readonly ?int $verificationStatus = null,
-    ) {
-    }
+    ) {}
 
     /** Fails if standards orchestration unexpectedly performs a capture operation. */
     public function capture(array $arguments, string $directory): string

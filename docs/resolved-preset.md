@@ -1,7 +1,7 @@
-# Resolved initial preset
+# Resolved PER preset
 
 Snapshot: ECS 13.3.8 from this repository’s Composer lock. The compiled container
-contains 48 distinct PHP-CS-Fixer rules, all reporting `isRisky() === false`.
+contains 63 distinct PHP-CS-Fixer rules, all reporting `isRisky() === false`.
 This is the actual Code Standards preset, not a resolved DevTools or CoiSA preset.
 
 The fixture `tests/Fixtures/preset-rules.json` records the installed ECS version
@@ -19,57 +19,72 @@ updating the fixture; do not regenerate it merely to silence a failure.
 
 | Rule | Explicit effective configuration |
 | --- | --- |
-| `binary_operator_spaces` | `default` |
+| `array_indentation` | `default` |
+| `array_syntax` | `default` |
+| `attribute_block_no_spaces` | `default` |
+| `binary_operator_spaces` | `{"default":"at_least_single_space"}` |
 | `blank_line_after_namespace` | `default` |
 | `blank_line_after_opening_tag` | `default` |
-| `braces_position` | `{"allow_single_line_empty_anonymous_classes":true}` |
-| `class_definition` | `default` |
+| `blank_line_between_import_groups` | `default` |
+| `blank_lines_before_namespace` | `default` |
+| `braces_position` | `{"allow_single_line_anonymous_functions":false,"allow_single_line_empty_anonymous_classes":true}` |
+| `cast_spaces` | `default` |
+| `class_definition` | `{"inline_constructor_arguments":false,"space_before_parenthesis":true}` |
+| `compact_nullable_type_declaration` | `default` |
 | `concat_space` | `{"spacing":"one"}` |
 | `constant_case` | `default` |
 | `control_structure_braces` | `default` |
 | `control_structure_continuation_position` | `default` |
-| `declare_equal_normalize` | `{"space":"none"}` |
-| `declare_parentheses` | `default` |
+| `declare_equal_normalize` | `default` |
 | `elseif` | `default` |
 | `encoding` | `default` |
 | `full_opening_tag` | `default` |
-| `function_declaration` | `default` |
+| `function_declaration` | `{"closure_fn_spacing":"none"}` |
 | `indentation_type` | `default` |
 | `line_ending` | `default` |
 | `lowercase_cast` | `default` |
 | `lowercase_keywords` | `default` |
+| `lowercase_static_reference` | `default` |
 | `method_argument_space` | `{"on_multiline":"ignore"}` |
-| `new_with_parentheses` | `default` |
+| `modifier_keywords` | `default` |
+| `new_with_parentheses` | `{"anonymous_class":false}` |
 | `no_blank_lines_after_class_opening` | `default` |
 | `no_break_comment` | `default` |
 | `no_closing_tag` | `default` |
-| `no_extra_blank_lines` | `{"tokens":["curly_brace_block"]}` |
+| `no_extra_blank_lines` | `{"tokens":["use"]}` |
 | `no_leading_import_slash` | `default` |
 | `no_multiple_statements_per_line` | `default` |
-| `no_singleline_whitespace_before_semicolons` | `default` |
+| `no_space_around_double_colon` | `default` |
 | `no_spaces_after_function_name` | `default` |
 | `no_trailing_whitespace` | `default` |
 | `no_trailing_whitespace_in_comment` | `default` |
-| `no_whitespace_before_comma_in_array` | `default` |
-| `ordered_imports` | `{"imports_order":["class","function","const"]}` |
+| `no_whitespace_in_blank_line` | `default` |
+| `nullable_type_declaration` | `default` |
+| `operator_linebreak` | `default` |
+| `ordered_class_elements` | `{"order":["use_trait"]}` |
+| `ordered_imports` | `{"imports_order":["class","function","const"],"sort_algorithm":"none"}` |
+| `ordered_types` | `{"null_adjustment":"always_last","sort_algorithm":"none"}` |
 | `phpdoc_align` | `{"align":"left"}` |
 | `return_type_declaration` | `default` |
 | `short_scalar_cast` | `default` |
 | `single_blank_line_at_eof` | `default` |
-| `single_class_element_per_statement` | `{"elements":["property"]}` |
+| `single_class_element_per_statement` | `default` |
+| `single_import_per_statement` | `{"group_to_single_imports":false}` |
 | `single_line_after_imports` | `default` |
-| `single_space_around_construct` | `default` |
+| `single_line_empty_body` | `default` |
+| `single_space_around_construct` | `{"constructs_followed_by_a_single_space":["abstract","as","case","catch","class","const","const_import","do","else","elseif","enum","final","finally","for","foreach","function","function_import","if","insteadof","interface","match","named_argument","namespace","new","private","protected","public","readonly","static","switch","trait","try","type_colon","use","use_lambda","while"],"constructs_preceded_by_a_single_space":["as","else","elseif","use_lambda"]}` |
+| `single_trait_insert_per_statement` | `default` |
 | `spaces_inside_parentheses` | `default` |
 | `statement_indentation` | `default` |
 | `switch_case_semicolon_to_colon` | `default` |
 | `switch_case_space` | `default` |
 | `ternary_operator_spaces` | `default` |
-| `unary_operator_spaces` | `default` |
-| `visibility_required` | `{"elements":["const","method","property"]}` |
-| `whitespace_after_comma_in_array` | `default` |
+| `trailing_comma_in_multiline` | `{"after_heredoc":true,"elements":["arguments","array_destructuring","arrays","match","parameters"]}` |
+| `types_spaces` | `default` |
+| `unary_operator_spaces` | `{"only_dec_inc":true}` |
 
-The six preservation skips and callback-last precedence remain declared in the
-preset. Some skipped rules are absent from this initial PSR-12 set; their absence
+The four preservation skips and callback-last precedence remain declared in the
+preset. The native PER set is ECS 13.3.8 `per-cs.php`, explicitly PER Coding Style 3.0 (not the moving PHP-CS-Fixer `@PER-CS` alias and not PER 3.1). Some skipped rules are absent from the PER set; their absence
 must not be presented as proof that broader profiles are safe. Native ECS builder
 `withSkip()` replaces the builder’s skip list, while configured rules of the same
 class use the last configuration. Consumers own their explicit overrides.
@@ -89,3 +104,31 @@ Reviewed policy update: the attributed-command spacing regression requires the
 native method_argument_space multiline policy to preserve deliberate blank
 lines. The old snapshot failed on exactly this one option after refreshing the
 base; only that reviewed configuration entry was updated. No risk flag changed.
+
+
+## PHPDoc preservation decision
+
+Keep `NoSuperfluousPhpdocTagsFixer`, `NoEmptyPhpdocFixer`,
+`PhpdocNoEmptyReturnFixer` and `GeneralPhpdocAnnotationRemoveFixer` skipped.
+The installed NoSuperfluous implementation removes redundant `@final` and
+`@abstract` annotations without checking descriptions; its `remove_inheritdoc`,
+unused/hidden-parameter and mixed options cannot protect that case. The installed
+empty-return implementation removes a void/null annotation by type even when
+it carries a description. General annotation removal deletes entire configured
+tags. No custom cleanup wrapper is introduced to work around these limitations.
+Redundant type-only PHPDoc therefore remains until selective preservation can
+be proved; preserving information takes precedence over blanket cleanup.
+
+`PhpdocToCommentFixer` and `GlobalNamespaceImportFixer` are no longer skipped,
+but neither belongs to the selected PER set: removing those skips does not
+implicitly activate either fixer. A consumer can explicitly select and configure
+them through the native builder. In particular, docblock-to-comment conversion
+changes analyzer/documentation semantics and is not silently enabled here.
+No broad common, docblock, Symfony, risky or migration set is added.
+
+The effective golden fixture preserves simple/multiline descriptions, inline
+and standalone inheritance markers, virtual parameters, list/shape/class-string
+types, explained unions and void/null returns, author/package/subpackage and
+PHPStan/Psalm tags, described final/abstract markers and the pre-return @var.
+Both fix idempotence and read-only check bytes are asserted by the real CLI.
+No visual IDE equivalence was established, so inheritdoc remains untouched.
