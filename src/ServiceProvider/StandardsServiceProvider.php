@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace FastForward\CodeStandards\DependencyInjection;
+namespace FastForward\CodeStandards\ServiceProvider;
 
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
 use FastForward\CodeStandards\Standards\StandardsRunner;
+use FastForward\Container\Factory\CallableFactory;
+use FastForward\Container\Factory\FactoryInterface;
+use FastForward\Container\Factory\InvokableFactory;
+use FastForward\Container\Factory\ServiceFactory;
 use Interop\Container\ServiceProviderInterface;
 use InvalidArgumentException;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
@@ -33,15 +36,16 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
         }
     }
 
-    /** @return array<string, callable(ContainerInterface):object> Lazy bindings; later aggregate-provider factories may replace them. */
+    /** @return array<string, FactoryInterface> Lazy native factories; later aggregate-provider bindings may replace them. */
     public function getFactories(): array
     {
         return [
-            OutputInterface::class => fn (): OutputInterface => $this->output,
-            ProcessRunner::class => fn (ContainerInterface $container): ProcessRunner => $this->process($container->get(OutputInterface::class)),
-            ProjectScopeResolver::class => static fn (): ProjectScopeResolver => new ProjectScopeResolver(dirname(__DIR__, 2) . '/config/ecs.php'),
-            StandardsRunner::class => fn (ContainerInterface $container): StandardsRunner => new StandardsRunner(
-                $container->get(ProcessRunner::class),
+            OutputInterface::class => new ServiceFactory($this->output),
+            ProcessRunner::class => new CallableFactory($this->process(...)),
+            ProjectScopeResolver::class => new InvokableFactory(ProjectScopeResolver::class, dirname(__DIR__, 2) . '/config/ecs.php'),
+            StandardsRunner::class => new InvokableFactory(
+                StandardsRunner::class,
+                ProcessRunner::class,
                 $this->vendorDirectory . '/symplify/easy-coding-standard/bin/ecs',
             ),
         ];
