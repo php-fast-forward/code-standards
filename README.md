@@ -1,6 +1,7 @@
 # Fast Forward Code Standards
 
 [![PHP](https://img.shields.io/badge/php-%5E8.3-777BB4?logo=php&logoColor=white)](composer.json)
+[![Composer Package](https://img.shields.io/badge/composer-fast--forward%2Fcode--standards-F28D1A?logo=composer&logoColor=white)](https://packagist.org/packages/fast-forward/code-standards)
 [![Tests](https://img.shields.io/github/actions/workflow/status/php-fast-forward/code-standards/repository-ci.yml?branch=main&label=tests)](https://github.com/php-fast-forward/code-standards/actions/workflows/repository-ci.yml)
 [![Docs](https://img.shields.io/badge/docs-source-38BDF8)](docs/architecture.md)
 [![License](https://img.shields.io/github/license/php-fast-forward/code-standards?color=64748B)](LICENSE)
@@ -20,6 +21,17 @@ style, not type correctness, application behavior or coverage.
 - An unprivileged reusable workflow and a portable consumption skill.
 
 ## 📦 Installation and requirements
+
+Install the published development tool in your Git project:
+
+```sh
+composer require --dev fast-forward/code-standards:^0.1 --no-plugins --no-scripts
+vendor/bin/code-standards check --all
+```
+
+The verified first release is `v0.1.0`; select a compatible version deliberately.
+The separate GitHub `v0` workflow channel can advance across development minors.
+
 
 Requires PHP 8.3+, Git and Composer runtime API 2.2+ for installed binary proxies.
 Composer resolves the tool runtime independently from
@@ -73,11 +85,11 @@ conflicting scan modes and unsupported arguments are rejected explicitly.
 
 ## ⚙️ Configuration and extension
 
-Once a reviewed version/ref is available, install `fast-forward/code-standards`
-as development tooling. No release of this package is assumed by these examples.
-To trial before publication, use a Composer path repository pointing at this
-checkout, require `*@dev`, and disable plugins/scripts. Production adoption must
-select the reviewed Composer version and workflow/runtime refs together.
+Install `fast-forward/code-standards` as development tooling. Select the reviewed
+Composer version and workflow/runtime refs independently and deliberately. For
+an isolated source trial, a local Composer path repository may require `*@dev`
+with plugins/scripts disabled; that constraint describes the checkout, not a
+published release.
 
 ```php
 <?php
@@ -204,6 +216,7 @@ changes or consumer rollout.
 
 - [Repository](https://github.com/php-fast-forward/code-standards)
 - [Issues](https://github.com/php-fast-forward/code-standards/issues)
+- [Packagist](https://packagist.org/packages/fast-forward/code-standards)
 - [Composer package metadata](composer.json)
 - [Automation and consumer refs](docs/automation.md)
 - [Policy and differences](docs/policy.md)
