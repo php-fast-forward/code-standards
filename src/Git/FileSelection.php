@@ -42,7 +42,7 @@ final class FileSelection
 
         // No shell, newline parsing or rename-source parsing. Deleted paths are never passed to tools.
         $allChanges = $this->paths($this->process->capture([
-            'git', 'diff', '--name-only', '-z', $base . '...' . $head, '--',
+            'git', 'diff', '--no-renames', '--name-only', '-z', $base . '...' . $head, '--',
         ], $directory));
         foreach ($allChanges as $path) {
             if ((null !== $config && $directory . '/' . $path === $config)

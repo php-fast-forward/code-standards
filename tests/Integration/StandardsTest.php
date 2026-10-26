@@ -489,7 +489,7 @@ PHP;
         $selection = new FileSelection(new NativeProcessRunner());
 
         foreach (['.gitignore', 'nested/.gitignore'] as $policy) {
-            foreach (['modify', 'delete'] as $operation) {
+            foreach (['modify', 'delete', 'rename'] as $operation) {
                 $ignored = dirname($policy) . '/blocked.php';
                 $ignored = str_starts_with($ignored, './') ? substr($ignored, 2) : $ignored;
                 $this->put($policy, "blocked.php\n");
@@ -500,6 +500,8 @@ PHP;
 
                 if ('delete' === $operation) {
                     $this->git(['rm', $policy]);
+                } elseif ('rename' === $operation) {
+                    $this->git(['mv', $policy, $policy . '.archive']);
                 } else {
                     $this->put($policy, "different.php\n");
                 }
