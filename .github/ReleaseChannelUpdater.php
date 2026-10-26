@@ -21,8 +21,7 @@ final readonly class ReleaseChannelUpdater
      */
     public function __construct(
         private HttpClientInterface $http,
-    ) {
-    }
+    ) {}
 
     /**
      * Advances only the selected major branch after proving published source and its old commit.
@@ -388,7 +387,7 @@ final readonly class ReleaseChannelUpdater
                 }
                 usort(
                     $releases,
-                    static fn (array $left, array $right): int => self::compare(self::version(
+                    static fn(array $left, array $right): int => self::compare(self::version(
                         $right['tag_name'],
                     ), self::version(
                         $left['tag_name'],

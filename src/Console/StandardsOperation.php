@@ -23,8 +23,7 @@ final readonly class StandardsOperation
         private FileSelection $selection,
         private PhpFiles $phpFiles,
         private StandardsRunner $standards,
-    ) {
-    }
+    ) {}
 
     /**
      * Resolves and presents one selection, preserving tool status and rendering controlled errors to stderr.
