@@ -1,0 +1,27 @@
+* text=auto
+*.php text eol=lf
+/bin/code-standards text eol=lf
+
+# Local state and synchronized copies never belong to package distributions.
+/.git export-ignore
+/vendor/ export-ignore
+/.agents/ export-ignore
+/.build/ export-ignore
+/.phpunit.cache/ export-ignore
+/packaging-consumer/ export-ignore
+
+# Contributor-only configuration and test infrastructure.
+/tests/ export-ignore
+/.github/workflows/ export-ignore
+/.github/ReleaseChannelUpdater.php export-ignore
+/.github/update-release-channels.php export-ignore
+/.github/update-release-channels.md export-ignore
+/AGENTS.md export-ignore
+/skills.json export-ignore
+/phpunit.xml export-ignore
+/.editorconfig export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+/.changelog/ export-ignore
+
+# Keep src/, bin/, config/, resources/, composer.lock, README and its Dash image.

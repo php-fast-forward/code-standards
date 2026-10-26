@@ -72,18 +72,6 @@
     "bin": [
         "bin/code-standards"
     ],
-    "archive": {
-        "exclude": [
-            "/vendor",
-            "/.build",
-            "/.phpunit.cache",
-            "/.git",
-            "/packaging-consumer",
-            "/.github/ReleaseChannelUpdater.php",
-            "/.github/update-release-channels.php",
-            "/.agents"
-        ]
-    },
     "scripts": {
         "test": "phpunit",
         "check": [
