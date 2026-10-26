@@ -1,6 +1,7 @@
 ---
 category: added
 type: minor
+pull_request: 25
 ---
 
 Complete package metadata and portable skill discovery, declare direct container
