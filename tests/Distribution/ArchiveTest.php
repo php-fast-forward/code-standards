@@ -27,8 +27,16 @@ final class ArchiveTest extends TestCase
             if ('' === $path || !is_file($root . '/' . $path)) {
                 continue;
             }
-            $this->put($path, file_get_contents($root . '/' . $path));
+            $content = file_get_contents($root . '/' . $path);
+            self::assertIsString($content);
+            $this->put($path, $content);
         }
+        $readme = file_get_contents($this->directory . '/README.md');
+        self::assertIsString($readme);
+        $this->put('README.md', str_replace("\n", "\r\n", str_replace("\r\n", "\n", $readme)));
+        $crlfReadme = file_get_contents($this->directory . '/README.md');
+        self::assertIsString($crlfReadme);
+        self::assertStringContainsString("\r\n", $crlfReadme);
         foreach (['vendor/local.php', '.agents/skills/copied/SKILL.md', '.build/local.php', '.phpunit.cache/local.php'] as $path) {
             $this->put($path, 'fixture-local-state');
         }
@@ -37,6 +45,11 @@ final class ArchiveTest extends TestCase
         $this->execute(['git', 'config', 'user.email', 'fixture@example.invalid']);
         $this->execute(['git', 'add', '-f', '--all']);
         $this->execute(['git', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-m', 'fixture']);
+        self::assertStringNotContainsString("\r\n", $this->execute(['git', 'show', 'HEAD:README.md']));
+        $this->materializeCommittedFiles();
+        $normalizedReadme = file_get_contents($this->directory . '/README.md');
+        self::assertIsString($normalizedReadme);
+        self::assertStringNotContainsString("\r\n", $normalizedReadme);
     }
 
     /** Removes only the exclusively owned fixture and its generated archives. */
@@ -74,6 +87,20 @@ final class ArchiveTest extends TestCase
             mkdir(dirname($target), recursive: true);
         }
         file_put_contents($target, $content);
+    }
+
+    /** Materializes normalized index bytes after removing only the fixture's copied files. */
+    private function materializeCommittedFiles(): void
+    {
+        $paths = explode("\0", $this->execute(['git', 'ls-files', '-z']));
+        foreach ($paths as $path) {
+            if ('' === $path) {
+                continue;
+            }
+            unlink($this->directory . '/' . $path);
+        }
+
+        $this->execute(['git', '-c', 'core.autocrlf=false', '-c', 'core.eol=lf', 'checkout-index', '--all', '--force']);
     }
 
     /**
