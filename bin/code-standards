@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 use FastForward\CodeStandards\Console\Application;
-use FastForward\CodeStandards\DependencyInjection\StandardsServiceProvider;
+use FastForward\CodeStandards\ServiceProvider\StandardsServiceProvider;
 use FastForward\Container\ContainerFactory;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
