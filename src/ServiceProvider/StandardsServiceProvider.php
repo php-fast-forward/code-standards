@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\ServiceProvider;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
+use FastForward\CodeStandards\Refactoring\RectorRunner;
 use FastForward\CodeStandards\Standards\StandardsRunner;
 use FastForward\Container\Factory\CallableFactory;
 use FastForward\Container\Factory\FactoryInterface;
@@ -47,6 +48,11 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
                 StandardsRunner::class,
                 ProcessRunner::class,
                 $this->vendorDirectory . '/symplify/easy-coding-standard/bin/ecs',
+            ),
+            RectorRunner::class => new InvokableFactory(
+                RectorRunner::class,
+                ProcessRunner::class,
+                $this->vendorDirectory . '/rector/rector/bin/rector',
             ),
         ];
     }

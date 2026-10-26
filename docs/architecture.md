@@ -33,8 +33,10 @@ explicit compatibility tests or a real process boundary. A separate Composer
 graph alone must never be described as runtime isolation.
 Analyzer/autoload fixtures must prove that the code under analysis comes from
 the consumer checkout, rather than another copy installed inside the tool.
-This initial syntax parser executes no application autoload; future PHPUnit,
-Rector and type-analysis adapters must add those compatibility tests.
+This initial syntax parser executes no application autoload; future PHPUnit and
+type-analysis adapters must add those compatibility tests. The separate Rector
+command's executable configuration and child-autoload limits are documented in
+[the native refactoring contract](rector.md).
 
 ## Bootstrap and compatibility
 

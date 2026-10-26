@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\Tests\ServiceProvider;
 use FastForward\CodeStandards\Console\Application;
 use FastForward\CodeStandards\Console\Command\CheckCommand;
 use FastForward\CodeStandards\Console\Command\FixCommand;
+use FastForward\CodeStandards\Console\Command\RefactorCommand;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\ServiceProvider\StandardsServiceProvider;
@@ -49,6 +50,8 @@ final class CompositionTest extends TestCase
             self::assertInstanceOf(FixCommand::class, $container->get(FixCommand::class));
             self::assertFalse(is_subclass_of(CheckCommand::class, Command::class));
             self::assertFalse(is_subclass_of(FixCommand::class, Command::class));
+            self::assertInstanceOf(RefactorCommand::class, $container->get(RefactorCommand::class));
+            self::assertFalse(is_subclass_of(RefactorCommand::class, Command::class));
 
             $tester = new ApplicationTester($application);
             self::assertSame(23, $tester->run(['command' => $name, '--all' => true, '--directory' => dirname(__DIR__, 2)]));

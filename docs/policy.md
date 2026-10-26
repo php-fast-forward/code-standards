@@ -57,6 +57,10 @@ Static quality in this first increment means parseable PHP and formatting
 conformance. Type analysis, dead-code analysis and semantic refactors are not
 claimed. Application tests, coverage and complete reports remain outside this domain.
 
+The separately opted-in [native Rector command](rector.md) is a future minor
+increment. It selects no legacy semantic profile and is never invoked by
+formatting check/fix; the consumer explicitly owns rules, target PHP and caches.
+
 The [PHPDoc comparison](phpdoc-comparison.md) records actual custom Rector
 activation and the fixtures required before adopting a documentation policy.
 The [static-analysis evaluation](static-analysis-evaluation.md) distinguishes

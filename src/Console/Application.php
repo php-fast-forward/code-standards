@@ -6,6 +6,7 @@ namespace FastForward\CodeStandards\Console;
 
 use FastForward\CodeStandards\Console\Command\CheckCommand;
 use FastForward\CodeStandards\Console\Command\FixCommand;
+use FastForward\CodeStandards\Console\Command\RefactorCommand;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\ExceptionInterface;
@@ -16,13 +17,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 /** Native Symfony application; standard binding errors retain the CLI's invalid-input status. */
 final class Application extends SymfonyApplication
 {
-    /** Registers the two explicitly composed operations without resolving project state or executing tools. */
-    public function __construct(CheckCommand $check, FixCommand $fix)
+    /** Registers independent operations without resolving project state or executing tools. */
+    public function __construct(CheckCommand $check, FixCommand $fix, RefactorCommand $refactor)
     {
         parent::__construct('Fast Forward Code Standards');
 
         $this->addCommand($check);
         $this->addCommand($fix);
+        $this->addCommand($refactor);
         $this->setAutoExit(false);
     }
 

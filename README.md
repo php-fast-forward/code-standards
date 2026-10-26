@@ -104,5 +104,8 @@ See [policy and differences](docs/policy.md), [workflow/ref adoption](docs/autom
 and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
 The [architecture decision](docs/architecture.md) defines library/tool dependency
 directions and CPX/autoload limits.
-Rector/custom PHPDoc transformations and deeper static analysis are separate,
-unimplemented increments; this package does not assert extraction parity yet.
+The separate opt-in [`refactor` command](docs/rector.md) previews an explicit
+native Rector configuration and requires `--apply` for semantic writes. It is
+never invoked by formatting `check` or `fix`; target PHP and cache remain native
+consumer configuration decisions. Custom PHPDoc transformations and deeper
+static analysis remain separate; no DevTools extraction parity is asserted.
