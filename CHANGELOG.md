@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-10-26
+
+### Changed
+
+- Organize the README around verified installation, commands, configuration, integration and compatibility, with source-backed badges, API summary and contributor guidance. ([#34](https://github.com/php-fast-forward/code-standards/pull/34))
+
 ## [0.1.0] - 2026-10-26
 
 ### Added
@@ -73,4 +79,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.1.1]: https://github.com/php-fast-forward/code-standards/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/php-fast-forward/code-standards/releases/tag/v0.1.0
