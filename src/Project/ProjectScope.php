@@ -20,6 +20,5 @@ final readonly class ProjectScope
         public string $config,
         public ?string $base,
         public ?string $head,
-    ) {
-    }
+    ) {}
 }

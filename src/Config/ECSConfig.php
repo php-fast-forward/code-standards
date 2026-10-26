@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Config;
 
 use PhpCsFixer\Fixer\FunctionNotation\MethodArgumentSpaceFixer;
-use PhpCsFixer\Fixer\Import\GlobalNamespaceImportFixer;
 use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
 use PhpCsFixer\Fixer\Phpdoc\NoEmptyPhpdocFixer;
 use PhpCsFixer\Fixer\Phpdoc\NoSuperfluousPhpdocTagsFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocAlignFixer;
 use PhpCsFixer\Fixer\Phpdoc\PhpdocNoEmptyReturnFixer;
-use PhpCsFixer\Fixer\Phpdoc\PhpdocToCommentFixer;
 use RuntimeException;
 use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 
-/** A deliberately non-risky PSR-12 starting point for extraction. */
+/** A deliberately non-risky PER Coding Style 3.0 preset for extraction. */
 final class ECSConfig
 {
     /**
@@ -28,13 +26,11 @@ final class ECSConfig
     public static function configure(?callable $customize = null): ECSConfigBuilder
     {
         $config = (new ECSConfigBuilder())
-            ->withPreparedSets(psr12: true)
+            ->withPreparedSets(perCs: true)
             ->withSkip([
-                PhpdocToCommentFixer::class,
                 NoSuperfluousPhpdocTagsFixer::class,
                 NoEmptyPhpdocFixer::class,
                 PhpdocNoEmptyReturnFixer::class,
-                GlobalNamespaceImportFixer::class,
                 GeneralPhpdocAnnotationRemoveFixer::class,
             ])
             ->withConfiguredRule(MethodArgumentSpaceFixer::class, ['on_multiline' => 'ignore'])

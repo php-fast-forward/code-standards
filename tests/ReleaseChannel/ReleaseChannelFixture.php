@@ -91,7 +91,7 @@ final class ReleaseChannelFixture
             $pipes,
             $this->directory,
             $environment,
-            ['bypass_shell' => true]
+            ['bypass_shell' => true],
         );
         if (!is_resource($process)) {
             throw new RuntimeException('Could not start disposable Git.');

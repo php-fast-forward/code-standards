@@ -2,9 +2,26 @@
     "ecs_version": "13.3.8",
     "ecs_reference": "0564c0b9b807f1740bf0f2cc965ab51551f4dc3b",
     "rules": {
+        "array_indentation": {
+            "class": "PhpCsFixer\\Fixer\\Whitespace\\ArrayIndentationFixer",
+            "configuration": [],
+            "risky": false
+        },
+        "array_syntax": {
+            "class": "PhpCsFixer\\Fixer\\ArrayNotation\\ArraySyntaxFixer",
+            "configuration": [],
+            "risky": false
+        },
+        "attribute_block_no_spaces": {
+            "class": "PhpCsFixer\\Fixer\\AttributeNotation\\AttributeBlockNoSpacesFixer",
+            "configuration": [],
+            "risky": false
+        },
         "binary_operator_spaces": {
             "class": "PhpCsFixer\\Fixer\\Operator\\BinaryOperatorSpacesFixer",
-            "configuration": [],
+            "configuration": {
+                "default": "at_least_single_space"
+            },
             "risky": false
         },
         "blank_line_after_namespace": {
@@ -17,15 +34,39 @@
             "configuration": [],
             "risky": false
         },
+        "blank_line_between_import_groups": {
+            "class": "PhpCsFixer\\Fixer\\Whitespace\\BlankLineBetweenImportGroupsFixer",
+            "configuration": [],
+            "risky": false
+        },
+        "blank_lines_before_namespace": {
+            "class": "PhpCsFixer\\Fixer\\NamespaceNotation\\BlankLinesBeforeNamespaceFixer",
+            "configuration": [],
+            "risky": false
+        },
         "braces_position": {
             "class": "PhpCsFixer\\Fixer\\Basic\\BracesPositionFixer",
             "configuration": {
+                "allow_single_line_anonymous_functions": false,
                 "allow_single_line_empty_anonymous_classes": true
             },
             "risky": false
         },
+        "cast_spaces": {
+            "class": "PhpCsFixer\\Fixer\\CastNotation\\CastSpacesFixer",
+            "configuration": [],
+            "risky": false
+        },
         "class_definition": {
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\ClassDefinitionFixer",
+            "configuration": {
+                "inline_constructor_arguments": false,
+                "space_before_parenthesis": true
+            },
+            "risky": false
+        },
+        "compact_nullable_type_declaration": {
+            "class": "PhpCsFixer\\Fixer\\Whitespace\\CompactNullableTypeDeclarationFixer",
             "configuration": [],
             "risky": false
         },
@@ -53,13 +94,6 @@
         },
         "declare_equal_normalize": {
             "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\DeclareEqualNormalizeFixer",
-            "configuration": {
-                "space": "none"
-            },
-            "risky": false
-        },
-        "declare_parentheses": {
-            "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\DeclareParenthesesFixer",
             "configuration": [],
             "risky": false
         },
@@ -80,7 +114,9 @@
         },
         "function_declaration": {
             "class": "PhpCsFixer\\Fixer\\FunctionNotation\\FunctionDeclarationFixer",
-            "configuration": [],
+            "configuration": {
+                "closure_fn_spacing": "none"
+            },
             "risky": false
         },
         "indentation_type": {
@@ -103,6 +139,11 @@
             "configuration": [],
             "risky": false
         },
+        "lowercase_static_reference": {
+            "class": "PhpCsFixer\\Fixer\\Casing\\LowercaseStaticReferenceFixer",
+            "configuration": [],
+            "risky": false
+        },
         "method_argument_space": {
             "class": "PhpCsFixer\\Fixer\\FunctionNotation\\MethodArgumentSpaceFixer",
             "configuration": {
@@ -110,9 +151,16 @@
             },
             "risky": false
         },
+        "modifier_keywords": {
+            "class": "PhpCsFixer\\Fixer\\ClassNotation\\ModifierKeywordsFixer",
+            "configuration": [],
+            "risky": false
+        },
         "new_with_parentheses": {
             "class": "PhpCsFixer\\Fixer\\Operator\\NewWithParenthesesFixer",
-            "configuration": [],
+            "configuration": {
+                "anonymous_class": false
+            },
             "risky": false
         },
         "no_blank_lines_after_class_opening": {
@@ -134,7 +182,7 @@
             "class": "PhpCsFixer\\Fixer\\Whitespace\\NoExtraBlankLinesFixer",
             "configuration": {
                 "tokens": [
-                    "curly_brace_block"
+                    "use"
                 ]
             },
             "risky": false
@@ -149,8 +197,8 @@
             "configuration": [],
             "risky": false
         },
-        "no_singleline_whitespace_before_semicolons": {
-            "class": "PhpCsFixer\\Fixer\\Semicolon\\NoSinglelineWhitespaceBeforeSemicolonsFixer",
+        "no_space_around_double_colon": {
+            "class": "PhpCsFixer\\Fixer\\Operator\\NoSpaceAroundDoubleColonFixer",
             "configuration": [],
             "risky": false
         },
@@ -169,9 +217,28 @@
             "configuration": [],
             "risky": false
         },
-        "no_whitespace_before_comma_in_array": {
-            "class": "PhpCsFixer\\Fixer\\ArrayNotation\\NoWhitespaceBeforeCommaInArrayFixer",
+        "no_whitespace_in_blank_line": {
+            "class": "PhpCsFixer\\Fixer\\Whitespace\\NoWhitespaceInBlankLineFixer",
             "configuration": [],
+            "risky": false
+        },
+        "nullable_type_declaration": {
+            "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\NullableTypeDeclarationFixer",
+            "configuration": [],
+            "risky": false
+        },
+        "operator_linebreak": {
+            "class": "PhpCsFixer\\Fixer\\Operator\\OperatorLinebreakFixer",
+            "configuration": [],
+            "risky": false
+        },
+        "ordered_class_elements": {
+            "class": "PhpCsFixer\\Fixer\\ClassNotation\\OrderedClassElementsFixer",
+            "configuration": {
+                "order": [
+                    "use_trait"
+                ]
+            },
             "risky": false
         },
         "ordered_imports": {
@@ -181,7 +248,16 @@
                     "class",
                     "function",
                     "const"
-                ]
+                ],
+                "sort_algorithm": "none"
+            },
+            "risky": false
+        },
+        "ordered_types": {
+            "class": "PhpCsFixer\\Fixer\\ClassNotation\\OrderedTypesFixer",
+            "configuration": {
+                "null_adjustment": "always_last",
+                "sort_algorithm": "none"
             },
             "risky": false
         },
@@ -209,10 +285,13 @@
         },
         "single_class_element_per_statement": {
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\SingleClassElementPerStatementFixer",
+            "configuration": [],
+            "risky": false
+        },
+        "single_import_per_statement": {
+            "class": "PhpCsFixer\\Fixer\\Import\\SingleImportPerStatementFixer",
             "configuration": {
-                "elements": [
-                    "property"
-                ]
+                "group_to_single_imports": false
             },
             "risky": false
         },
@@ -221,8 +300,63 @@
             "configuration": [],
             "risky": false
         },
+        "single_line_empty_body": {
+            "class": "PhpCsFixer\\Fixer\\Basic\\SingleLineEmptyBodyFixer",
+            "configuration": [],
+            "risky": false
+        },
         "single_space_around_construct": {
             "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\SingleSpaceAroundConstructFixer",
+            "configuration": {
+                "constructs_followed_by_a_single_space": [
+                    "abstract",
+                    "as",
+                    "case",
+                    "catch",
+                    "class",
+                    "const",
+                    "const_import",
+                    "do",
+                    "else",
+                    "elseif",
+                    "enum",
+                    "final",
+                    "finally",
+                    "for",
+                    "foreach",
+                    "function",
+                    "function_import",
+                    "if",
+                    "insteadof",
+                    "interface",
+                    "match",
+                    "named_argument",
+                    "namespace",
+                    "new",
+                    "private",
+                    "protected",
+                    "public",
+                    "readonly",
+                    "static",
+                    "switch",
+                    "trait",
+                    "try",
+                    "type_colon",
+                    "use",
+                    "use_lambda",
+                    "while"
+                ],
+                "constructs_preceded_by_a_single_space": [
+                    "as",
+                    "else",
+                    "elseif",
+                    "use_lambda"
+                ]
+            },
+            "risky": false
+        },
+        "single_trait_insert_per_statement": {
+            "class": "PhpCsFixer\\Fixer\\ClassNotation\\SingleTraitInsertPerStatementFixer",
             "configuration": [],
             "risky": false
         },
@@ -251,25 +385,30 @@
             "configuration": [],
             "risky": false
         },
-        "unary_operator_spaces": {
-            "class": "PhpCsFixer\\Fixer\\Operator\\UnaryOperatorSpacesFixer",
-            "configuration": [],
-            "risky": false
-        },
-        "visibility_required": {
-            "class": "PhpCsFixer\\Fixer\\ClassNotation\\VisibilityRequiredFixer",
+        "trailing_comma_in_multiline": {
+            "class": "PhpCsFixer\\Fixer\\ControlStructure\\TrailingCommaInMultilineFixer",
             "configuration": {
+                "after_heredoc": true,
                 "elements": [
-                    "const",
-                    "method",
-                    "property"
+                    "arguments",
+                    "array_destructuring",
+                    "arrays",
+                    "match",
+                    "parameters"
                 ]
             },
             "risky": false
         },
-        "whitespace_after_comma_in_array": {
-            "class": "PhpCsFixer\\Fixer\\ArrayNotation\\WhitespaceAfterCommaInArrayFixer",
+        "types_spaces": {
+            "class": "PhpCsFixer\\Fixer\\Whitespace\\TypesSpacesFixer",
             "configuration": [],
+            "risky": false
+        },
+        "unary_operator_spaces": {
+            "class": "PhpCsFixer\\Fixer\\Operator\\UnaryOperatorSpacesFixer",
+            "configuration": {
+                "only_dec_inc": true
+            },
             "risky": false
         }
     }
