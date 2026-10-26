@@ -35,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   PHPDoc preservation and explicit fix idempotence contracts.
 
   ([#7](https://github.com/php-fast-forward/code-standards/pull/7))
+- Place the tool's StandardsServiceProvider and composition tests in the
+  ServiceProvider namespace, matching the provider's responsibility before the
+  first publication. Third-party dependency-injection APIs remain unchanged.
+  Use the published Container factories for lazy service bindings, preserving
+  native autowiring, explicit scalar inputs and consumer overrides.
+
+  ([#28](https://github.com/php-fast-forward/code-standards/pull/28))
 - Documents the legacy PHPDoc rule activation and future analyzer boundaries,
   including native whole-project PHPStan scope, without enabling new policies.
 

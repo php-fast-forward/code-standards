@@ -68,6 +68,14 @@ only the process/output interfaces and services needing installation/config
 paths. The binary supplies the actual vendor directory and terminal output;
 there are no hidden construction defaults or service lookups inside domain
 services. The container is used only at this composition boundary.
+The tool-owned provider lives in `ServiceProvider/StandardsServiceProvider`,
+matching its responsibility and class suffix. Its composition tests mirror that
+namespace. Third-party dependency-injection namespaces retain their upstream names.
+Bindings use the published Container 1.10.1 factories: `ServiceFactory` retains
+the supplied output instance, `InvokableFactory` constructs services with explicit
+installation arguments and service IDs, and `CallableFactory` resolves the typed
+output collaborator for the process adapter. Concrete application services still
+use autowiring. No unpublished Container behavior or parallel factory layer is needed.
 Project-scope validation, Git selection, PHP filtering and tool execution have
 separate responsibilities. The process transport receives its output sink;
 reusable services do not write to global standard-output handles.

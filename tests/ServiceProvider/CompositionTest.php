@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace FastForward\CodeStandards\Tests\DependencyInjection;
+namespace FastForward\CodeStandards\Tests\ServiceProvider;
 
 use FastForward\CodeStandards\Console\Application;
 use FastForward\CodeStandards\Console\Command\CheckCommand;
 use FastForward\CodeStandards\Console\Command\FixCommand;
-use FastForward\CodeStandards\DependencyInjection\StandardsServiceProvider;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
+use FastForward\CodeStandards\ServiceProvider\StandardsServiceProvider;
 use FastForward\Container\ContainerFactory;
 use FastForward\Container\ServiceProvider\AggregateServiceProvider;
 use FastForward\Container\ServiceProvider\ArrayServiceProvider;
