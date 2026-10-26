@@ -1,6 +1,7 @@
 ---
 category: added
 type: minor
+pull_request: 7
 ---
 
 Introduces standalone non-risky ECS style configuration, explicit check/fix CLI,

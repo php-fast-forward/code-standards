@@ -1,6 +1,7 @@
 ---
 category: changed
 type: minor
+pull_request: 28
 ---
 
 Place the tool's StandardsServiceProvider and composition tests in the
