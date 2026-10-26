@@ -299,7 +299,7 @@ final class StandardsTest extends TestCase
         $fixtures = dirname(__DIR__) . '/Fixtures/';
         $original = [];
 
-        foreach (['style', 'preservation'] as $name) {
+        foreach (['style', 'preservation', 'documentation'] as $name) {
             $original[$name] = file_get_contents($fixtures . $name . '.before.php.inc');
             $this->put($name . '.php', $original[$name]);
         }
@@ -470,7 +470,7 @@ PHP;
         $base = $this->commit();
         $selection = new FileSelection(new NativeProcessRunner());
         $selected = (new PhpFiles())->filter($this->directory, $selection->select($this->directory, null, null));
-        $expected = array_map(fn (string $path): string => $this->directory . '/' . $path, $eligible);
+        $expected = array_map(fn(string $path): string => $this->directory . '/' . $path, $eligible);
         sort($expected, SORT_STRING);
         self::assertSame($expected, $selected);
 
