@@ -1,9 +1,10 @@
 # Explicit semantic refactoring
 
-This opt-in increment targets a future minor release. It does not change the
-0.1 syntax/style contract, select a migration profile, or authorize publication.
-`check` and `fix` never invoke the semantic runner. The separate invocable
-`refactor` command uses the existing container factories and process transport.
+The opt-in `refactor` command previews native semantic transformations and
+applies them only when explicitly requested. It does not select a migration
+profile or authorize publication. `check` and `fix` never invoke the semantic
+runner. The separate invocable command uses the existing container factories
+and process transport.
 
 The qualified lock selects published Rector 2.4.2, reference
 `e645b6463c6a88ea5b44b17d3387d35a912c7946`, with PHPStan 2.1.51. The manifest
