@@ -64,7 +64,7 @@ final class CompositionTest extends TestCase
         $replacement = new BufferedOutput();
         $container = ContainerFactory::create(new AggregateServiceProvider(
             new StandardsServiceProvider(dirname(__DIR__, 2) . '/vendor', $default),
-            new ArrayServiceProvider([OutputInterface::class => static fn (): OutputInterface => $replacement]),
+            new ArrayServiceProvider([OutputInterface::class => static fn(): OutputInterface => $replacement]),
         ));
 
         $status = $container->get(ProcessRunner::class)->run([PHP_BINARY, '-r', 'echo "<info>literal</info>";'], sys_get_temp_dir());
@@ -79,7 +79,7 @@ final class CompositionTest extends TestCase
         $cause = new \RuntimeException('Synthetic transport construction failure.');
         $container = ContainerFactory::create(new AggregateServiceProvider(
             new StandardsServiceProvider(dirname(__DIR__, 2) . '/vendor', new BufferedOutput()),
-            new ArrayServiceProvider([ProcessRunner::class => static fn (): ProcessRunner => throw $cause]),
+            new ArrayServiceProvider([ProcessRunner::class => static fn(): ProcessRunner => throw $cause]),
         ));
 
         try {

@@ -10,9 +10,7 @@ use Symfony\Component\Process\Process;
 final class NativeProcessRunner implements ProcessRunner
 {
     /** @param \Closure(string,string):void|null $write Explicit output sink; null keeps this library transport silent. */
-    public function __construct(private readonly ?\Closure $write = null)
-    {
-    }
+    public function __construct(private readonly ?\Closure $write = null) {}
 
     /** Captures Git output as bytes, including NUL-delimited paths. */
     public function capture(array $arguments, string $directory): string

@@ -18,9 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final readonly class CheckCommand
 {
     /** Injects the shared orchestration without parsing input or resolving a checkout. */
-    public function __construct(private StandardsOperation $operation)
-    {
-    }
+    public function __construct(private StandardsOperation $operation) {}
 
     /** Returns the exact check status; this entrypoint never grants write authority. */
     public function __invoke(

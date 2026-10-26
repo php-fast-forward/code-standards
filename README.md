@@ -1,7 +1,7 @@
 # Fast Forward Code Standards
 
 Focused PHP style and static syntax checks, independent of DevTools. The library
-provides an extendable ECS PSR-12 preset; the CLI checks tracked PHP files or the files
+provides an extendable ECS PER Coding Style 3.0 preset; the CLI checks tracked PHP files or the files
 changed by an exact PR head. This initial increment validates PHP syntax and
 style, not type correctness, application behavior or coverage.
 
