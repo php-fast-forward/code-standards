@@ -60,9 +60,7 @@ final class RectorTransport implements ProcessRunner
     public array $captures = [];
 
     /** @param list<int> $statuses Native process/verification outcomes in execution order. */
-    public function __construct(private string $inventory = '{"rectors":["ReviewedRule"]}', private array $statuses = [0])
-    {
-    }
+    public function __construct(private string $inventory = '{"rectors":["ReviewedRule"]}', private array $statuses = [0]) {}
 
     public function capture(array $arguments, string $directory): string
     {

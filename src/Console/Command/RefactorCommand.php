@@ -22,9 +22,7 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 final readonly class RefactorCommand
 {
     /** Reuses project/config path validation and the injected subprocess boundary. */
-    public function __construct(private ProjectScopeResolver $projects, private RectorRunner $rector)
-    {
-    }
+    public function __construct(private ProjectScopeResolver $projects, private RectorRunner $rector) {}
 
     /** Configured native rules own target PHP and source scope; no migration set is inferred from the host. */
     public function __invoke(

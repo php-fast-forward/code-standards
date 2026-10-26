@@ -23,7 +23,7 @@ final class RefactorCommandTest extends TestCase
         $directory = realpath(sys_get_temp_dir());
         $process = $this->createMock(ProcessRunner::class);
         $process->expects(self::once())->method('capture')->willReturn('{"rectors":["ReviewedRule"]}');
-        $process->expects(self::once())->method('run')->with(self::callback(static fn (array $arguments): bool => in_array('--dry-run', $arguments, true)), $directory)->willReturn(2);
+        $process->expects(self::once())->method('run')->with(self::callback(static fn(array $arguments): bool => in_array('--dry-run', $arguments, true)), $directory)->willReturn(2);
         $application = new Application();
         $application->setAutoExit(false);
         $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default'), new RectorRunner($process, '/tool/rector')));

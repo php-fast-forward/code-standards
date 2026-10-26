@@ -12,9 +12,7 @@ use JsonException;
 final readonly class RectorRunner
 {
     /** @param string $rector Absolute Rector entrypoint in this tool's Composer installation. */
-    public function __construct(private ProcessRunner $process, private string $rector)
-    {
-    }
+    public function __construct(private ProcessRunner $process, private string $rector) {}
 
     /**
      * Rejects an empty rule set before Rector can initialize configuration, then previews or explicitly applies.
@@ -49,7 +47,7 @@ final readonly class RectorRunner
         }
         $rules = is_array($inventory) ? ($inventory['rectors'] ?? null) : null;
         if (!is_array($rules) || [] === $rules || !array_is_list($rules)
-            || count(array_filter($rules, static fn (mixed $rule): bool => is_string($rule) && '' !== $rule)) !== count($rules)) {
+            || count(array_filter($rules, static fn(mixed $rule): bool => is_string($rule) && '' !== $rule)) !== count($rules)) {
             throw new InvalidArgumentException('Select a native Rector configuration with at least one rule; automatic initialization is disabled.');
         }
     }
