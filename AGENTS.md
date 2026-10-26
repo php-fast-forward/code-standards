@@ -65,13 +65,13 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 ## Child DOX Index
 
 - [README.md](README.md): library/CLI adoption, explicit fix and tool scope.
-- [Policy comparison](docs/policy.md): evidence, rule differences and extraction gates.
-- [Resolved preset](docs/resolved-preset.md): compiled rules, golden contracts and dependency-update review.
-- [Legacy fixer comparison](docs/legacy-fixer-comparison.md): fixed-source inventory, loaded dependencies and remaining profile decisions.
-- [PHPDoc comparison](docs/phpdoc-comparison.md): actual custom-rule registration, source contracts and remaining golden decisions.
-- [Static-analysis evaluation](docs/static-analysis-evaluation.md): candidate engines, whole-project analysis and unresolved domain ownership.
-- [Architecture decision](docs/architecture.md): library/tool dependencies, CPX/autoload limits and bootstrap without circular prerequisites.
-- [Automation](docs/automation.md): trust, ref/bootstrap contracts and consumer adoption.
+- [Policy comparison](docs/policy.rst): evidence, rule differences and extraction gates.
+- [Resolved preset](docs/resolved-preset.rst): compiled rules, golden contracts and dependency-update review.
+- [Legacy fixer comparison](docs/legacy-fixer-comparison.rst): fixed-source inventory, loaded dependencies and remaining profile decisions.
+- [PHPDoc comparison](docs/phpdoc-comparison.rst): actual custom-rule registration, source contracts and remaining golden decisions.
+- [Static-analysis evaluation](docs/static-analysis-evaluation.rst): candidate engines, whole-project analysis and unresolved domain ownership.
+- [Architecture decision](docs/architecture.rst): library/tool dependencies, CPX/autoload limits and bootstrap without circular prerequisites.
+- [Automation](docs/automation.rst): trust, ref/bootstrap contracts and consumer adoption.
 - [Released channel helper](.github/update-release-channels.md): repository-only publication verification, CAS update and permission-failure recovery; never creates releases or changes repository settings.
-- [Instruction map](docs/instruction-map.md): single root scope and skill ownership.
+- [Instruction map](docs/instruction-map.rst): single root scope and skill ownership.
 - [Consumer skill](resources/skills/fast-forward-code-standards/SKILL.md): portable consumption procedure; no automatic installation or rollout.

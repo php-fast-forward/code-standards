@@ -16,6 +16,17 @@ semantic migrations in a consumer check.
    links/index
    faq
 
-The existing Markdown architecture and policy records remain authoritative
-supplements; see :doc:`links/index` for their source links. This documentation
-can be built locally; no hosted documentation deployment is claimed.
+Architecture, policy and evidence
+---------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   architecture
+   automation
+   instruction-map
+   legacy-fixer-comparison
+   phpdoc-comparison
+   policy
+   resolved-preset
+   static-analysis-evaluation

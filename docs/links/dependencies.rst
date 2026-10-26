@@ -12,13 +12,13 @@ References and dependency boundaries
 Source records
 --------------
 
-These links lead to the maintained Markdown source records rather than claiming
+These links lead to the maintained source records rather than claiming
 that a documentation site or coverage report is published:
 
-* `Architecture and bootstrap <https://github.com/php-fast-forward/code-standards/blob/main/docs/architecture.md>`_
-* `Workflow and ref contract <https://github.com/php-fast-forward/code-standards/blob/main/docs/automation.md>`_
-* `Policy comparison <https://github.com/php-fast-forward/code-standards/blob/main/docs/policy.md>`_
-* `Resolved preset <https://github.com/php-fast-forward/code-standards/blob/main/docs/resolved-preset.md>`_
+* `Architecture and bootstrap <https://github.com/php-fast-forward/code-standards/blob/main/docs/architecture.rst>`_
+* `Workflow and ref contract <https://github.com/php-fast-forward/code-standards/blob/main/docs/automation.rst>`_
+* `Policy comparison <https://github.com/php-fast-forward/code-standards/blob/main/docs/policy.rst>`_
+* `Resolved preset <https://github.com/php-fast-forward/code-standards/blob/main/docs/resolved-preset.rst>`_
 * `Composer dependencies <https://github.com/php-fast-forward/code-standards/blob/main/composer.json>`_
 
 Runtime libraries include Console for input/help, Process for child execution,
