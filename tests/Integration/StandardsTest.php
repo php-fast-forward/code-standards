@@ -47,6 +47,7 @@ final class StandardsTest extends TestCase
     /** Exercises divergence, rename destinations, deleted sources and binary-safe path arguments. */
     public function testChangedFilesUseMergeBaseDestinationsAndNulSafePaths(): void
     {
+        $this->put('.gitignore', "/vendor/\n");
         $this->put('old name.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'old';\n");
         $this->put('deleted.php', '<?php echo 1;');
         $this->put('unchanged.php', '<?php echo 1;');
@@ -58,6 +59,7 @@ final class StandardsTest extends TestCase
         $this->put('-leading.php', '<?php echo 2;');
         $this->put('bin/a command', "#!/usr/bin/env php\n<?php\necho 2;\n");
         $this->put('vendor/ignored.php', '<?php echo 2;');
+        $this->git(['add', '-f', 'vendor/ignored.php']);
         $head = $this->commit();
         $this->git(['switch', 'main']);
         $this->put('base only.php', '<?php echo 3;');
@@ -441,30 +443,81 @@ PHP;
         self::assertSame($clean, file_get_contents($this->directory . '/source.php'));
     }
 
-    /** Git owns ignore semantics; forced tracked files remain source while untracked negations do not expand the contract. */
-    public function testGitIgnoresDoNotLeakUntrackedFilesOrHideForcedTrackedSource(): void
+    /** Applies arbitrary consumer patterns to tracked files, preserving Git negation, escape and parent-directory semantics. */
+    public function testConsumerGitIgnoresFilterTrackedFilesDynamically(): void
     {
         $source = "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n";
-        $this->put('.gitignore', "generated/*.php\n!generated/keep.php\n");
-        $this->put('nested/.gitignore', "*.php\n!keep.php\n");
-        $this->put('source.php', $source);
-        $this->put('generated/forced tracked.php', $source);
-        $this->put('vendor/manual.php', $source);
-        $this->git(['add', '-f', 'generated/forced tracked.php']);
-        $this->commit();
-
-        foreach (['generated/ignored.php', 'generated/keep.php', 'nested/ignored.php', 'nested/keep.php'] as $path) {
-            $this->put($path, '<?php broken source');
+        $ignored = [
+            'root-only.php', 'deep/scratch-one.php', 'bundle-42/data.php',
+            '#tag.php', '!bang.php', 'space name.php', "line\nbreak.php",
+            'module/drop.php', 'blocked-parent/keep.php',
+        ];
+        $eligible = [
+            'source.php', 'deep/root-only.php', 'module/keep.php',
+            'public/source.php', 'resources/source.php', 'backup/source.php',
+            'global.php', 'info.php',
+        ];
+        $this->put('.gitignore', "# Consumer-owned rules\n/root-only.php\n**/scratch-*.php\nbundle-*/\n\\#tag.php\n\\!bang.php\nspace\\ name.php\nline?break.php\nblocked-parent/\n");
+        $this->put('module/.gitignore', "*.php\n!keep.php\n");
+        $this->put('blocked-parent/.gitignore', "!keep.php\n");
+        foreach ([...$ignored, ...$eligible] as $path) {
+            $this->put($path, $source);
         }
+        $this->put('.build/global-ignore', "global.php\n");
+        $this->git(['config', 'core.excludesFile', $this->directory . '/.build/global-ignore']);
+        file_put_contents($this->directory . '/.git/info/exclude', "info.php\n");
+        $this->git(['add', '-f', '--all']);
+        $base = $this->commit();
+        $selection = new FileSelection(new NativeProcessRunner());
+        $selected = (new PhpFiles())->filter($this->directory, $selection->select($this->directory, null, null));
+        $expected = array_map(fn (string $path): string => $this->directory . '/' . $path, $eligible);
+        sort($expected, SORT_STRING);
+        self::assertSame($expected, $selected);
 
-        $selected = (new FileSelection(new NativeProcessRunner()))->select($this->directory, null, null);
-        $filtered = (new PhpFiles())->filter($this->directory, $selected);
-        self::assertSame([
-            $this->directory . '/generated/forced tracked.php',
-            $this->directory . '/source.php',
-        ], $filtered);
+        $this->put('root-only.php', str_replace("'ok'", "'ignored edit'", $source));
+        $this->put('source.php', str_replace("'ok'", "'visible edit'", $source));
+        $head = $this->commit();
+        self::assertSame(['source.php'], $selection->select($this->directory, $base, $head));
         self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
-        self::assertSame("generated/*.php\n!generated/keep.php\n", file_get_contents($this->directory . '/.gitignore'));
+        self::assertStringContainsString('blocked-parent/', file_get_contents($this->directory . '/.gitignore'));
+    }
+
+    /** Root and nested ignore changes/removals rescan unchanged eligible tracked code. */
+    public function testChangedIgnorePoliciesInvalidateTheSelectedScope(): void
+    {
+        $this->put('unchanged.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $selection = new FileSelection(new NativeProcessRunner());
+
+        foreach (['.gitignore', 'nested/.gitignore'] as $policy) {
+            foreach (['modify', 'delete'] as $operation) {
+                $ignored = dirname($policy) . '/blocked.php';
+                $ignored = str_starts_with($ignored, './') ? substr($ignored, 2) : $ignored;
+                $this->put($policy, "blocked.php\n");
+                $this->put($ignored, '<?php echo 1;');
+                $this->git(['add', '-f', $ignored]);
+                $base = $this->commit();
+                self::assertNotContains($ignored, $selection->select($this->directory, null, null));
+
+                if ('delete' === $operation) {
+                    $this->git(['rm', $policy]);
+                } else {
+                    $this->put($policy, "different.php\n");
+                }
+                $head = $this->commit();
+                $selected = $selection->select($this->directory, $base, $head);
+                self::assertContains('unchanged.php', $selected, $policy . ':' . $operation);
+                self::assertContains($ignored, $selected, $policy . ':' . $operation);
+            }
+        }
+    }
+
+    /** A missing Git executable fails explicitly; no parser fallback silently changes the consumer scope. */
+    public function testMissingGitFailsInsteadOfIgnoringConsumerRules(): void
+    {
+        $result = $this->cli(['check', '--all'], ['PATH' => $this->directory . '/no-executables']);
+
+        self::assertSame(2, $result->getExitCode());
+        self::assertStringContainsString('git', strtolower($result->getErrorOutput()));
     }
 
     /** Linked worktrees use a .git file; a non-Git project still fails explicitly rather than silently passing. */

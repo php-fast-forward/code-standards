@@ -86,5 +86,5 @@ GitHub `v0` may advance across breaking development minors. It is not a Composer
 
 Checking can fail the workflow. Making it a required status is a separate GitHub
 protection decision. `fix` has no automatic push workflow and never runs during
-PR checks. Full tracked scans occur for Composer/ECS/EditorConfig changes; after
+PR checks. Full tracked scans occur for Composer/ECS/EditorConfig/root or nested `.gitignore` changes; after
 other policy imports change, run an explicit full check in addition to PR checks.

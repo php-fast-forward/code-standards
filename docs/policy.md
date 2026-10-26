@@ -24,7 +24,7 @@ from blocked PR #376 or composer-installers #15 was executed or changed.
 | PHPDoc preservation | skips conversion, empty/redundant tags removal, global imports, general annotation removal | removes author; preserves empty return/package | Same six ECS skips as DevTools; left alignment |
 | Additional behavior | PHPUnit static calls self; missing typed params; refactoring sets | immutable date, private visibility, simplified null returns and migration | Deliberately absent pending separate profile/fixtures |
 | Headers | `.docheader`, current year, after strict declaration | opening header extracted without executing config, updated year, after open | No automatic header rewrite |
-| Scope | source resolver excludes generated/resources/public/vendor | consumer Finder, hidden files, VCS ignores, path exclusions | Tracked PHP/bin scope, same generated exclusions plus node_modules; symlinks rejected |
+| Scope | source resolver excludes generated/resources/public/vendor | consumer Finder, hidden files, VCS ignores, path exclusions | Tracked PHP/bin candidates filtered by root/nested consumer .gitignore (including tracked matches); only .git structurally excluded; PHP symlinks rejected |
 | Overrides | customize callback last | extraRules last | customize callback last; explicit config selection |
 | Check | combined orchestration has independent mutation risks | dry-run fixer | syntax parse then ECS check, no source writes |
 | Semantic transformations | Rector seven sets, PHP migration, Safe migration, Faker and custom PHPDoc | mixed into risky fixer | Not implemented; requires explicit target, opt-in and independent tests |

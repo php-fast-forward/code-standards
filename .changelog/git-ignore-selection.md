@@ -1,6 +1,7 @@
 ---
 category: changed
-type: patch
+type: minor
+pull_request: 39
 ---
 
-Document and verify Git-native tracked-file selection with nested ignore rules, negations, force-added tracked sources and linked worktrees. Preserve manual exclusions and explicit failure outside a checkout without changing consumer ignore files or introducing a second ignore parser.
+Apply the consumer's root and nested Git ignore rules dynamically to tracked candidates in full and changed scans, including force-added matching files. Preserve Git's negation, anchor, escape and directory semantics without a second parser or host-global excludes. Replace generated-directory name exclusions with consumer-owned rules while retaining structural Git metadata and source-containment protection. Ignore-rule changes trigger a complete eligible tracked scan.
