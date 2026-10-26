@@ -228,7 +228,7 @@ final class ReleaseChannelUpdaterTest extends TestCase
     public function testRejectsANewerReleaseDiscoveredBeforeMutation(): void
     {
         $f = $this->fixture;
-        $f->catalog = static fn (int $count): array => 1 === $count ? array_values($f->releases)
+        $f->catalog = static fn(int $count): array => 1 === $count ? array_values($f->releases)
             : [...array_values($f->releases), [...$f->releases['v0.2.0'], 'id' => 3, 'tag_name' => 'v0.3.0']];
         $this->expectExceptionMessage('changed before');
         $f->run();
@@ -239,7 +239,7 @@ final class ReleaseChannelUpdaterTest extends TestCase
     {
         $f = $this->fixture;
         $f->git(['branch', 'v0', $f->commits['v0.1.0']]);
-        $f->catalog = static fn (int $count): array => 1 === $count ? array_values($f->releases) : [
+        $f->catalog = static fn(int $count): array => 1 === $count ? array_values($f->releases) : [
             $f->releases['v0.2.0'],
         ];
         $this->expectExceptionMessage('previous channel release evidence');
@@ -250,7 +250,7 @@ final class ReleaseChannelUpdaterTest extends TestCase
     public function testRejectsAnUnboundedCatalog(): void
     {
         $f = $this->fixture;
-        $f->catalog = static fn (): array => array_fill(0, 100, $f->releases['v0.2.0']);
+        $f->catalog = static fn(): array => array_fill(0, 100, $f->releases['v0.2.0']);
         $this->expectExceptionMessage('verification limit');
         $f->run();
     }
@@ -276,7 +276,7 @@ final class ReleaseChannelUpdaterTest extends TestCase
     public function testRejectsMalformedExactRefs(): void
     {
         $f = $this->fixture;
-        $f->referenceOverride = static fn (): array => ['ref' => 'refs/tags/foreign',
+        $f->referenceOverride = static fn(): array => ['ref' => 'refs/tags/foreign',
             'object' => ['type' => 'commit', 'sha' => $f->commits['v0.2.0']]];
         $this->expectExceptionMessage('Malformed exact');
         $f->run();

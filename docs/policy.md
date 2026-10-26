@@ -61,3 +61,16 @@ The [PHPDoc comparison](phpdoc-comparison.md) records actual custom Rector
 activation and the fixtures required before adopting a documentation policy.
 The [static-analysis evaluation](static-analysis-evaluation.md) distinguishes
 candidate engines and their analysis scopes without deciding domain ownership.
+
+
+## Selected PER evolution
+
+The current preset replaces prepared PSR-12 with ECS 13.3.8's native non-risky
+PER Coding Style 3.0 set, then applies the owned preservation skips and explicit
+spacing overrides. It does not combine duplicate PSR/PER/common/docblock sets.
+The resolved snapshot records 63 rules:20 added and5 removed from the earlier 48-rule
+snapshot, with explicit option changes captured for review. PER supersedes
+several older checker choices; the two snapshots are not identical contracts.
+No migration or risky rule is enabled. See the resolved preset and PHPDoc golden
+fixture for information-preservation decisions. Earlier comparison tables above
+remain the initial extraction evidence rather than a claim of current parity.
