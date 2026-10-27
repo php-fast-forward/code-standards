@@ -31,3 +31,4 @@ Architecture, policy and evidence
    rector
    resolved-preset
    static-analysis-evaluation
+   twig-evaluation
