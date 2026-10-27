@@ -37,6 +37,12 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
   current HEAD with no pending findings before merge. Unavailable, skipped,
   requested-only or stale reviews do not count. Do not expand permissions to
   install those integrations. Technical review replies are authorized here.
+- Every new or changed public command requires documentation matching its actual
+  registration and installed `--help`: options, defaults, examples, side effects
+  and exit codes. Update README entry points and cross-links when applicable.
+  Preserve the canonical PHP documentation flow and present-tense instructions;
+  do not document commands absent from the corresponding branch. This audit is
+  a merge gate, including after base reconciliation.
 - During 0.x, compatible corrections use patch and functionality/breaking
   development changes explicitly use minor. No major release is authorized.
   Changelog automation owns version PRs/tags; never create manual bootstrap tags.

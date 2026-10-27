@@ -14,9 +14,10 @@ Usage and selection
 
    vendor/bin/code-standards magic-numbers --all
    vendor/bin/code-standards magic-numbers --all --format=xml > magic-numbers.xml
-   vendor/bin/code-standards magic-numbers --base=<base-sha> --head=<head-sha> --format=xml
+   vendor/bin/code-standards magic-numbers --base=BASE_40_CHARACTER_SHA --head=HEAD_40_CHARACTER_SHA --format=xml
 
 Use exactly ``--all`` or both immutable 40-character ``--base``/``--head`` SHAs.
+Replace the example placeholders with the actual immutable commit SHAs.
 ``--directory`` (``-C``) selects the Git checkout root. Changed mode requires the
 requested HEAD and a clean tracked checkout. Selection uses the PR merge base,
 ignores deleted paths and respects the consumer's root/nested ``.gitignore``

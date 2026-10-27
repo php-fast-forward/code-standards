@@ -50,6 +50,7 @@
         "symplify/easy-coding-standard": "^13.3.8"
     },
     "require-dev": {
+        "llm/skills": "^1.15",
         "phpunit/phpunit": "^12.5",
         "symfony/filesystem": "^7.4 || ^8.0",
         "symfony/http-client": "^7.4 || ^8.0"
@@ -75,17 +76,6 @@
     "bin": [
         "bin/code-standards"
     ],
-    "archive": {
-        "exclude": [
-            "/vendor",
-            "/.build",
-            "/.phpunit.cache",
-            "/.git",
-            "/packaging-consumer",
-            "/.github/ReleaseChannelUpdater.php",
-            "/.github/update-release-channels.php"
-        ]
-    },
     "scripts": {
         "test": "phpunit",
         "check": [
@@ -98,7 +88,9 @@
     },
     "config": {
         "sort-packages": true,
-        "allow-plugins": false,
+        "allow-plugins": {
+            "llm/skills": true
+        },
         "platform": {
             "php": "8.3.0"
         }
