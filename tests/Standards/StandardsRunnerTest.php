@@ -16,7 +16,7 @@ final class StandardsRunnerTest extends TestCase
         foreach ([false, true] as $fix) {
             $process = new RecordingProcess();
             $files = ['/repo/a b.php', "/repo/c\nd.php", '/repo/-dash.php'];
-            self::assertSame(0, (new StandardsRunner($process, '/tools/ecs'))->run('/repo', $files, '/tools/ecs.php', $fix));
+            self::assertSame(0, (new StandardsRunner($process, '/tools/worker', '/tools/autoload.php', '/tools/ecs'))->run('/repo', $files, '/tools/ecs.php', $fix));
             $command = $process->commands[3];
             self::assertSame($fix, in_array('--fix', $command, true));
             self::assertSame($files, array_slice($command, -3));
@@ -29,7 +29,7 @@ final class StandardsRunnerTest extends TestCase
     {
         $process = new RecordingProcess(23);
         $files = array_map(static fn(int $i): string => '/repo/' . $i . '.php', range(1, 101));
-        self::assertSame(23, (new StandardsRunner($process, '/tools/ecs'))->run('/repo', $files, '/config', false));
+        self::assertSame(23, (new StandardsRunner($process, '/tools/worker', '/tools/autoload.php', '/tools/ecs'))->run('/repo', $files, '/config', false));
         self::assertCount(102, $process->commands);
         self::assertCount(57, $process->commands[101]);
     }
@@ -38,7 +38,7 @@ final class StandardsRunnerTest extends TestCase
     public function testFixSuccessIsVerifiedWithoutAnotherWritePass(): void
     {
         $process = new RecordingProcess(verificationStatus: 19);
-        $runner = new StandardsRunner($process, '/tools/ecs');
+        $runner = new StandardsRunner($process, '/tools/worker', '/tools/autoload.php', '/tools/ecs');
 
         self::assertSame(19, $runner->run('/repo', ['/repo/a b.php'], '/config', true));
         self::assertCount(3, $process->commands);
@@ -51,7 +51,7 @@ final class StandardsRunnerTest extends TestCase
     public function testSyntaxFailurePreventsFixAndNoFilesExecutesNothing(): void
     {
         $process = new RecordingProcess(0, 17);
-        $runner = new StandardsRunner($process, '/tools/ecs');
+        $runner = new StandardsRunner($process, '/tools/worker', '/tools/autoload.php', '/tools/ecs');
         self::assertSame(0, $runner->run('/repo', [], '/config', true));
         self::assertSame([], $process->commands);
         self::assertSame(17, $runner->run('/repo', ['/repo/a.php'], '/config', true));
