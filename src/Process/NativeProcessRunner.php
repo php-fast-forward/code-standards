@@ -79,8 +79,10 @@ final class NativeProcessRunner implements LimitedResultProcessRunner
     /** @param list<string> $arguments Positive finite bounds never become Symfony's zero/null unlimited mode. */
     private function createProcess(array $arguments, string $directory, float $timeout): Process
     {
-        if (!is_finite($timeout)
-            || $timeout <= 0) {
+        if (
+            !is_finite($timeout)
+            || $timeout <= 0
+        ) {
             throw new InvalidArgumentException('Subprocess timeout must be a positive finite number of seconds.');
         }
 
