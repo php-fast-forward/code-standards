@@ -128,7 +128,7 @@ The fixture ``tests/Fixtures/preset-rules.json`` records the installed ECS versi
 +---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``ternary_operator_spaces``                 | ``default``                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 +---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``trailing_comma_in_multiline``             | ``{"after_heredoc":true,"elements":["arguments","array_destructuring","arrays","match","parameters"]}``                                                                                                                                                                                                                                                                                                                                                                        |
+| ``trailing_comma_in_multiline``             | ``{"after_heredoc":true,"elements":["arguments","array_destructuring","arrays","match"]}``                                                                                                                                                                                                                                                                                                                                                                                     |
 +---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``types_spaces``                            | ``default``                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 +---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -136,6 +136,29 @@ The fixture ``tests/Fixtures/preset-rules.json`` records the installed ECS versi
 +---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 The four preservation skips and callback-last precedence remain declared in the preset. The native PER set is ECS 13.3.9 ``per-cs.php``, explicitly PER Coding Style 3.0 (not the moving PHP-CS-Fixer ``@PER-CS`` alias and not PER 3.1). Some skipped rules are absent from the PER set; their absence must not be presented as proof that broader profiles are safe. Native ECS builder ``withSkip()`` replaces the builder’s skip list, while configured rules of the same class use the last configuration. Consumers own their explicit overrides.
+
+Consumer language compatibility
+--------------------------------
+
+The formatter's PHP runtime is separate from the consumer's supported PHP versions.
+The default deliberately excludes ``parameters`` from the native multiline trailing
+comma rule: commas in parameter declarations require PHP 8.0, while running the
+formatter on PHP 8.3 or later does not authorize upgrading a consumer's syntax.
+Arguments, arrays, destructuring and match retain the selected native behavior,
+including ``after_heredoc``. Existing parameter commas are preserved, not removed.
+This conservative exception is not a complete PER conformance claim or a PHP 7.4
+compatibility certification. Syntax checks use the executing PHP binary.
+
+A consumer that has reviewed PHP 8.0-or-later compatibility can explicitly include
+``parameters`` through ``ECSConfig::configure()``'s native callback. The callback runs
+last; it owns the complete ``TrailingCommaInMultilineFixer`` configuration supplied
+through ``withConfiguredRule()``. No target version is inferred from the host.
+Explicit target selection and execution on consumer PHP versions remain part of
+the open compatibility and policy work in issues #2 and #5.
+
+Sources: `PHP parameter syntax <https://www.php.net/manual/en/functions.arguments.php>`_,
+`native fixer options <https://cs.symfony.com/doc/rules/control_structure/trailing_comma_in_multiline.html>`_,
+and `PER language-version exceptions <https://www.php-fig.org/per/coding-style/#previous-language-versions>`_.
 
 Golden fixtures prove formatting, check-without-writes, exact fixed bytes and second-pass idempotence. Preservation covers author/package/typed-parameter/ void-return documentation, property visibility, mutable DateTime construction and the existing copyright/header position/year. No fixture executes source.
 
