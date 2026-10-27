@@ -114,6 +114,15 @@ both ECS and a competing PHP-CS-Fixer pass. Standalone ECS users may import the
 same library preset and set their own paths. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
 
+The formatter worker uses ECS's public factory and command APIs with this tool's
+own Composer installation. An isolated tool does not implicitly load the target
+checkout's `vendor/autoload.php`. Explicit PHP configuration retains the checkout
+as `getcwd()`, keeps `__DIR__` and relative paths intact, and may deliberately
+require consumer autoloaders or register custom checkers. When the tool is a
+development dependency in the consumer's own Composer graph, that installation's
+normal binary-proxy bootstrap remains intentional; it is not a separate import
+of another checkout's dependency graph.
+
 ## 🔌 Integration and file scope
 
 - Tracked `*.php` and PHP entrypoints under `bin/` are included.

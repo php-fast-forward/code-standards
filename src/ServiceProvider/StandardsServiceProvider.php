@@ -22,6 +22,8 @@ use Symfony\Component\Process\Process;
 /** Supplies only interface/scalar bindings; Fast Forward Container autowires concrete application services. */
 final readonly class StandardsServiceProvider implements ServiceProviderInterface
 {
+    private string $engineDirectory;
+
     /**
      * Captures external installation/output dependencies without opening a checkout or starting processes.
      *
@@ -31,10 +33,18 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
      */
     public function __construct(private string $vendorDirectory, private OutputInterface $output)
     {
-        $entrypoint = $vendorDirectory . '/symplify/easy-coding-standard/bin/ecs';
-        if (!str_starts_with($vendorDirectory, '/') || !is_file($entrypoint) || !is_readable($entrypoint)) {
+        $engine = realpath($vendorDirectory . '/symplify/easy-coding-standard');
+        $entrypoint = $engine . '/bin/ecs';
+        if (!str_starts_with($vendorDirectory, '/')
+            || false === $engine
+            || !is_file($entrypoint)
+            || !is_readable($entrypoint)
+            || !is_readable($vendorDirectory . '/autoload.php')
+        ) {
             throw new InvalidArgumentException('Vendor directory must contain a readable installed ECS entrypoint.');
         }
+
+        $this->engineDirectory = $engine;
     }
 
     /** @return array<string, FactoryInterface> Lazy native factories; later aggregate-provider bindings may replace them. */
@@ -47,7 +57,9 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
             StandardsRunner::class => new InvokableFactory(
                 StandardsRunner::class,
                 ProcessRunner::class,
-                $this->vendorDirectory . '/symplify/easy-coding-standard/bin/ecs',
+                dirname(__DIR__, 2) . '/bin/ecs-worker',
+                $this->vendorDirectory . '/autoload.php',
+                $this->engineDirectory,
             ),
             RectorRunner::class => new InvokableFactory(
                 RectorRunner::class,

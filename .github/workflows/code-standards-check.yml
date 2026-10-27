@@ -43,14 +43,14 @@ jobs:
             printf 'sha=%s\n' "$runtime"
           } >> "$GITHUB_OUTPUT"
       - name: Check out reviewed tool runtime
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
         with:
           repository: ${{ steps.runtime.outputs.repository }}
           ref: ${{ steps.runtime.outputs.sha }}
           path: tool
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # 2.37.1
+        uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ inputs.php-version }}
           coverage: none
@@ -62,7 +62,7 @@ jobs:
           COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
         run: composer install --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
       - name: Check out exact consumer head
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: consumer

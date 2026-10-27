@@ -9,14 +9,24 @@ use PHPUnit\Framework\TestCase;
 /** Contract assertions complement actionlint and real Git/CLI regressions. */
 final class WorkflowTest extends TestCase
 {
-    /** Verifies supply-chain pins for every external Action in executable repository workflows. */
-    public function testExternalActionsUseReviewedImmutableCommits(): void
+    /** Keeps each external Action on its own verified published major channel. */
+    public function testExternalActionsUsePublishedMajorChannels(): void
     {
-        foreach (glob(dirname(__DIR__, 2) . '/.github/workflows/*.yml') as $file) {
+        $references = [
+            'actions/checkout@v7',
+            'shivammathur/setup-php@v2',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
+            'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
+        ];
+        $files = [
+            ...glob(dirname(__DIR__, 2) . '/.github/workflows/*.yml'),
+            ...glob(dirname(__DIR__, 2) . '/resources/workflows/*.yml'),
+        ];
+        foreach ($files as $file) {
             preg_match_all('~(?:^|\n)\s*(?:-\s*)?uses:\s*([^\s#]+)~', file_get_contents($file), $matches);
             foreach ($matches[1] as $reference) {
                 if (!str_starts_with($reference, './')) {
-                    self::assertMatchesRegularExpression('/@[a-f0-9]{40}$/', $reference, $file);
+                    self::assertContains($reference, $references, $file);
                 }
             }
         }
