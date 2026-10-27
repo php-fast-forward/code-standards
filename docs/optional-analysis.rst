@@ -1,5 +1,5 @@
 Optional workflow analyses and summaries
-=======================================
+========================================
 
 The public reusable keeps the mandatory style/syntax check unchanged. A separate
 hosted job reports optional analysis without making ``check`` or ``fix`` invoke
@@ -48,7 +48,7 @@ contract apply to both basic checks and explicitly enabled analyses.
      rector-policy: fail
 
 Result states and counts
------------------------
+------------------------
 
 The job summary distinguishes:
 
@@ -83,7 +83,7 @@ closed. A mixed Rector report containing errors remains operational failure even
 when it also includes proposed changes.
 
 Execution, summary and trust limits
-----------------------------------
+-----------------------------------
 
 The workflow uses only ``pull_request``, ``contents: read``, GitHub-hosted Ubuntu,
 the called job's verified repository/SHA, exact consumer head, separate checkouts
@@ -141,4 +141,4 @@ mutate files even during preview. This is not a security/filesystem sandbox or
 a guarantee against malicious code which detaches another session. The boundary
 is the unprivileged ephemeral hosted job and finite runtime. Never call it from
 a privileged target event or supply secrets. Review the
-`native refactoring contract <rector.rst>`__ before enabling it.
+:doc:`native refactoring contract <rector>` before enabling it.

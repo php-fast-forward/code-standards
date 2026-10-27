@@ -183,6 +183,19 @@ final class OptionalAnalysisReportTest extends TestCase
         self::assertStringContainsString('| Rector | disabled |', $summary, 'Every tool state remains visible even when earlier diagnostics fill the display budget.');
     }
 
+    /** Separators stay readable while untrusted Unicode and markup remain visible and inert. */
+    public function testSummaryUsesReadableSeparatorsWithoutUnescapingDiagnostics(): void
+    {
+        $summary = (new SummaryRenderer())->render([
+            new AnalysisResult('Magic Numbers', 'findings', 1, 1, [
+                ['file' => 'src/Example.php', 'line' => 7, 'message' => "Control \u{202E} \u{00E9} <tag>"],
+            ], nativeExit: 1),
+        ]);
+        self::assertStringContainsString('src/Example.php:7 - Control \u202e \u00e9 &lt;tag&gt;', $summary);
+        self::assertStringNotContainsString('\u2014', $summary);
+        self::assertStringNotContainsString("\u{202E}", $summary);
+    }
+
     /** Disabled, empty selection and operational error are observably different from native clean. */
     public function testStatesAndPolicyDoNotConvertErrorsToAdvisorySuccess(): void
     {

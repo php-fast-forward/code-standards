@@ -26,7 +26,7 @@ final class SummaryRenderer
             $summary .= "<pre>\n";
             $lines = '' === $result->details ? [] : [$result->details];
             foreach (array_slice($result->diagnostics, 0, self::MAX_DIAGNOSTICS) as $diagnostic) {
-                $lines[] = $diagnostic['file'] . ':' . ($diagnostic['line'] ?? '?') . ' — ' . $diagnostic['message'];
+                $lines[] = $diagnostic['file'] . ':' . ($diagnostic['line'] ?? '?') . ' - ' . $diagnostic['message'];
             }
             foreach ($lines as $line) {
                 $escaped = $this->escape($line) . "\n";
