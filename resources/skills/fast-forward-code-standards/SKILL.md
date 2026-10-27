@@ -85,7 +85,7 @@ the consumer's PHP platform or dependency constraints implicitly.
    tool/consumer autoload/bootstrap compatibility; fail on collisions rather than
    accepting a false clean result. Review semantic diffs and run affected consumer
    tests; zero status alone does not prove semantic safety. The same ref's
-   `docs/rector.md` is an optional detailed guide. Never substitute this command
+   `docs/rector.rst` is an optional detailed guide. Never substitute this command
    for ordinary formatting `fix` or automatically migrate consumers.
 6. For requested CI adoption copy `resources/workflows/code-standards.yml` from
    the selected ref after v0 points to a confirmed 0.x release, and use `pull_request` with
