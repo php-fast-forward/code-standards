@@ -35,7 +35,10 @@ return RectorConfig::configure()
     ->withoutParallel();
 ```
 
-The target is a consumer decision, independent of the host PHP. `withPhpVersion`
+The target is a required consumer decision, independent of the host PHP. Declare
+it with native `withPhpVersion()` or `RectorConfig::phpVersion()`, directly or in
+an imported native configuration. Composer constraints and Rector's runtime
+fallback do not satisfy this explicit target requirement. `withPhpVersion`
 limits supported transformations; it does not downgrade existing code or select
 PHP migration sets. Review any later `withPhpSets` selection separately. The
 command does not infer or overwrite target, rule, cache, bootstrap, parallelism
@@ -62,13 +65,20 @@ diagnostic. Other native fatal exits propagate unchanged. Rector 2.4.2 uses `-n`
 ## Executable configuration and initialization boundary
 
 The command first asks native `list-rules --output-format=json` for the selected
-configuration's rules. An empty or invalid inventory is rejected without calling
+configuration's rules. A temporary, tool-owned native PHP wrapper imports that
+configuration into Rector's own initialized container and checks its public
+parameter API for an explicit PHP target. The wrapper is removed after preflight,
+including failures; selected source and consumer configuration are not rewritten.
+The actual `process` commands keep the original config path and cache identity.
+Missing or invalid native targets fail without semantic writes. An empty or invalid inventory is rejected without calling
 `process`: native Rector otherwise can generate `rector.php` and return success
 even during dry-run. Missing explicit configuration is rejected before launch.
 
-This is a contract for **trusted, deterministic configuration**. Preview loads
-it twice; successful apply and verification load it three times. A configuration
-that changes its rules between invocations can defeat that preflight. Arbitrary
+This is a contract for **trusted, deterministic configuration**. Preview runs
+one inventory and one processing invocation; successful apply adds a verification
+invocation. Native Rector may evaluate configuration multiple times within an
+invocation. The guard does not add another configuration-evaluation process.
+A configuration that changes its target or rules between invocations can defeat that preflight. Arbitrary
 configuration, Composer autoload files, custom rules and configured bootstraps
 can execute and mutate files even in dry-run. The command is not a filesystem or
 security sandbox, and cannot promise read-only behavior for such executable
@@ -85,8 +95,9 @@ Captured preflight and streamed processing use the same credential stripping.
 No generic promise of semantic safety follows from a zero result.
 
 The integration fixtures cover no-write preview, explicit apply/verification, empty custom
-configuration, a PHP 7.4 target under a newer host, configured cache ownership,
-native bootstrap failures and consumer/tool autoload collisions. Run the
+configuration, missing/invalid targets, a PHP 7.4 target under a newer host,
+imported targets and native service bindings, configured cache ownership,
+configuration context/evaluation counts, native bootstrap failures and consumer/tool autoload collisions. Run the
 consumer's affected behavioral tests and review API/side-effect changes before
 accepting any semantic patch. Type analysis and application testing are not
 implicitly added to this command.

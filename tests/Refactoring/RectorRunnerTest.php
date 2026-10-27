@@ -8,6 +8,7 @@ use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\Refactoring\RectorRunner;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /** Checks write authority and the native empty-configuration initialization boundary. */
 final class RectorRunnerTest extends TestCase
@@ -51,6 +52,30 @@ final class RectorRunnerTest extends TestCase
             }
         }
     }
+
+    /** Only the temporary preflight is removed; original config identity stays on every process command. */
+    public function testTargetGuardEscapesOriginalPathAndCleansItsOwnFile(): void
+    {
+        $process = new RectorTransport();
+        $config = "/consumer/quote'line\npolicy.php";
+        (new RectorRunner($process, '/tool/rector'))->run('/consumer', $config, false);
+
+        self::assertCount(1, $process->preflights);
+        self::assertStringContainsString('$config->import(' . var_export($config, true) . ');', $process->guards[0]);
+        self::assertFileDoesNotExist($process->preflights[0]);
+        self::assertContains('--config=' . $config, $process->commands[0]);
+
+        $failure = new RectorTransport();
+        $failure->failCapture = true;
+        try {
+            (new RectorRunner($failure, '/tool/rector'))->run('/consumer', $config, true);
+            self::fail('Native bootstrap failure must remain observable.');
+        } catch (RuntimeException $exception) {
+            self::assertSame('fixture capture failure', $exception->getMessage());
+            self::assertFileDoesNotExist($failure->preflights[0]);
+            self::assertSame([], $failure->commands);
+        }
+    }
 }
 
 /** Records only the execution boundary; no native configuration or source is evaluated here. */
@@ -58,6 +83,9 @@ final class RectorTransport implements ProcessRunner
 {
     public array $commands = [];
     public array $captures = [];
+    public array $preflights = [];
+    public array $guards = [];
+    public bool $failCapture = false;
 
     /** @param list<int> $statuses Native process/verification outcomes in execution order. */
     public function __construct(private string $inventory = '{"rectors":["ReviewedRule"]}', private array $statuses = [0]) {}
@@ -65,6 +93,12 @@ final class RectorTransport implements ProcessRunner
     public function capture(array $arguments, string $directory): string
     {
         $this->captures[] = $arguments;
+        $preflight = substr($arguments[3], strlen('--config='));
+        $this->preflights[] = $preflight;
+        $this->guards[] = file_get_contents($preflight);
+        if ($this->failCapture) {
+            throw new RuntimeException('fixture capture failure');
+        }
 
         return $this->inventory;
     }
