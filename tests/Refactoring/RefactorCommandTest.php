@@ -70,8 +70,17 @@ final class RefactorCommandTest extends TestCase
         }
     }
 
-    /** An actual short subprocess timeout is an execution failure, with the preflight cleaned on the same exception path. */
-    public function testTimeoutIsFailureAndCleansThePreflight(): void
+    /** @return iterable<string, array{int}> Widths exercise narrow, hosted-CI and wide rendering without private terminal state. */
+    public static function timeoutTerminalWidths(): iterable
+    {
+        yield 'narrow' => [20];
+        yield 'hosted CI' => [80];
+        yield 'wide' => [160];
+    }
+
+    /** An actual short subprocess timeout remains a failure with its complete diagnostic and owned preflight cleanup. */
+    #[DataProvider('timeoutTerminalWidths')]
+    public function testTimeoutIsFailureAndCleansThePreflight(int $columns): void
     {
         $native = new Process([PHP_BINARY, '-r', 'usleep(250000);'], timeout: 0.01);
         try {
@@ -93,15 +102,19 @@ final class RefactorCommandTest extends TestCase
         $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default'), new RectorRunner($process, '/tool/rector')));
         $tester = new ApplicationTester($application);
 
+        $previousColumns = getenv('COLUMNS');
         try {
+            putenv('COLUMNS=' . $columns);
             self::assertSame(1, $tester->run(['command' => 'refactor', '--config' => $config, '--directory' => realpath(sys_get_temp_dir())]));
-            self::assertStringContainsString('exceeded the timeout', $tester->getDisplay());
+            self::assertMatchesRegularExpression('/exceeded\s+the\s+timeout\s+of\s+0\.01\s+seconds\./', $tester->getDisplay());
             self::assertIsString($preflight);
             self::assertFileDoesNotExist($preflight);
             self::assertDirectoryDoesNotExist(dirname($preflight));
         } finally {
+            putenv(false === $previousColumns ? 'COLUMNS' : 'COLUMNS=' . $previousColumns);
             unlink($config);
         }
+        self::assertSame($previousColumns, getenv('COLUMNS'));
     }
 
     /** @return iterable<string, array{string}> Inputs that must never be coerced to a disabled or unintended limit. */
