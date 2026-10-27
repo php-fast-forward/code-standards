@@ -365,7 +365,7 @@ PHP);
         $fixtures = dirname(__DIR__) . '/Fixtures/';
         $original = [];
 
-        foreach (['style', 'preservation', 'documentation'] as $name) {
+        foreach (['style', 'preservation', 'documentation', 'normative-contract'] as $name) {
             $original[$name] = file_get_contents($fixtures . $name . '.before.php.inc');
             $this->put($name . '.php', $original[$name]);
         }
