@@ -37,8 +37,6 @@ final readonly class OptionalAnalysisRunner
             if (false === $directory || !is_dir($directory)) {
                 throw new InvalidArgumentException('Consumer directory is unavailable.');
             }
-            $paths = $this->selection->select($directory, $input->base, $input->head);
-            $files = $this->phpFiles->filter($directory, $paths);
         } catch (Throwable $exception) {
             return [
                 $input->magicNumbers ? $this->failure('Magic Numbers', $exception) : $magic,
@@ -46,7 +44,7 @@ final readonly class OptionalAnalysisRunner
             ];
         }
         if ($input->magicNumbers) {
-            $magic = $this->magicNumbers($input, $directory, $files);
+            $magic = $this->magicNumbers($input, $directory);
         }
         if ($input->rector) {
             $rector = $this->rector($input, $directory);
@@ -55,14 +53,17 @@ final readonly class OptionalAnalysisRunner
         return [$magic, $rector];
     }
 
-    /** @param list<string> $files Eligible paths selected by the existing exact-PR/ignore contract. */
-    private function magicNumbers(WorkflowInput $input, string $directory, array $files): AnalysisResult
+    /** Selects only Magic Numbers' eligible paths using the exact-PR/ignore contract. */
+    private function magicNumbers(WorkflowInput $input, string $directory): AnalysisResult
     {
-        if ([] === $files) {
-            return new AnalysisResult('Magic Numbers', 'not-executed', 0, details: 'No eligible changed PHP files; the engine was not executed.');
-        }
+        $files = null;
         $result = null;
         try {
+            $paths = $this->selection->select($directory, $input->base, $input->head);
+            $files = $this->phpFiles->filter($directory, $paths);
+            if ([] === $files) {
+                return new AnalysisResult('Magic Numbers', 'not-executed', 0, details: 'No eligible changed PHP files; the engine was not executed.');
+            }
             $result = $this->process->capture([
                 PHP_BINARY, '-d', 'memory_limit=256M', $this->root . '/bin/code-standards', 'magic-numbers',
                 '--directory=' . $directory, '--base=' . $input->base, '--head=' . $input->head, '--format=xml',
@@ -70,7 +71,7 @@ final readonly class OptionalAnalysisRunner
 
             return $this->reports->magicNumbers($result, $files);
         } catch (Throwable $exception) {
-            return $this->failure('Magic Numbers', $exception, count($files), $result);
+            return $this->failure('Magic Numbers', $exception, null === $files ? null : count($files), $result);
         }
     }
 

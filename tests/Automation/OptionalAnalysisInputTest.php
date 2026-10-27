@@ -15,6 +15,7 @@ use FastForward\CodeStandards\Workflow\OptionalAnalysisRunner;
 use FastForward\CodeStandards\Workflow\WorkflowInput;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 foreach (['AnalysisResult', 'BoundedProcess', 'NativeReportParser', 'WorkflowInput', 'OptionalAnalysisRunner'] as $helper) {
     require_once dirname(__DIR__, 2) . '/.github/OptionalAnalysis/' . $helper . '.php';
@@ -64,6 +65,37 @@ final class OptionalAnalysisInputTest extends TestCase
         self::assertSame('operational-error', $results[0]->status);
         self::assertTrue($results[0]->blocks('report'));
         self::assertNull($results[0]->findingCount);
+    }
+
+    /** Rector validates its native configuration without consulting Magic Numbers' changed-file scope. */
+    public function testRectorOnlyDoesNotSelectMagicNumbersFiles(): void
+    {
+        $process = $this->createMock(ProcessRunner::class);
+        $process->expects(self::never())->method('capture');
+        $process->expects(self::never())->method('run');
+        $results = $this->runner($process)->run(new WorkflowInput(
+            realpath(sys_get_temp_dir()), str_repeat('a', 40), str_repeat('b', 40), false, 'report', true, 'report', '',
+        ));
+        self::assertSame('disabled', $results[0]->status);
+        self::assertSame('operational-error', $results[1]->status);
+        self::assertSame('Enabled Rector requires a consumer-relative rector-config input.', $results[1]->details);
+    }
+
+    /** Selection errors belong to Magic Numbers and cannot replace Rector's independent result. */
+    public function testMagicNumbersSelectionFailureDoesNotPreventRectorValidation(): void
+    {
+        $process = $this->createMock(ProcessRunner::class);
+        $process->method('capture')->willThrowException(new RuntimeException('Selection unavailable.'));
+        $process->expects(self::never())->method('run');
+        $results = $this->runner($process)->run(new WorkflowInput(
+            realpath(sys_get_temp_dir()), str_repeat('a', 40), str_repeat('b', 40), true, 'report', true, 'report', '',
+        ));
+        self::assertSame('operational-error', $results[0]->status);
+        self::assertSame('Selection unavailable.', $results[0]->details);
+        self::assertNull($results[0]->selectedCount);
+        self::assertTrue($results[0]->blocks('report'));
+        self::assertSame('operational-error', $results[1]->status);
+        self::assertSame('Enabled Rector requires a consumer-relative rector-config input.', $results[1]->details);
     }
 
     /** Missing/stringly enablement and unrecognized severity policies fail instead of being coerced. */

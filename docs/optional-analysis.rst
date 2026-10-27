@@ -67,6 +67,8 @@ For Magic Numbers, ``selected PHP files`` comes from the existing
 counts only files containing findings. ``Findings`` counts native entries; their
 real file/line values are shown. XML columns are not safe AST-patch identities.
 An empty eligible selection is checked before launching the analyzer.
+Selection runs only when Magic Numbers is enabled; its failure does not prevent
+Rector from producing its own result using the configured whole-project paths.
 
 For Rector, ``changed files`` is the native total, not a count of individual
 rules, lines or defects. Available native error locations retain their line
