@@ -46,8 +46,10 @@ Ordinary Composer installation inside the consumer intentionally shares that
 installation's autoloader through its binary proxy. `composer-runtime-api` and
 `$_composer_autoload_path` remain part of this contract. Removing an extra import
 from a different target graph does not remove normal Composer bootstrap.
-PHPUnit, Rector and type-analysis adapters still require their own compatibility
-tests; the formatter's process boundary does not prove their isolation.
+PHPUnit and type-analysis adapters require their own compatibility tests; the
+formatter's process boundary does not prove their isolation. The separate Rector
+command's executable configuration and child-autoload limits are documented in
+[the native refactoring contract](rector.md).
 
 ## Bootstrap and compatibility
 
