@@ -4,7 +4,7 @@
 [![PHP](https://img.shields.io/badge/php-%5E8.3-777BB4?logo=php&logoColor=white)](composer.json)
 [![Composer Package](https://img.shields.io/badge/composer-fast--forward%2Fcode--standards-F28D1A?logo=composer&logoColor=white)](https://packagist.org/packages/fast-forward/code-standards)
 [![Tests](https://img.shields.io/github/actions/workflow/status/php-fast-forward/code-standards/repository-ci.yml?branch=main&label=tests)](https://github.com/php-fast-forward/code-standards/actions/workflows/repository-ci.yml)
-[![Docs](https://img.shields.io/badge/docs-source-38BDF8)](docs/architecture.md)
+[![Docs](https://img.shields.io/badge/docs-source-38BDF8)](docs/architecture.rst)
 [![License](https://img.shields.io/github/license/php-fast-forward/code-standards?color=64748B)](LICENSE)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/php-fast-forward?color=EC4899)](https://github.com/sponsors/php-fast-forward)
 
@@ -143,12 +143,12 @@ of another checkout's dependency graph.
 - Tools run in bounded batches and stop on failure. Syntax checks use `php -n -l`,
   so selected application sources are parsed without executing them.
 
-See [policy and differences](docs/policy.md), [workflow/ref adoption](docs/automation.md)
+Start with the [usage guide](docs/index.rst). See [policy and differences](docs/policy.rst), [workflow/ref adoption](docs/automation.rst)
 and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
-The [architecture decision](docs/architecture.md) defines library/tool dependency
+The [architecture decision](docs/architecture.rst) defines library/tool dependency
 directions and CPX/autoload limits.
 The formatter preserves descriptive PHPDoc and inherited documentation.
-The separate opt-in [`refactor` command](docs/rector.md) previews an explicit
+The separate opt-in [`refactor` command](docs/rector.rst) previews an explicit
 native Rector configuration and requires `--apply` for semantic writes. It is
 never invoked by formatting `check` or `fix`; target PHP and cache remain native
 consumer configuration decisions. Custom PHPDoc transformations and deeper
@@ -236,7 +236,7 @@ changes or consumer rollout.
 - [Issues](https://github.com/php-fast-forward/code-standards/issues)
 - [Packagist](https://packagist.org/packages/fast-forward/code-standards)
 - [Composer package metadata](composer.json)
-- [Automation and consumer refs](docs/automation.md)
-- [Policy and differences](docs/policy.md)
+- [Automation and consumer refs](docs/automation.rst)
+- [Policy and differences](docs/policy.rst)
 - [Fast Forward Container](https://github.com/php-fast-forward/container)
 - [Changelog](https://github.com/php-fast-forward/changelog)
