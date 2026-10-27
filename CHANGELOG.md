@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-10-27
+
+### Fixed
+
+- Checks and fixes through ECS's public APIs without implicitly loading a separate
+  consumer vendor autoloader. Preserves consumer cwd, native configuration and cache
+  behavior, explicit custom-checker opt-in, and the tool's own Composer bootstrap.
+
+  ([#55](https://github.com/php-fast-forward/code-standards/pull/55))
+
 ## [0.3.1] - 2026-10-27
 
 ### Changed
@@ -118,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.3.2]: https://github.com/php-fast-forward/code-standards/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/php-fast-forward/code-standards/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/php-fast-forward/code-standards/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/php-fast-forward/code-standards/compare/v0.1.0...v0.2.0
