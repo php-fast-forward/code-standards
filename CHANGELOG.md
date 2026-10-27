@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#52](https://github.com/php-fast-forward/code-standards/pull/52))
 
+- Expose optional lossless process capture with exact native exit codes and separate
+  stdout/stderr bytes while preserving existing transport and provider contracts.
+
+  ([#67](https://github.com/php-fast-forward/code-standards/pull/67))
+
 - Add a reproducible, isolated Twig evaluation on the existing PHP matrix. Qualify
   native Finder/Git intersection, explicit configuration overrides, grammar parsing,
   deterministic native JSON and check/fix boundaries without adding a consumer CLI

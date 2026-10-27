@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Symfony\Component\Process\Process;
 
 /** Native transport; callers own selection and operation policy. */
-final class NativeProcessRunner implements ProcessRunner
+final class NativeProcessRunner implements ResultProcessRunner
 {
     /** Both captured and streamed configuration subprocesses receive the same credential policy. */
     private const array ENVIRONMENT = ['GH_TOKEN' => false, 'GITHUB_TOKEN' => false, 'COMPOSER_AUTH' => false];
@@ -31,6 +31,15 @@ final class NativeProcessRunner implements ProcessRunner
         $process = $this->createProcess($arguments, $directory, $timeout);
 
         return $process->run($this->write);
+    }
+
+    /** Captures both channels without invoking the streaming sink or interpreting native failure statuses. */
+    public function captureResult(array $arguments, string $directory, float $timeout = 300): ProcessResult
+    {
+        $process = $this->createProcess($arguments, $directory, $timeout);
+        $status = $process->run();
+
+        return new ProcessResult($status, $process->getOutput(), $process->getErrorOutput());
     }
 
     /** @param list<string> $arguments Positive finite bounds never become Symfony's zero/null unlimited mode. */

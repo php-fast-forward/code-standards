@@ -114,6 +114,24 @@ apply, including idempotent repeated boolean flags and both `--option=value`
 and `--option value`. Behavioral tests exercise the default preset, real rule
 overrides, help outside a checkout and invalid invocations.
 
+### Optional lossless process capture
+
+`ResultProcessRunner` extends the existing process interface with `captureResult()`.
+The native transport returns an immutable `ProcessResult` containing the exact
+exit code and separate stdout/stderr bytes, including non-UTF-8 and ANSI bytes.
+Nonzero exits remain results; startup, timeout and invalid-bound failures retain
+their native exceptions. Capture uses the same credential filtering, explicit
+working directory, argument vector and finite timeout policy, without invoking
+the streaming output sink.
+
+Existing `ProcessRunner` implementations and provider overrides need no new
+method. Existing `capture()` still throws on nonzero exits, and `run()` retains
+its streaming behavior. The service provider and command output are unchanged.
+This library capability does not parse tool output, infer a clean outcome or
+expose CLI JSON. Callers must preserve unsupported output rather than extract a
+JSON suffix, merge the two channels or treat empty diagnostics as success.
+Check, fix and semantic-operation authority remain with their existing runners.
+
 ## Implementation quality
 
 Keep methods focused on one responsibility and use early returns for rejected
