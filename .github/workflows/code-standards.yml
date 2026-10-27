@@ -10,6 +10,26 @@ on:
         description: Optional consumer-relative ECS config.
         default: ''
         type: string
+      magic-numbers:
+        description: Explicitly enable native Magic Numbers analysis of the exact PR selection.
+        default: false
+        type: boolean
+      magic-numbers-policy:
+        description: report or fail for verified findings; operational errors always fail.
+        default: report
+        type: string
+      rector:
+        description: Explicitly enable native semantic preview using rector-config, never apply.
+        default: false
+        type: boolean
+      rector-policy:
+        description: report or fail for verified proposed changes; operational errors always fail.
+        default: report
+        type: string
+      rector-config:
+        description: Consumer-relative native PHP configuration with explicit target and rules.
+        default: ''
+        type: string
 permissions: {}
 jobs:
   check:
@@ -19,3 +39,14 @@ jobs:
     with:
       php-version: ${{ inputs.php-version }}
       config: ${{ inputs.config }}
+  optional-analysis:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/code-standards-analysis.yml
+    with:
+      php-version: ${{ inputs.php-version }}
+      magic-numbers: ${{ inputs.magic-numbers }}
+      magic-numbers-policy: ${{ inputs.magic-numbers-policy }}
+      rector: ${{ inputs.rector }}
+      rector-policy: ${{ inputs.rector-policy }}
+      rector-config: ${{ inputs.rector-config }}

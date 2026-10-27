@@ -10,6 +10,9 @@ jobs:
   reusable-check:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/code-standards.yml
+    with:
+      magic-numbers: true
+      magic-numbers-policy: report
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -24,6 +27,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          extensions: dom, posix
           coverage: none
           tools: composer:v2
       - run: composer install --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress

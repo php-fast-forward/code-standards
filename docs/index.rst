@@ -27,6 +27,7 @@ Architecture, policy and evidence
    architecture
    automation
    instruction-map
+   optional-analysis
    legacy-fixer-comparison
    magic-numbers
    phpdoc-comparison

@@ -19,12 +19,14 @@ final class WorkflowContextTest extends TestCase
             'STANDARDS_BASE' => str_repeat('2', 40),
             'STANDARDS_HEAD' => str_repeat('3', 40),
         ];
-        $script = $this->guard('code-standards-check.yml', 'Reject privileged events and invalid refs');
-        $valid = $this->guardResult($script, $environment);
-        self::assertSame(0, $valid['status']);
-        self::assertSame("repository=php-fast-forward/code-standards\nsha=" . str_repeat('1', 40) . "\n", $valid['output']);
-        foreach (['STANDARDS_EVENT' => 'pull_request_target', 'STANDARDS_BASE' => 'main', 'STANDARDS_HEAD' => 'v0'] as $key => $value) {
-            self::assertNotSame(0, $this->guardExitCode($script, [...$environment, $key => $value]));
+        foreach (['code-standards-check.yml', 'code-standards-analysis.yml'] as $file) {
+            $script = $this->guard($file, 'Reject privileged events and invalid refs');
+            $valid = $this->guardResult($script, $environment);
+            self::assertSame(0, $valid['status']);
+            self::assertSame("repository=php-fast-forward/code-standards\nsha=" . str_repeat('1', 40) . "\n", $valid['output']);
+            foreach (['STANDARDS_EVENT' => 'pull_request_target', 'STANDARDS_BASE' => 'main', 'STANDARDS_HEAD' => 'v0'] as $key => $value) {
+                self::assertNotSame(0, $this->guardExitCode($script, [...$environment, $key => $value]), $file);
+            }
         }
     }
 
@@ -72,6 +74,9 @@ final class WorkflowContextTest extends TestCase
 
         foreach ([
             ['code-standards-check.yml', 'Reject privileged events and invalid refs', 'STANDARDS_JOB_JSON', [
+                'STANDARDS_EVENT' => 'pull_request', 'STANDARDS_BASE' => str_repeat('2', 40), 'STANDARDS_HEAD' => str_repeat('3', 40),
+            ]],
+            ['code-standards-analysis.yml', 'Reject privileged events and invalid refs', 'STANDARDS_JOB_JSON', [
                 'STANDARDS_EVENT' => 'pull_request', 'STANDARDS_BASE' => str_repeat('2', 40), 'STANDARDS_HEAD' => str_repeat('3', 40),
             ]],
             ['repository-release-channels.yml', 'Require a trusted repository workflow', 'FF_JOB_JSON', [

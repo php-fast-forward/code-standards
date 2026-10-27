@@ -1,0 +1,148 @@
+name: 'Internal: Optional PHP Analysis'
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        default: '8.3'
+        type: string
+      magic-numbers:
+        default: false
+        type: boolean
+      magic-numbers-policy:
+        default: report
+        type: string
+      rector:
+        default: false
+        type: boolean
+      rector-policy:
+        default: report
+        type: string
+      rector-config:
+        default: ''
+        type: string
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Reject privileged events and invalid refs
+        id: runtime
+        env:
+          STANDARDS_EVENT: ${{ github.event_name }}
+          STANDARDS_JOB_JSON: ${{ toJSON(job) }}
+          STANDARDS_BASE: ${{ github.event.pull_request.base.sha }}
+          STANDARDS_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
+          [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
+          [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
+          runtime=$(jq --slurp --raw-output --exit-status '
+            select(length == 1) | .[0] | select(type == "object")
+            | select(.workflow_repository | type == "string")
+            | select(.workflow_repository == "php-fast-forward/code-standards")
+            | select(.workflow_sha | type == "string")
+            | select(.workflow_sha | length == 40 and test("^[a-f0-9]+$"))
+            | .workflow_sha
+          ' <<< "$STANDARDS_JOB_JSON") || {
+            echo '::error::Invalid executing workflow identity in native job context.' >&2
+            exit 1
+          }
+          {
+            printf 'repository=php-fast-forward/code-standards\n'
+            printf 'sha=%s\n' "$runtime"
+          } >> "$GITHUB_OUTPUT"
+      - name: Validate explicit optional findings policies
+        env:
+          STANDARDS_MAGIC_POLICY: ${{ inputs.magic-numbers-policy }}
+          STANDARDS_RECTOR_POLICY: ${{ inputs.rector-policy }}
+        run: |
+          set -euo pipefail
+          for policy in "$STANDARDS_MAGIC_POLICY" "$STANDARDS_RECTOR_POLICY"; do
+            [[ "$policy" == report || "$policy" == fail ]] || {
+              echo '::error::Optional findings policies must be report or fail.' >&2
+              exit 1
+            }
+          done
+      - name: Check out reviewed tool runtime
+        if: inputs.magic-numbers || inputs.rector
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ steps.runtime.outputs.repository }}
+          ref: ${{ steps.runtime.outputs.sha }}
+          path: tool
+          persist-credentials: false
+      - name: Set up PHP
+        if: inputs.magic-numbers || inputs.rector
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+          extensions: dom, posix
+          coverage: none
+          tools: composer:v2
+      - name: Install only the reviewed tool
+        if: inputs.magic-numbers || inputs.rector
+        working-directory: tool
+        env:
+          COMPOSER_HOME: ${{ runner.temp }}/standards-analysis-composer-home
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-analysis-composer-cache
+        run: composer install --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
+      - name: Check out exact consumer head
+        if: inputs.magic-numbers || inputs.rector
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: consumer
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Classify optional analyses
+        id: analysis
+        if: inputs.magic-numbers || inputs.rector
+        uses: ./tool/.github/actions/analyze
+        with:
+          directory: ${{ github.workspace }}/consumer
+          base-sha: ${{ github.event.pull_request.base.sha }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
+          magic-numbers: ${{ inputs.magic-numbers }}
+          magic-numbers-policy: ${{ inputs.magic-numbers-policy }}
+          rector: ${{ inputs.rector }}
+          rector-policy: ${{ inputs.rector-policy }}
+          rector-config: ${{ inputs.rector-config }}
+      - name: Always summarize unavailable or disabled analyses
+        if: always() && steps.analysis.outputs.summary-written != 'true'
+        env:
+          STANDARDS_MAGIC_ENABLED: ${{ inputs.magic-numbers }}
+          STANDARDS_RECTOR_ENABLED: ${{ inputs.rector }}
+        run: |
+          set -euo pipefail
+          {
+            printf '## Optional Code Standards analyses\n\n'
+            printf '| Tool | Status | Findings |\n| --- | --- | --- |\n'
+            if [[ "$STANDARDS_MAGIC_ENABLED" == true ]]; then
+              printf '| Magic Numbers | operational-error | unavailable |\n'
+            else
+              printf '| Magic Numbers | disabled | not executed |\n'
+            fi
+            if [[ "$STANDARDS_RECTOR_ENABLED" == true ]]; then
+              printf '| Rector | operational-error | unavailable |\n'
+            else
+              printf '| Rector | disabled | not executed |\n'
+            fi
+            printf '\nEnabled analyses without a complete classified result are operational errors, never clean passes.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Enforce explicit optional-analysis result
+        if: always()
+        env:
+          STANDARDS_MAGIC_ENABLED: ${{ inputs.magic-numbers }}
+          STANDARDS_RECTOR_ENABLED: ${{ inputs.rector }}
+          STANDARDS_SUMMARY_WRITTEN: ${{ steps.analysis.outputs.summary-written }}
+          STANDARDS_BLOCKING: ${{ steps.analysis.outputs.blocking }}
+        run: |
+          set -euo pipefail
+          if [[ "$STANDARDS_MAGIC_ENABLED" != true && "$STANDARDS_RECTOR_ENABLED" != true ]]; then
+            exit 0
+          fi
+          [[ "$STANDARDS_SUMMARY_WRITTEN" == true ]] || exit 1
+          [[ "$STANDARDS_BLOCKING" == false ]]
