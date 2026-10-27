@@ -7,6 +7,11 @@ accept ``--directory`` and ``--config``. Symfony Console supports both
 ``--option=value`` and ``--option value``. See ``help check`` and ``help fix``
 for the installed command definitions.
 
+``check`` additionally accepts ``--format=text|json`` with text as the default.
+The explicit `structured check contract <../structured-check.rst>`__ documents
+single-document stdout, native findings, operational failures and partial coverage.
+``fix`` retains text output and does not accept this option.
+
 The separate opt-in ``refactor`` command uses an explicit native Rector
 configuration's source paths rather than this Git changed-file selection.
 See the `semantic refactoring contract <../rector.rst>`__ for required target
