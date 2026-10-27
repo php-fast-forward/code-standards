@@ -22,6 +22,12 @@ metadata:
 4. Select a local ECS configuration explicitly with `--config=ecs.php` and keep
    imports/overrides. Configuration is executable PHP: never load it with a
    privileged token or on a privileged target event. No incidental dependency update.
+   The owned multiline-condition policy splits symbolic `&&`/`||` in existing
+   multiline if/elseif/while/do-while conditions, including argument/group/index
+   expressions but excluding function/arrow/anonymous-class declarations. It
+   preserves single-line conditions and uses native `withSpacing()` overrides.
+   A deliberate `withSkip()` of `MultilineBooleanConditionSniff` is supported;
+   preserve the other intended skips because the native method replaces its list.
 5. Only when fixing is requested run `code-standards fix --all`, inspect the diff
    and rerun check. Do not commit/push automatically. Semantic migrations need a
    separate reviewed procedure; none are enabled by this initial package.

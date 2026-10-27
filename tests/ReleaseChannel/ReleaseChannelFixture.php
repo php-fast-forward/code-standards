@@ -166,10 +166,11 @@ final class ReleaseChannelFixture
             $current = $this->git(['show-ref', '--verify', '--hash', $change['name']], true);
             if (null !== $this->mutationErrors) {
                 $data = ['errors' => $this->mutationErrors];
-            } elseif (null !== $current && null === $this->git(
-                ['merge-base', '--is-ancestor', $current, $change['afterOid']],
-                true,
-            )) {
+            } elseif (null !== $current
+                && null === $this->git(
+                    ['merge-base', '--is-ancestor', $current, $change['afterOid']],
+                    true,
+                )) {
                 $data = ['errors' => [['message' => 'Synthetic non-fast-forward rejection']]];
             } elseif (null === $this->git(
                 ['update-ref', $change['name'], $change['afterOid'], $change['beforeOid']],

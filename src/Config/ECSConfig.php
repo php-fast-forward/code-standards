@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Config;
 
+use FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff;
 use PhpCsFixer\Fixer\FunctionNotation\MethodArgumentSpaceFixer;
 use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
 use PhpCsFixer\Fixer\Phpdoc\NoEmptyPhpdocFixer;
@@ -21,12 +22,13 @@ final class ECSConfig
      *
      * @param callable(ECSConfigBuilder):void|null $customize Native rule imports, skips or overrides; null uses the preset unchanged.
      * @return ECSConfigBuilder The native builder, ready to return from an explicit ECS configuration file.
-     * @throws RuntimeException When the executing checkout cannot be identified for cache isolation.
+     * @throws RuntimeException When the checkout or owned policy source cannot be identified for cache isolation.
      */
     public static function configure(?callable $customize = null): ECSConfigBuilder
     {
         $config = (new ECSConfigBuilder())
             ->withPreparedSets(perCs: true)
+            ->withRules([MultilineBooleanConditionSniff::class])
             ->withSkip([
                 NoSuperfluousPhpdocTagsFixer::class,
                 NoEmptyPhpdocFixer::class,
@@ -44,7 +46,7 @@ final class ECSConfig
         return $config;
     }
 
-    /** Keeps ECS invalidation within the executing checkout's temporary cache; native overrides still run last. */
+    /** Keeps each checkout and owned policy revision in its own temporary cache; native overrides still run last. */
     private static function cacheDirectory(): string
     {
         $directory = getcwd();
@@ -52,6 +54,22 @@ final class ECSConfig
             throw new RuntimeException('Cannot determine the checkout directory for the ECS cache.');
         }
 
-        return sys_get_temp_dir() . '/fast-forward-code-standards/' . hash('sha256', $directory);
+        return sys_get_temp_dir() . '/fast-forward-code-standards/' . hash('sha256', $directory) . '/' . self::policyFingerprint();
+    }
+
+    /** Includes both source bytes and installation paths so an unchanged consumer cannot retain an older owned rule result. */
+    private static function policyFingerprint(): string
+    {
+        $sources = [];
+        foreach ([__FILE__, dirname(__DIR__) . '/Sniff/MultilineBooleanConditionSniff.php'] as $path) {
+            $hash = hash_file('sha256', $path);
+            if (false === $hash) {
+                throw new RuntimeException('Cannot fingerprint formatter policy source: ' . $path);
+            }
+
+            $sources[$path] = $hash;
+        }
+
+        return hash('sha256', serialize($sources));
     }
 }

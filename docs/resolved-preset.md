@@ -1,7 +1,8 @@
 # Resolved PER preset
 
 Snapshot: ECS 13.3.8 from this repository’s Composer lock. The compiled container
-contains 63 distinct PHP-CS-Fixer rules, all reporting `isRisky() === false`.
+contains 63 distinct PHP-CS-Fixer rules, all reporting `isRisky() === false`,
+and one owned PHPCS Sniff: 64 checkers in total.
 This is the actual Code Standards preset, not a resolved DevTools or CoiSA preset.
 
 The fixture `tests/Fixtures/preset-rules.json` records the installed ECS version
@@ -10,7 +11,12 @@ classification after container boot/skip passes. Unspecified options retain the
 fixer's defaults at that exact version; the table does not expand those defaults.
 `tests/Config/PresetTest.php` rebuilds that configuration and compares it exactly.
 It reads this installation's Composer metadata and verifies every fixer's source
-path inside that exact ECS package. This avoids querying the global
+path inside that exact ECS package. The owned Sniff has its own exact class/source
+allowlist; an unknown default Sniff fails the inventory test. PHPCS has no native
+`isRisky()` contract: the snapshot records `risky: null`, checker `type: sniff`
+and the explicit reviewed classification `owned-whitespace-only`, rather than
+inventing a native false value. Fixer entries retain their native risk checks.
+This avoids querying the global
 `InstalledVersions` registry after the bundled ECS autoloader has registered its
 own graph: locally that changed the reported ECS version from `13.3.8` to
 `dev-main`. Installation separation alone does not isolate that global registry.
@@ -88,6 +94,36 @@ preset. The native PER set is ECS 13.3.8 `per-cs.php`, explicitly PER Coding Sty
 must not be presented as proof that broader profiles are safe. Native ECS builder
 `withSkip()` replaces the builder’s skip list, while configured rules of the same
 class use the last configuration. Consumers own their explicit overrides.
+
+## Owned multiline boolean policy
+
+`FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff` participates in
+the existing ECS PHPCS pass. It uses the installed PHPCS public token/scope
+metadata, not another parser, dependency or formatter pass. It changes whitespace
+only and reports a failing diagnostic if a required native expression boundary
+cannot be established. Its source is `src/Sniff/MultilineBooleanConditionSniff.php`.
+
+An `if`, `elseif`, `while` or `do-while` condition whose opening and closing
+parentheses occupy different lines must put each symbolic `&&` and `||` on its
+own line. This includes operators inside grouped expressions, call arguments and
+array indexes. Function/closure/arrow and anonymous-class declarations are
+opaque; separately nested conditional statements are checked independently.
+Single-line conditions, expressions outside those conditions and keyword
+`and`/`or`/`xor` retain their native policy. This extension does not claim that
+PER requires one boolean part per line.
+
+The native ECS spacing service supplies two/four-space or tab indentation and
+LF/CRLF endings after the consumer callback. Native `withSkip()` can disable the
+owned checker explicitly; it replaces the skip list, so callers preserve their
+other intentional skips. The default cache fingerprints both installed policy
+source paths and bytes, in addition to checkout isolation. An explicit
+`withCache()` override remains authoritative.
+
+CLI regressions cover the reported mixed-line guard, groups/calls/indexes,
+declaration boundaries, comments/PHPDoc/strings, native overrides, no-write check,
+token-content equivalence and second-pass idempotence. A disposable installation
+test changes only its owned checker source and verifies that unchanged consumer
+source is rechecked without deleting another checkout's cache.
 
 Golden fixtures prove formatting, check-without-writes, exact fixed bytes and
 second-pass idempotence. Preservation covers author/package/typed-parameter/

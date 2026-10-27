@@ -68,7 +68,9 @@ candidate engines and their analysis scopes without deciding domain ownership.
 The current preset replaces prepared PSR-12 with ECS 13.3.8's native non-risky
 PER Coding Style 3.0 set, then applies the owned preservation skips and explicit
 spacing overrides. It does not combine duplicate PSR/PER/common/docblock sets.
-The resolved snapshot records 63 rules:20 added and5 removed from the earlier 48-rule
+The resolved snapshot records 63 native fixers plus one explicitly classified,
+owned whitespace-only Sniff. The native PER transition added 20 and removed five
+fixers from the earlier 48-rule
 snapshot, with explicit option changes captured for review. PER supersedes
 several older checker choices; the two snapshots are not identical contracts.
 No migration or risky rule is enabled. See the resolved preset and PHPDoc golden

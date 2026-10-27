@@ -2,22 +2,34 @@
     "ecs_version": "13.3.8",
     "ecs_reference": "0564c0b9b807f1740bf0f2cc965ab51551f4dc3b",
     "rules": {
+        "FastForward\\CodeStandards\\Sniff\\MultilineBooleanConditionSniff": {
+            "type": "sniff",
+            "class": "FastForward\\CodeStandards\\Sniff\\MultilineBooleanConditionSniff",
+            "configuration": [],
+            "risky": null,
+            "risk_policy": "owned-whitespace-only",
+            "source": "src/Sniff/MultilineBooleanConditionSniff.php"
+        },
         "array_indentation": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\ArrayIndentationFixer",
             "configuration": [],
             "risky": false
         },
         "array_syntax": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ArrayNotation\\ArraySyntaxFixer",
             "configuration": [],
             "risky": false
         },
         "attribute_block_no_spaces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\AttributeNotation\\AttributeBlockNoSpacesFixer",
             "configuration": [],
             "risky": false
         },
         "binary_operator_spaces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\BinaryOperatorSpacesFixer",
             "configuration": {
                 "default": "at_least_single_space"
@@ -25,26 +37,31 @@
             "risky": false
         },
         "blank_line_after_namespace": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\NamespaceNotation\\BlankLineAfterNamespaceFixer",
             "configuration": [],
             "risky": false
         },
         "blank_line_after_opening_tag": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\PhpTag\\BlankLineAfterOpeningTagFixer",
             "configuration": [],
             "risky": false
         },
         "blank_line_between_import_groups": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\BlankLineBetweenImportGroupsFixer",
             "configuration": [],
             "risky": false
         },
         "blank_lines_before_namespace": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\NamespaceNotation\\BlankLinesBeforeNamespaceFixer",
             "configuration": [],
             "risky": false
         },
         "braces_position": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Basic\\BracesPositionFixer",
             "configuration": {
                 "allow_single_line_anonymous_functions": false,
@@ -53,11 +70,13 @@
             "risky": false
         },
         "cast_spaces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\CastNotation\\CastSpacesFixer",
             "configuration": [],
             "risky": false
         },
         "class_definition": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\ClassDefinitionFixer",
             "configuration": {
                 "inline_constructor_arguments": false,
@@ -66,11 +85,13 @@
             "risky": false
         },
         "compact_nullable_type_declaration": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\CompactNullableTypeDeclarationFixer",
             "configuration": [],
             "risky": false
         },
         "concat_space": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\ConcatSpaceFixer",
             "configuration": {
                 "spacing": "one"
@@ -78,41 +99,49 @@
             "risky": false
         },
         "constant_case": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Casing\\ConstantCaseFixer",
             "configuration": [],
             "risky": false
         },
         "control_structure_braces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\ControlStructureBracesFixer",
             "configuration": [],
             "risky": false
         },
         "control_structure_continuation_position": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\ControlStructureContinuationPositionFixer",
             "configuration": [],
             "risky": false
         },
         "declare_equal_normalize": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\DeclareEqualNormalizeFixer",
             "configuration": [],
             "risky": false
         },
         "elseif": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\ElseifFixer",
             "configuration": [],
             "risky": false
         },
         "encoding": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Basic\\EncodingFixer",
             "configuration": [],
             "risky": false
         },
         "full_opening_tag": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\PhpTag\\FullOpeningTagFixer",
             "configuration": [],
             "risky": false
         },
         "function_declaration": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\FunctionNotation\\FunctionDeclarationFixer",
             "configuration": {
                 "closure_fn_spacing": "none"
@@ -120,31 +149,37 @@
             "risky": false
         },
         "indentation_type": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\IndentationTypeFixer",
             "configuration": [],
             "risky": false
         },
         "line_ending": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\LineEndingFixer",
             "configuration": [],
             "risky": false
         },
         "lowercase_cast": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\CastNotation\\LowercaseCastFixer",
             "configuration": [],
             "risky": false
         },
         "lowercase_keywords": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Casing\\LowercaseKeywordsFixer",
             "configuration": [],
             "risky": false
         },
         "lowercase_static_reference": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Casing\\LowercaseStaticReferenceFixer",
             "configuration": [],
             "risky": false
         },
         "method_argument_space": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\FunctionNotation\\MethodArgumentSpaceFixer",
             "configuration": {
                 "on_multiline": "ignore"
@@ -152,11 +187,13 @@
             "risky": false
         },
         "modifier_keywords": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\ModifierKeywordsFixer",
             "configuration": [],
             "risky": false
         },
         "new_with_parentheses": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\NewWithParenthesesFixer",
             "configuration": {
                 "anonymous_class": false
@@ -164,21 +201,25 @@
             "risky": false
         },
         "no_blank_lines_after_class_opening": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\NoBlankLinesAfterClassOpeningFixer",
             "configuration": [],
             "risky": false
         },
         "no_break_comment": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\NoBreakCommentFixer",
             "configuration": [],
             "risky": false
         },
         "no_closing_tag": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\PhpTag\\NoClosingTagFixer",
             "configuration": [],
             "risky": false
         },
         "no_extra_blank_lines": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\NoExtraBlankLinesFixer",
             "configuration": {
                 "tokens": [
@@ -188,51 +229,61 @@
             "risky": false
         },
         "no_leading_import_slash": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Import\\NoLeadingImportSlashFixer",
             "configuration": [],
             "risky": false
         },
         "no_multiple_statements_per_line": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Basic\\NoMultipleStatementsPerLineFixer",
             "configuration": [],
             "risky": false
         },
         "no_space_around_double_colon": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\NoSpaceAroundDoubleColonFixer",
             "configuration": [],
             "risky": false
         },
         "no_spaces_after_function_name": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\FunctionNotation\\NoSpacesAfterFunctionNameFixer",
             "configuration": [],
             "risky": false
         },
         "no_trailing_whitespace": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\NoTrailingWhitespaceFixer",
             "configuration": [],
             "risky": false
         },
         "no_trailing_whitespace_in_comment": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Comment\\NoTrailingWhitespaceInCommentFixer",
             "configuration": [],
             "risky": false
         },
         "no_whitespace_in_blank_line": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\NoWhitespaceInBlankLineFixer",
             "configuration": [],
             "risky": false
         },
         "nullable_type_declaration": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\NullableTypeDeclarationFixer",
             "configuration": [],
             "risky": false
         },
         "operator_linebreak": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\OperatorLinebreakFixer",
             "configuration": [],
             "risky": false
         },
         "ordered_class_elements": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\OrderedClassElementsFixer",
             "configuration": {
                 "order": [
@@ -242,6 +293,7 @@
             "risky": false
         },
         "ordered_imports": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Import\\OrderedImportsFixer",
             "configuration": {
                 "imports_order": [
@@ -254,6 +306,7 @@
             "risky": false
         },
         "ordered_types": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\OrderedTypesFixer",
             "configuration": {
                 "null_adjustment": "always_last",
@@ -262,6 +315,7 @@
             "risky": false
         },
         "phpdoc_align": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Phpdoc\\PhpdocAlignFixer",
             "configuration": {
                 "align": "left"
@@ -269,26 +323,31 @@
             "risky": false
         },
         "return_type_declaration": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\FunctionNotation\\ReturnTypeDeclarationFixer",
             "configuration": [],
             "risky": false
         },
         "short_scalar_cast": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\CastNotation\\ShortScalarCastFixer",
             "configuration": [],
             "risky": false
         },
         "single_blank_line_at_eof": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\SingleBlankLineAtEofFixer",
             "configuration": [],
             "risky": false
         },
         "single_class_element_per_statement": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\SingleClassElementPerStatementFixer",
             "configuration": [],
             "risky": false
         },
         "single_import_per_statement": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Import\\SingleImportPerStatementFixer",
             "configuration": {
                 "group_to_single_imports": false
@@ -296,16 +355,19 @@
             "risky": false
         },
         "single_line_after_imports": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Import\\SingleLineAfterImportsFixer",
             "configuration": [],
             "risky": false
         },
         "single_line_empty_body": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Basic\\SingleLineEmptyBodyFixer",
             "configuration": [],
             "risky": false
         },
         "single_space_around_construct": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\LanguageConstruct\\SingleSpaceAroundConstructFixer",
             "configuration": {
                 "constructs_followed_by_a_single_space": [
@@ -356,36 +418,43 @@
             "risky": false
         },
         "single_trait_insert_per_statement": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ClassNotation\\SingleTraitInsertPerStatementFixer",
             "configuration": [],
             "risky": false
         },
         "spaces_inside_parentheses": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\SpacesInsideParenthesesFixer",
             "configuration": [],
             "risky": false
         },
         "statement_indentation": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\StatementIndentationFixer",
             "configuration": [],
             "risky": false
         },
         "switch_case_semicolon_to_colon": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\SwitchCaseSemicolonToColonFixer",
             "configuration": [],
             "risky": false
         },
         "switch_case_space": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\SwitchCaseSpaceFixer",
             "configuration": [],
             "risky": false
         },
         "ternary_operator_spaces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\TernaryOperatorSpacesFixer",
             "configuration": [],
             "risky": false
         },
         "trailing_comma_in_multiline": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\ControlStructure\\TrailingCommaInMultilineFixer",
             "configuration": {
                 "after_heredoc": true,
@@ -400,11 +469,13 @@
             "risky": false
         },
         "types_spaces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\TypesSpacesFixer",
             "configuration": [],
             "risky": false
         },
         "unary_operator_spaces": {
+            "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Operator\\UnaryOperatorSpacesFixer",
             "configuration": {
                 "only_dec_inc": true

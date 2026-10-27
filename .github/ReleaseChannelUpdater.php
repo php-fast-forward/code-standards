@@ -39,10 +39,14 @@ final readonly class ReleaseChannelUpdater
     public function update(string $repository, string $tag, string $sha): array
     {
         $selected = self::version($tag);
-        if (null === $selected || '0' !== $selected['major'] || 'php-fast-forward/code-standards' !== $repository || !self::sha($sha) || 1 !== preg_match(
-            '~^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$~D',
-            $repository,
-        )) {
+        if (null === $selected
+            || '0' !== $selected['major']
+            || 'php-fast-forward/code-standards' !== $repository
+            || !self::sha($sha)
+            || 1 !== preg_match(
+                '~^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$~D',
+                $repository,
+            )) {
             throw new RuntimeException('Select an exact repository, complete stable release tag and full commit SHA.');
         }
 
@@ -204,7 +208,8 @@ final readonly class ReleaseChannelUpdater
             throw new RuntimeException('Release or conflicting-tag evidence changed before the channel update.');
         }
 
-        if (null !== $previous && (!self::contains($finalCatalog, $previous)
+        if (null !== $previous
+            && (!self::contains($finalCatalog, $previous)
             || $this->commit($repository, $previous['tag_name']) !== $current['sha'])) {
             throw new RuntimeException('The previous channel release evidence changed before the update.');
         }
@@ -280,7 +285,8 @@ final readonly class ReleaseChannelUpdater
         if (null === $data) {
             return null;
         }
-        if ('refs/' . $ref !== ($data['ref'] ?? null) || !self::sha($data['object']['sha'] ?? null)
+        if ('refs/' . $ref !== ($data['ref'] ?? null)
+            || !self::sha($data['object']['sha'] ?? null)
             || !is_string($data['object']['type'] ?? null)) {
             throw new RuntimeException('Malformed exact Git reference evidence.');
         }
@@ -361,8 +367,10 @@ final readonly class ReleaseChannelUpdater
                 throw new RuntimeException('Malformed release catalog.');
             }
             foreach ($data as $release) {
-                if (!is_array($release) || !is_bool($release['draft'] ?? null)
-                    || !is_bool($release['prerelease'] ?? null) || !is_string($release['tag_name'] ?? null)) {
+                if (!is_array($release)
+                    || !is_bool($release['draft'] ?? null)
+                    || !is_bool($release['prerelease'] ?? null)
+                    || !is_string($release['tag_name'] ?? null)) {
                     throw new RuntimeException('Partial release catalog metadata cannot establish the latest version.');
                 }
                 if ($release['draft'] || $release['prerelease']) {
@@ -393,10 +401,11 @@ final readonly class ReleaseChannelUpdater
                         $left['tag_name'],
                     )),
                 );
-                if (count($releases) > 1 && 0 === self::compare(
-                    self::version($releases[0]['tag_name']),
-                    self::version($releases[1]['tag_name']),
-                )) {
+                if (count($releases) > 1
+                    && 0 === self::compare(
+                        self::version($releases[0]['tag_name']),
+                        self::version($releases[1]['tag_name']),
+                    )) {
                     throw new RuntimeException('Build-only release ties cannot choose a unique channel destination.');
                 }
 
@@ -461,10 +470,11 @@ final readonly class ReleaseChannelUpdater
      */
     private static function publicationTime(mixed $value): bool
     {
-        if (!is_string($value) || 1 !== preg_match(
-            '/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/D',
-            $value,
-        )) {
+        if (!is_string($value)
+            || 1 !== preg_match(
+                '/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/D',
+                $value,
+            )) {
             return false;
         }
         $date = DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s\Z', $value, new DateTimeZone('UTC'));
@@ -481,11 +491,13 @@ final readonly class ReleaseChannelUpdater
      */
     private static function version(mixed $tag): ?array
     {
-        if (!is_string($tag) || strlen($tag) > 128 || 1 !== preg_match(
-            '/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/D',
-            $tag,
-            $matches,
-        )) {
+        if (!is_string($tag)
+            || strlen($tag) > 128
+            || 1 !== preg_match(
+                '/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/D',
+                $tag,
+                $matches,
+            )) {
             return null;
         }
 

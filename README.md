@@ -63,8 +63,10 @@ composer test
 
 `check` reports violations with a nonzero status and does not change source.
 The default preset stores its ECS cache beneath the system temporary directory,
-in `fast-forward-code-standards/<SHA-256 of the executing checkout path>`.
-Different checkouts cannot invalidate each other's cache. Native
+in `fast-forward-code-standards/<SHA-256 of the executing checkout path>/<owned-policy fingerprint>`.
+The fingerprint includes the installed preset and owned checker paths and source
+bytes. Different checkouts cannot invalidate each other's cache, and a changed
+owned rule cannot reuse an earlier passing result. Native
 `withCache()` overrides remain supported and apply last; share cache directories
 only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
@@ -113,6 +115,17 @@ preset, does not discover or overwrite consumer configuration, and never runs
 both ECS and a competing PHP-CS-Fixer pass. Standalone ECS users may import the
 same library preset and set their own paths. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
+
+The preset adds an owned whitespace policy to native PER 3.0: in an already
+multiline `if`, `elseif`, `while` or `do-while` condition, each symbolic `&&` and
+`||` starts its own line. The policy includes grouped expressions, call arguments
+and array indexes within that condition; function, arrow and anonymous-class
+declarations remain opaque. Single-line conditions and other expression contexts
+retain their native rules. This is a project policy, not an additional PER claim.
+The native ECS `withSpacing()` callback controls indentation and line endings.
+Consumers can explicitly skip `FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff`
+through `withSkip()`; that native method replaces the skip list, so preserve any
+other intended preservation skips. See [the resolved preset](docs/resolved-preset.md).
 
 The formatter worker uses ECS's public factory and command APIs with this tool's
 own Composer installation. An isolated tool does not implicitly load the target
