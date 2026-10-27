@@ -34,6 +34,12 @@ metadata:
    the selected ref after v0 points to a confirmed 0.x release, and use `pull_request` with
    read-only permissions and a hosted runner. No secrets/inherit, write token,
    target event or automatic fix. Required-check settings remain separately owned.
+7. Only when magic-number analysis is requested, run `magic-numbers --all` or
+   the same immutable `--base`/`--head` selection. It is independent of check/fix
+   and does not execute consumer configuration/autoload implicitly. Use
+   `--format=xml` for native machine output; preserve failing status and stderr.
+   Review native numeric/function/context exceptions explicitly. They are broad
+   policy overrides, not per-finding baselines; do not auto-accept existing debt.
 
 This directory is the sole source payload. Installation/host activation is explicit;
 copying this skill does not install the runtime or authorize consumer rollout.

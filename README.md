@@ -190,6 +190,13 @@ Composer package constraint.
 
 ## ❓ FAQ
 
+### Optional magic-number analysis
+
+Run `vendor/bin/code-standards magic-numbers --all` explicitly for PHPMND
+analysis. Add `--format=xml` for its native machine-readable report. The command
+uses the same tracked-file/Git ignore policy and does not run as part of
+`check` or `fix`. See [options, status and adoption guidance](docs/magic-numbers.rst).
+
 **Can I use this as a staged-only pre-commit check?**
 The CLI selects working-tree files from Git, not staged index blobs. Changed
 mode requires a clean tracked checkout and cannot certify staged-only content.
