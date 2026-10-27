@@ -88,12 +88,12 @@ final class ArchiveTest extends TestCase
             self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/' . $path), $git[$path]);
         }
         $root = dirname(__DIR__, 2);
-        foreach (['SKILL.md', 'LICENSE', 'NOTICE', 'references/contracts.md', 'references/cleanup.md', 'references/verification.md'] as $name) {
+        foreach (['SKILL.md', 'LICENSE', 'references/contracts.md', 'references/cleanup.md', 'references/verification.md'] as $name) {
             $path = 'resources/skills/fast-forward-phpdoc/' . $name;
             self::assertArrayHasKey($path, $git);
             self::assertSame(hash_file('sha256', $root . '/' . $path), $git[$path]);
         }
-        self::assertSame(hash_file('sha256', $root . '/LICENSE'), $git['resources/skills/fast-forward-phpdoc/LICENSE']);
+        self::assertArrayNotHasKey('resources/skills/fast-forward-phpdoc/NOTICE', $git);
         foreach (array_keys($git) as $path) {
             self::assertDoesNotMatchRegularExpression('~^(?:vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
