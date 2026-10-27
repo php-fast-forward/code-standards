@@ -21,7 +21,7 @@ final class FileSelection
     {
         $this->assertCheckoutRoot($directory);
         if (null === $base && null === $head) {
-            return $this->paths($this->process->capture(['git', 'ls-files', '-z'], $directory));
+            return $this->withoutIgnored($directory, $this->paths($this->process->capture(['git', 'ls-files', '-z'], $directory)));
         }
 
         foreach ([$base, $head] as $sha) {
@@ -40,18 +40,37 @@ final class FileSelection
 
         // No shell, newline parsing or rename-source parsing. Deleted paths are never passed to tools.
         $allChanges = $this->paths($this->process->capture([
-            'git', 'diff', '--name-only', '-z', $base . '...' . $head, '--',
+            'git', 'diff', '--no-renames', '--name-only', '-z', $base . '...' . $head, '--',
         ], $directory));
         foreach ($allChanges as $path) {
+            // Case-folding hosts can load mixed-case policy names; an extra full scan elsewhere is conservative.
             if ((null !== $config && $directory . '/' . $path === $config)
-                || 1 === preg_match('~(^|/)(composer\.(json|lock)|ecs[^/]*\.php|\.editorconfig)$|^src/Config/|^config/~', $path)) {
-                return $this->paths($this->process->capture(['git', 'ls-files', '-z'], $directory));
+                || 1 === preg_match('~(^|/)(composer\.(json|lock)|ecs[^/]*\.php|\.editorconfig|\.gitignore)$|^src/Config/|^config/~i', $path)) {
+                return $this->withoutIgnored($directory, $this->paths($this->process->capture(['git', 'ls-files', '-z'], $directory)));
             }
         }
 
-        return $this->paths($this->process->capture([
+        return $this->withoutIgnored($directory, $this->paths($this->process->capture([
             'git', 'diff', '--name-only', '--diff-filter=ACMRT', '--find-renames', '-z', $base . '...' . $head, '--',
+        ], $directory)));
+    }
+
+    /**
+     * Applies only the consumer's per-directory .gitignore rules, including to forced tracked paths.
+     *
+     * Git owns anchored patterns, negations, nested rules and binary-safe paths. Global/info excludes
+     * are deliberately absent so host-specific preferences cannot silently change the project check.
+     *
+     * @param list<string> $paths Candidate tracked destinations from the selected scan mode.
+     * @return list<string> Destinations not ignored by the consumer's current checkout rules.
+     */
+    private function withoutIgnored(string $directory, array $paths): array
+    {
+        $ignored = $this->paths($this->process->capture([
+            'git', 'ls-files', '--cached', '--ignored', '--exclude-per-directory=.gitignore', '-z',
         ], $directory));
+
+        return array_values(array_diff($paths, $ignored));
     }
 
     /**
