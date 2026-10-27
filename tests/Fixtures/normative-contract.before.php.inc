@@ -11,7 +11,6 @@ interface NormativeContract
      * Returns the supplied value as a one-element list.
      *
      * Implementations MUST preserve the supplied value and MUST NOT accept negative input.
-     * Callers SHOULD validate user input before invocation.
      *
      * @param int $value Nonnegative value whose identity the result retains.
      * @return list<int> Exactly one unchanged value, without normalization.

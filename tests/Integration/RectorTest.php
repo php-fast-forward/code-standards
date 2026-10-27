@@ -51,7 +51,7 @@ final class RectorTest extends TestCase
         self::assertSame($config, file_get_contents($this->directory . '/policy.php'));
     }
 
-    /** A qualified native semantic rule preserves descriptive interface contracts and inheritance markers. */
+    /** Preserves interface documentation during refactoring. */
     public function testNativeArrayRulePreservesNormativeInterfaceDocumentation(): void
     {
         $fixtures = dirname(__DIR__) . '/Fixtures/';

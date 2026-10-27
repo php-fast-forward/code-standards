@@ -1,60 +1,33 @@
 Process transport contracts
 ===========================
 
-``ProcessRunner`` separates successful output capture from diagnostic execution.
-``ResultProcessRunner`` is an optional capability for callers that need both
-channels and the native exit status. These interfaces do not select a formatter,
-refactoring policy or application bootstrap.
+``ProcessRunner`` distinguishes successful output capture from command status.
+``ResultProcessRunner`` optionally adds separate raw output channels and status.
 
 Normative language
 ------------------
 
-Uppercase requirement words in these contracts follow
+Uppercase ``MUST``, ``MUST NOT``, ``SHOULD``, ``SHOULD NOT`` and ``MAY`` follow
 `RFC 2119 <https://www.rfc-editor.org/rfc/rfc2119>`__ and
-`RFC 8174 <https://www.rfc-editor.org/rfc/rfc8174>`__:
-
-* ``MUST`` and ``MUST NOT`` express a requirement and a prohibition.
-* ``SHOULD`` and ``SHOULD NOT`` allow justified exceptions after their
-  consequences have been assessed.
-* ``MAY`` identifies optional behavior.
-
-Lowercase words keep their ordinary meaning. Use these terms sparingly for
-interoperability and consequential behavior, rather than turning every sentence
-into a requirement. A method summary explains its purpose; subsequent paragraphs
-describe semantics that parameter and return types cannot convey. Parameter,
-return and exception tags add useful details instead of replacing the summary.
+`RFC 8174 <https://www.rfc-editor.org/rfc/rfc8174>`__; lowercase words retain
+their ordinary meaning. Use requirement terms sparingly for observable contracts.
+Interface descriptions state semantic obligations, not implementation details.
 
 Choosing an operation
 ---------------------
 
-The output-delivery column describes ``NativeProcessRunner``. The operation
-purposes and return/failure distinctions follow the interface contracts; custom
-overrides document their own delivery and exception details.
+=================== =========================== =============================
+Operation           Return value                Completed nonzero exit
+=================== =========================== =============================
+``capture``         Successful stdout           Raises an exception
+``run``             Completed exit status       Returned unchanged
+``captureResult``   Status, stdout and stderr   Returned as data
+=================== =========================== =============================
 
-=================== =========================== ============================= =============================
-Operation           Return on completion        Completed nonzero exit        Output delivery
-=================== =========================== ============================= =============================
-``capture``         Successful stdout bytes     Raises an execution failure   Buffered result; no live sink
-``run``             Native integer exit status  Remains a nonzero status      Configured sink, when present
-``captureResult``   ``ProcessResult``           Remains result data           Separate stdout/stderr bytes
-=================== =========================== ============================= =============================
-
-Use ``capture`` for a Git NUL-delimited path list or a successful Rector JSON
-inventory: a failed command must not be mistaken for valid output. The transport
-does not trim or decode stdout. Stderr is not concatenated into that return value.
-
-Use ``run`` for syntax, formatter or semantic-tool diagnostics when the caller
-needs the exit code and its configured output boundary. The native provider
-connects the sink to Console output, preserving stderr when the output supports
-it. A directly constructed ``NativeProcessRunner`` with no sink stays silent.
-Chunks retain bytes, but no total order between stdout and stderr is promised.
-Streaming to a sink does not imply bounded memory: Symfony also retains buffers.
-Exceptions from a configured sink may propagate instead of producing a status.
-
-Use ``captureResult`` when nonzero statuses and both output channels are useful
-data. It does not parse diagnostics or decide that an engine result is clean.
-An injected ``ProcessRunner`` override is not necessarily a
-``ResultProcessRunner``; check the capability before using it.
+Use ``capture`` for output consumed as data, such as a Git path list or Rector
+JSON inventory. Use ``run`` to propagate tool status, with diagnostics permitted.
+Use ``captureResult`` for raw stdout/stderr and status without streaming; a
+nonzero status remains data. Failure before completion raises an exception.
 
 .. code-block:: php
 
@@ -68,49 +41,31 @@ An injected ``ProcessRunner`` override is not necessarily a
    $result = $process->captureResult([PHP_BINARY, '-n', '-l', $file], $directory);
    // Interpret $result->exitCode, stdout and stderr according to the selected tool.
 
-These examples assume an explicitly supplied transport, existing working
-directory and selected source file. They do not construct a container or execute
-an application bootstrap. The result-capture capability is a transport foundation;
-it does not itself provide structured ECS/Rector reports or a CLI JSON option.
+The examples assume an injected transport, existing working directory and
+selected source file. Check the optional capability before using an arbitrary
+``ProcessRunner`` override. Result capture does not parse ECS/Rector reports.
 
-Shared execution boundary
---------------------------
+Native transport
+----------------
 
-The executable and arguments are passed as a literal vector. The interface does
-not interpolate a shell command. A caller can deliberately select a shell or
-interpreter as the executable; its own command language remains the caller's
-responsibility. The directory identifies the requested child working directory;
-the native transport sets it without changing the parent's working directory.
+``NativeProcessRunner`` uses Symfony Process. It rejects invalid timeouts before
+launch and keeps the parent's working directory unchanged. Declared defaults
+are 120 seconds for ``capture`` and 300 for ``run``/``captureResult``.
 
-Callers supply a positive finite timeout to all three operations. The native
-transport rejects invalid bounds before launching the child; the interface's
-input precondition does not prescribe every override's validation algorithm.
-The defaults are 120 seconds for ``capture`` and 300 seconds for ``run`` and
-``captureResult``. The native implementation raises
-``InvalidArgumentException`` for invalid bounds and Symfony Process runtime
-exceptions when execution cannot complete, including timeout failures.
-``capture`` also raises a process failure for a completed nonzero exit; ``run``
-and ``captureResult`` retain such statuses. A missing executable can itself
-produce a native failure status; do not infer a particular exception from every
-unsuccessful command.
+Its ``run`` forwards raw stdout/stderr chunks to the optional sink; without one
+it is silent. Capture operations do not use the sink. Symfony retains buffers,
+so sink delivery is not a bounded-memory guarantee. Execution and sink exceptions
+can propagate.
 
-Capturing output is not a read-only guarantee. Any selected command or trusted
-configuration may write files, execute code or contact external services. Callers
-own that authority and the tool-specific interpretation of status and output.
-The native transport removes ``GH_TOKEN``, ``GITHUB_TOKEN`` and ``COMPOSER_AUTH``
-from child environment inheritance. It does not promise an empty environment,
-filesystem isolation, output redaction or rollback of child side effects.
+The native child environment excludes ``GH_TOKEN``, ``GITHUB_TOKEN`` and
+``COMPOSER_AUTH``. This is not a sandbox or an empty environment. Callers own
+command authority: an explicitly selected shell, application or configuration
+can execute code and change files. Capturing output does not make it read-only.
 
 Preservation and extension
 --------------------------
 
-The default formatter is configured to retain descriptive interface PHPDoc,
-normative clauses and inheritance markers. Golden fixtures exercise read-only
-checking, explicit fixing and a stable second pass. A separately qualified native Rector rule also
-preserves these contracts while transforming implementation code. Arbitrary
-consumer-selected Rector rules can change PHPDoc; this is not a guarantee about
-every semantic configuration.
-
-Custom transport overrides remain responsible for the documented execution and
-failure semantics. They MAY implement only ``ProcessRunner``; the
-``ResultProcessRunner`` capability is optional and callers discover it explicitly.
+Golden fixtures exercise descriptive contracts and inheritance markers through
+read-only checking, explicit fixing and idempotence. A native Rector regression
+changes array syntax while retaining the same documentation. Consumer-selected
+semantic rules can change PHPDoc; this is not a claim about every configuration.
