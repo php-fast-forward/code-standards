@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-10-27
+
+### Fixed
+
+- Checks and fixes through ECS's public APIs without implicitly loading a separate
+  consumer vendor autoloader. Preserves consumer cwd, native configuration and cache
+  behavior, explicit custom-checker opt-in, and the tool's own Composer bootstrap.
+
+  ([#55](https://github.com/php-fast-forward/code-standards/pull/55))
+
+## [0.3.1] - 2026-10-27
+
+### Changed
+
+- Uses each external Action's published major channel: checkout v7, setup-php v2
+  and Changelog's released v0 branch channel. Preserves workflow permissions,
+  unprivileged PR checks and runtime provenance from the called job's actual SHA.
+
+  ([#60](https://github.com/php-fast-forward/code-standards/pull/60))
+
+## [0.3.0] - 2026-10-27
+
+### Added
+
+- Add weekly Dependabot checks for root Composer dependencies and GitHub Actions.
+  Group minor and patch version updates separately for production and development
+  Composer dependencies, and group GitHub Actions minor and patch updates. Keep
+  major updates individual and leave security-update grouping at its defaults.
+
+  ([#48](https://github.com/php-fast-forward/code-standards/pull/48))
+
+### Changed
+
+- Describes current usage and installs the compatible Composer package without a
+  fixed release in the README example.
+
+  ([#51](https://github.com/php-fast-forward/code-standards/pull/51))
+
+- Apply the consumer's root and nested Git ignore rules dynamically to tracked candidates in full and changed scans, including force-added matching files. Preserve Git's negation, anchor, escape and directory semantics without a second parser or host-global excludes. Replace generated-directory name exclusions with consumer-owned rules while retaining structural Git metadata and source-containment protection. Ignore-rule changes, removals and renames trigger a complete eligible tracked scan; case-insensitive policy-name detection prevents missed invalidation on case-folding filesystems. ([#39](https://github.com/php-fast-forward/code-standards/pull/39))
+
+### Fixed
+
+- Uses the published Changelog 0.4.1 lifecycle's native repository and version title
+  template when preparing or refreshing the managed version pull request, without
+  overriding the generated title in this repository.
+
+  ([#50](https://github.com/php-fast-forward/code-standards/pull/50))
+
 ## [0.2.0] - 2026-10-26
 
 ### Changed
@@ -80,5 +128,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.3.2]: https://github.com/php-fast-forward/code-standards/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/php-fast-forward/code-standards/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/php-fast-forward/code-standards/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/php-fast-forward/code-standards/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/php-fast-forward/code-standards/releases/tag/v0.1.0

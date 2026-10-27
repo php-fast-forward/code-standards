@@ -33,8 +33,21 @@ explicit compatibility tests or a real process boundary. A separate Composer
 graph alone must never be described as runtime isolation.
 Analyzer/autoload fixtures must prove that the code under analysis comes from
 the consumer checkout, rather than another copy installed inside the tool.
-This initial syntax parser executes no application autoload; future PHPUnit,
-Rector and type-analysis adapters must add those compatibility tests.
+Syntax parsing uses `php -n -l` without application autoload. The formatter worker
+loads its own Composer runtime and uses ECS's public container factory and native
+check command. It does not invoke ECS's CLI bootstrap, which otherwise imports
+the working directory's vendor autoloader before config selection. The worker
+preserves consumer cwd, native config cache bookkeeping and absolute selected
+file arguments; executable user config can explicitly opt into consumer loaders
+and custom checkers. Engine paths are captured from the tool's installation before
+that config can change Composer's installed-package metadata.
+
+Ordinary Composer installation inside the consumer intentionally shares that
+installation's autoloader through its binary proxy. `composer-runtime-api` and
+`$_composer_autoload_path` remain part of this contract. Removing an extra import
+from a different target graph does not remove normal Composer bootstrap.
+PHPUnit, Rector and type-analysis adapters still require their own compatibility
+tests; the formatter's process boundary does not prove their isolation.
 
 ## Bootstrap and compatibility
 
