@@ -136,6 +136,35 @@ final class StandardsTest extends TestCase
         self::assertStringContainsString('clean tracked checkout', $dirty->getErrorOutput());
     }
 
+    /** Selection failures retain text-mode status while JSON reports remain incomplete and source stays unchanged. */
+    public function testJsonSelectionFailuresPreserveTextModeExitStatus(): void
+    {
+        $this->put('a.php', '<?php echo 1;');
+        $base = $this->commit();
+        $this->put('a.php', '<?php echo 2;');
+        $head = $this->commit();
+
+        foreach (['mismatch', 'dirty'] as $scenario) {
+            if ('dirty' === $scenario) {
+                $this->put('a.php', '<?php echo 3;');
+            }
+            $arguments = ['check', '--base=' . $base, '--head=' . ('mismatch' === $scenario ? $base : $head)];
+            $source = file_get_contents($this->directory . '/a.php');
+            $text = $this->cli($arguments);
+            $json = $this->cli([...$arguments, '--format=json']);
+            $report = json_decode($json->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+
+            self::assertSame(2, $text->getExitCode(), $scenario);
+            self::assertSame($text->getExitCode(), $json->getExitCode(), $scenario);
+            self::assertSame(2, $report['exit_code'], $scenario);
+            self::assertSame('operational-error', $report['status'], $scenario);
+            self::assertFalse($report['complete'], $scenario);
+            self::assertSame('selection', $report['errors'][0]['phase'], $scenario);
+            self::assertSame(0, $report['selection']['files'], $scenario);
+            self::assertSame($source, file_get_contents($this->directory . '/a.php'), $scenario);
+        }
+    }
+
     /** Uses real ECS to prove violation status, source preservation and second-pass fix stability. */
     public function testStyleCheckDoesNotWriteAndExplicitFixIsIdempotent(): void
     {
@@ -154,6 +183,92 @@ final class StandardsTest extends TestCase
         self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
         self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
         self::assertSame($fixed, file_get_contents($this->directory . '/' . $path));
+    }
+
+    /** Native JSON reports findings without banners or source changes, then clean output after explicit fix. */
+    public function testExplicitJsonCheckUsesNativeReportsAndPreservesSource(): void
+    {
+        $path = "space and\nnewline.php";
+        $bad = "<?php\n\ndeclare(strict_types=1);\n\n\$foo=1;\n";
+        $this->put($path, $bad);
+        $this->commit();
+        $check = $this->cli(['check', '--all', '--format=json']);
+        $report = json_decode($check->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+
+        self::assertSame(2, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame('check', $report['command']);
+        self::assertSame('findings', $report['status']);
+        self::assertTrue($report['complete']);
+        self::assertSame(0, $report['selection']['style_remaining']);
+        self::assertArrayHasKey($this->directory . '/' . $path, $report['files']);
+        self::assertSame($bad, file_get_contents($this->directory . '/' . $path));
+        self::assertSame('', $check->getErrorOutput());
+        self::assertSame('', $this->git(['diff']));
+
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        $fixed = file_get_contents($this->directory . '/' . $path);
+        $clean = $this->cli(['check', '--all', '--format=json']);
+        $cleanReport = json_decode($clean->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(0, $clean->getExitCode(), $clean->getOutput() . $clean->getErrorOutput());
+        self::assertSame('clean', $cleanReport['status']);
+        self::assertSame($fixed, file_get_contents($this->directory . '/' . $path));
+    }
+
+    /** Syntax failures and executable-config output cannot masquerade as style findings or clean JSON. */
+    public function testJsonCheckClassifiesSyntaxAndContaminatedConfigurationSeparately(): void
+    {
+        $broken = '<?php broken syntax !!!';
+        $this->put('source.php', $broken);
+        $this->commit();
+        $syntax = $this->cli(['check', '--all', '--format=json']);
+        $report = json_decode($syntax->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertNotSame(0, $syntax->getExitCode());
+        self::assertSame('syntax-failed', $report['status']);
+        self::assertFalse($report['complete']);
+        self::assertSame(1, $report['selection']['style_remaining']);
+        self::assertSame($broken, file_get_contents($this->directory . '/source.php'));
+
+        $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $this->put('.build/ecs.php', '<?php echo "consumer banner"; return \\FastForward\\CodeStandards\\Config\\ECSConfig::configure();');
+        $contaminated = $this->cli(['check', '--all', '--format=json', '--config=.build/ecs.php']);
+        $report = json_decode($contaminated->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(1, $contaminated->getExitCode());
+        self::assertSame('operational-error', $report['status']);
+        self::assertFalse($report['complete']);
+        self::assertStringNotContainsString('consumer banner', $contaminated->getOutput());
+    }
+
+    /** Unsupported formats are rejected before config execution and fix does not acquire a JSON mode. */
+    public function testCheckFormatsAreExplicitAndEmptySelectionHasACompleteReport(): void
+    {
+        $empty = $this->cli(['check', '--all', '--format=json']);
+        $report = json_decode($empty->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(0, $empty->getExitCode());
+        self::assertSame('check', $report['command']);
+        self::assertSame('clean', $report['status']);
+        self::assertSame(0, $report['selection']['files']);
+        self::assertTrue($report['complete']);
+
+        $this->put('.build/ecs.php', '<?php file_put_contents(__DIR__ . "/ran", "unexpected"); return null;');
+        $invalid = $this->cli(['check', '--all', '--format=xml', '--config=.build/ecs.php']);
+        self::assertSame(2, $invalid->getExitCode());
+        self::assertSame('', $invalid->getOutput());
+        self::assertFileDoesNotExist($this->directory . '/.build/ran');
+        $fix = $this->cli(['fix', '--all', '--format=json']);
+        self::assertSame(2, $fix->getExitCode());
+    }
+
+    /** Unrepresentable source bytes cause an objective operational failure instead of lossy JSON coercion. */
+    public function testJsonReportDoesNotReplaceInvalidUtf8InSourceDiffs(): void
+    {
+        $source = "<?php\n\ndeclare(strict_types=1);\n\n// invalid byte: \xff\n\$foo=1;\n";
+        $this->put('source.php', $source);
+        $this->commit();
+        $check = $this->cli(['check', '--all', '--format=json']);
+        $report = json_decode($check->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(1, $check->getExitCode(), $check->getOutput());
+        self::assertSame('operational-error', $report['status']);
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
     }
 
     /** Preserves older parameter syntax by default, existing commas and explicit fix/check boundaries. */
