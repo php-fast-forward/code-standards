@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Config;
 
 use FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff;
+use FastForward\CodeStandards\Sniff\MultilineConditionSpacingSniff;
 use PhpCsFixer\Fixer\FunctionNotation\MethodArgumentSpaceFixer;
 use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
 use PhpCsFixer\Fixer\Phpdoc\NoEmptyPhpdocFixer;
@@ -28,7 +29,7 @@ final class ECSConfig
     {
         $config = (new ECSConfigBuilder())
             ->withPreparedSets(perCs: true)
-            ->withRules([MultilineBooleanConditionSniff::class])
+            ->withRules([MultilineBooleanConditionSniff::class, MultilineConditionSpacingSniff::class])
             ->withSkip([
                 NoSuperfluousPhpdocTagsFixer::class,
                 NoEmptyPhpdocFixer::class,
@@ -60,8 +61,13 @@ final class ECSConfig
     /** Includes both source bytes and installation paths so an unchanged consumer cannot retain an older owned rule result. */
     private static function policyFingerprint(): string
     {
+        $paths = [
+            __FILE__,
+            dirname(__DIR__) . '/Sniff/MultilineBooleanConditionSniff.php',
+            dirname(__DIR__) . '/Sniff/MultilineConditionSpacingSniff.php',
+        ];
         $sources = [];
-        foreach ([__FILE__, dirname(__DIR__) . '/Sniff/MultilineBooleanConditionSniff.php'] as $path) {
+        foreach ($paths as $path) {
             $hash = hash_file('sha256', $path);
             if (false === $hash) {
                 throw new RuntimeException('Cannot fingerprint formatter policy source: ' . $path);

@@ -66,6 +66,7 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 
 - [README.md](README.md): library/CLI adoption, explicit fix and tool scope.
 - [Policy comparison](docs/policy.md): evidence, rule differences and extraction gates.
+- [Explicit Rector](docs/rector.md): opt-in native semantic preview/application; executable configuration owns target PHP, rules, source paths and caches.
 - [Resolved preset](docs/resolved-preset.md): compiled rules, golden contracts and dependency-update review.
 - [Legacy fixer comparison](docs/legacy-fixer-comparison.md): fixed-source inventory, loaded dependencies and remaining profile decisions.
 - [PHPDoc comparison](docs/phpdoc-comparison.md): actual custom-rule registration, source contracts and remaining golden decisions.

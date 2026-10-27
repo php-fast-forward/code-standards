@@ -2,7 +2,7 @@
 
 Snapshot: ECS 13.3.8 from this repository’s Composer lock. The compiled container
 contains 63 distinct PHP-CS-Fixer rules, all reporting `isRisky() === false`,
-and one owned PHPCS Sniff: 64 checkers in total.
+and two allowlisted PHPCS Sniffs: 65 checkers in total.
 This is the actual Code Standards preset, not a resolved DevTools or CoiSA preset.
 
 The fixture `tests/Fixtures/preset-rules.json` records the installed ECS version
@@ -14,7 +14,8 @@ It reads this installation's Composer metadata and verifies every fixer's source
 path inside that exact ECS package. The owned Sniff has its own exact class/source
 allowlist; an unknown default Sniff fails the inventory test. PHPCS has no native
 `isRisky()` contract: the snapshot records `risky: null`, checker `type: sniff`
-and the explicit reviewed classification `owned-whitespace-only`, rather than
+and explicit reviewed classifications `owned-whitespace-only` and
+`native-psr12-whitespace-adapter`, rather than
 inventing a native false value. Fixer entries retain their native risk checks.
 This avoids querying the global
 `InstalledVersions` registry after the bundled ECS autoloader has registered its
@@ -97,6 +98,36 @@ class use the last configuration. Consumers own their explicit overrides.
 
 ## Owned multiline boolean policy
 
+The normative braced wrapper follows [PSR-12 sections 5.1 and 5.3](https://www.php-fig.org/psr/psr-12/)
+and [PER Coding Style 3.0.0 sections 5.1 and 5.3](https://github.com/php-fig/per-coding-style/blob/3.0.0/spec.md):
+first expression on the next line, closing parenthesis on its own line, followed
+by the opening brace with one space (`) {`), or `);` for do-while. PER 3.0 requires
+broken boolean operators at the beginning. The default uses four-space
+indentation and LF. Two-space/tab/CRLF native overrides are intentional deviations
+from those standards, not alternative compliant defaults.
+
+`MultilineConditionSpacingSniff` extends PHPCS's public PSR-12
+`ControlStructureSpacingSniff`, restricting registration to if/elseif/while
+(including do-while). It delegates token interpretation and fixes to that native
+implementation, deriving indent width from injected ECS spacing and the public
+PHPCS File tab-width configuration. No structural diagnostic is skipped.
+The normative golden cases use braced forms. Alternative colon syntax remains
+unchanged apart from whitespace; its compatibility fixture does not certify
+PSR/PER compliance or authorize a semantic conversion into braces.
+
+The PHPCS 4.0.4 implementation bundled with ECS 13.3.8 excludes text/comment/
+heredoc tokens from its indentation loop. ECS processes Sniffs before Fixers:
+after a newly wrapped first literal is left at column one, native
+`StatementIndentationFixer` can indent that literal and also amplify already
+correct continuation offsets. The adapter's compatibility guard uses only
+public File metadata and Fixer APIs to add padding **before** that first token,
+when it is unindented and the native implementation has not already padded it.
+It neither edits literal/comment contents nor realigns existing continuations.
+The quoted `refs/` guard has exact golden output across native spacing options;
+tests also preserve a legitimate stable extra offset. Adapter indentation is
+controlled by `withSpacing()`, not a second consumer option for its inherited
+managed `indent` property.
+
 `FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff` participates in
 the existing ECS PHPCS pass. It uses the installed PHPCS public token/scope
 metadata, not another parser, dependency or formatter pass. It changes whitespace
@@ -105,7 +136,8 @@ cannot be established. Its source is `src/Sniff/MultilineBooleanConditionSniff.p
 
 An `if`, `elseif`, `while` or `do-while` condition whose opening and closing
 parentheses occupy different lines must put each symbolic `&&` and `||` on its
-own line. This includes operators inside grouped expressions, call arguments and
+own line. This is a project extension beyond the standards' placement rule and
+includes operators inside grouped expressions, call arguments and
 array indexes. Function/closure/arrow and anonymous-class declarations are
 opaque; separately nested conditional statements are checked independently.
 Single-line conditions, expressions outside those conditions and keyword
@@ -115,8 +147,8 @@ PER requires one boolean part per line.
 The native ECS spacing service supplies two/four-space or tab indentation and
 LF/CRLF endings after the consumer callback. Native `withSkip()` can disable the
 owned checker explicitly; it replaces the skip list, so callers preserve their
-other intentional skips. The default cache fingerprints both installed policy
-source paths and bytes, in addition to checkout isolation. An explicit
+other intentional skips. The default cache fingerprints all three installed policy
+source paths and bytes (preset plus both Sniffs), in addition to checkout isolation. An explicit
 `withCache()` override remains authoritative.
 
 CLI regressions cover the reported mixed-line guard, groups/calls/indexes,

@@ -48,6 +48,40 @@ final class MultilineConditionTest extends TestCase
         self::assertSame($fixed, file_get_contents($this->directory . '/source.php'));
     }
 
+    /** @return iterable<string, array{string, string}> Braced forms prove normative wrapper bytes, not a global standards certificate. */
+    public static function bracedWrappers(): iterable
+    {
+        yield 'if' => ["if (\$a\n    || \$b) {\n    return;\n}", "if (\n    \$a\n    || \$b\n) {\n    return;\n}"];
+        yield 'elseif' => ["if (\$a) {\n    return;\n} elseif (\$b\n    || \$c) {\n    return;\n}", "if (\$a) {\n    return;\n} elseif (\n    \$b\n    || \$c\n) {\n    return;\n}"];
+        yield 'while' => ["while (\$a\n    || \$b) {\n    break;\n}", "while (\n    \$a\n    || \$b\n) {\n    break;\n}"];
+        yield 'do-while' => ["do {\n    break;\n} while (\$a\n    || \$b);", "do {\n    break;\n} while (\n    \$a\n    || \$b\n);"];
+        yield 'without boolean' => ["if (check(\n    \$a,\n)) {\n    return;\n}", "if (\n    check(\n        \$a,\n    )\n) {\n    return;\n}"];
+        yield 'quoted first expression' => ["if ('a' === \$a\n    || \$b) {\n    return;\n}", "if (\n    'a' === \$a\n    || \$b\n) {\n    return;\n}"];
+        yield 'comments preserve descriptions' => ["if (/* opening description */ \$a\n    || \$b /* closing description */) {\n    return;\n}", "if (\n    /* opening description */ \$a\n    || \$b /* closing description */\n) {\n    return;\n}"];
+        yield 'leading line comment' => ["if (// first reason\n    \$a\n    || \$b) {\n    return;\n}", "if (\n    // first reason\n    \$a\n    || \$b\n) {\n    return;\n}"];
+        yield 'nowdoc first expression' => ["if (<<<'TEXT'\n|| && literal unchanged\nTEXT\n    || \$a) {\n    return;\n}", "if (\n    <<<'TEXT'\n|| && literal unchanged\nTEXT\n    || \$a\n) {\n    return;\n}"];
+    }
+
+    /** Native wrapper fixes preserve tokens, comments, grouping and explicit source-only check semantics. */
+    #[DataProvider('bracedWrappers')]
+    public function testNativeBracedWrappersMatchExactReviewedLayout(string $input, string $expected): void
+    {
+        $source = "<?php\n\n" . $input . "\n";
+        file_put_contents($this->directory . '/source.php', $source);
+        $this->git(['add', 'source.php']);
+        $check = $this->cli(['check', '--all']);
+
+        self::assertSame(2, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        $fixed = file_get_contents($this->directory . '/source.php');
+        self::assertSame("<?php\n\n" . $expected . "\n", $fixed);
+        self::assertSame($this->significantTokens($source), $this->significantTokens($fixed));
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
+        self::assertSame($fixed, file_get_contents($this->directory . '/source.php'));
+    }
+
     /** @return iterable<string, array{string, bool, list<string>}> Owned source-only fixtures and deliberate scope exclusions. */
     public static function conditions(): iterable
     {
@@ -128,10 +162,46 @@ final class MultilineConditionTest extends TestCase
         self::assertSame($fixed, file_get_contents($this->directory . '/source.php'));
     }
 
+    /** The exact quoted-reference guard must not amplify continuation offsets in the Sniff-then-Fixer pipeline. */
+    #[DataProvider('spacing')]
+    public function testQuotedFirstExpressionDoesNotAmplifyContinuationIndent(string $indent, string $lineEnding): void
+    {
+        $source = $this->withSpacing(file_get_contents(__DIR__ . '/../Fixtures/quoted-condition-input.php.inc'), $indent, $lineEnding);
+        file_put_contents($this->directory . '/source.php', $source);
+        $this->git(['add', 'source.php']);
+        $this->configure('$config->withSpacing(indentation: ' . var_export($indent, true) . ', lineEnding: ' . var_export($lineEnding, true) . ');');
+        $arguments = ['--all', '--config=.build/ecs.php'];
+        $check = $this->cli(['check', ...$arguments]);
+
+        self::assertSame(2, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+        self::assertSame(0, $this->cli(['fix', ...$arguments])->getExitCode());
+        $fixed = file_get_contents($this->directory . '/source.php');
+        self::assertSame($this->withSpacing(file_get_contents(__DIR__ . '/../Fixtures/quoted-condition-expected.php.inc'), $indent, $lineEnding), $fixed);
+        self::assertSame($this->significantTokens($source), $this->significantTokens($fixed));
+        self::assertSame(0, $this->cli(['check', ...$arguments])->getExitCode());
+        self::assertSame(0, $this->cli(['fix', ...$arguments])->getExitCode());
+        self::assertSame($fixed, file_get_contents($this->directory . '/source.php'));
+    }
+
+    /** A legitimate stable extra offset must survive; the compatibility guard only pads an unindented first token. */
+    public function testQuotedConditionPreservesExistingStableContinuationOffset(): void
+    {
+        $source = str_replace('            ||', '                ||', file_get_contents(__DIR__ . '/../Fixtures/quoted-condition-expected.php.inc'));
+        file_put_contents($this->directory . '/source.php', $source);
+        $this->git(['add', 'source.php']);
+        foreach (['check', 'fix', 'check', 'fix'] as $mode) {
+            $result = $this->cli([$mode, '--all']);
+            self::assertSame(0, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+            self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+        }
+    }
+
     /** Consumer rule skips remain native, explicit and last in precedence. */
     public function testNativeSkipCanDisableTheOwnedPolicy(): void
     {
         $source = file_get_contents(__DIR__ . '/../Fixtures/multiline-condition-input.php.inc');
+        $source = str_replace('    if (!str_starts_with', "    if (\n        !str_starts_with", $source);
         file_put_contents($this->directory . '/source.php', $source);
         $this->git(['add', 'source.php']);
         $this->configure('$config->withSkip([FastForward\\CodeStandards\\Sniff\\MultilineBooleanConditionSniff::class]);');
@@ -176,6 +246,7 @@ final class MultilineConditionTest extends TestCase
         $filesystem->mkdir([$copy . '/src/Config', $copy . '/src/Sniff', $copy . '/vendor/symplify', $copy . '/vendor/bin']);
         copy($root . '/src/Config/ECSConfig.php', $copy . '/src/Config/ECSConfig.php');
         copy($root . '/src/Sniff/MultilineBooleanConditionSniff.php', $copy . '/src/Sniff/MultilineBooleanConditionSniff.php');
+        copy($root . '/src/Sniff/MultilineConditionSpacingSniff.php', $copy . '/src/Sniff/MultilineConditionSpacingSniff.php');
         symlink(realpath($root . '/vendor/symplify/easy-coding-standard'), $copy . '/vendor/symplify/easy-coding-standard');
         file_put_contents($copy . '/vendor/autoload.php', '<?php require ' . var_export($root . '/vendor/autoload.php', true) . '; '
             . '$loader = new Composer\\Autoload\\ClassLoader(); $loader->addPsr4("FastForward\\\\CodeStandards\\\\", ' . var_export($copy . '/src', true) . '); $loader->register(true);');

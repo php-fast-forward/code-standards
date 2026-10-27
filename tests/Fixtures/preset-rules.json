@@ -10,6 +10,14 @@
             "risk_policy": "owned-whitespace-only",
             "source": "src/Sniff/MultilineBooleanConditionSniff.php"
         },
+        "FastForward\\CodeStandards\\Sniff\\MultilineConditionSpacingSniff": {
+            "type": "sniff",
+            "class": "FastForward\\CodeStandards\\Sniff\\MultilineConditionSpacingSniff",
+            "configuration": [],
+            "risky": null,
+            "risk_policy": "native-psr12-whitespace-adapter",
+            "source": "src/Sniff/MultilineConditionSpacingSniff.php"
+        },
         "array_indentation": {
             "type": "fixer",
             "class": "PhpCsFixer\\Fixer\\Whitespace\\ArrayIndentationFixer",

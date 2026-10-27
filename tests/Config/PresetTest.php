@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Tests\Config;
 
 use FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff;
+use FastForward\CodeStandards\Sniff\MultilineConditionSpacingSniff;
 use PHP_CodeSniffer\Sniffs\Sniff;
 use PhpCsFixer\Fixer\FixerInterface;
 use PHPUnit\Framework\TestCase;
@@ -62,21 +63,30 @@ final class PresetTest extends TestCase
 
     /**
      * @param array<class-string, mixed[]> $configuration Effective options, including the absence of owned scalar options.
-     * @return array<string, array<string, mixed>> PHPCS has no native isRisky method; only this behaviorally tested class is allowed.
+     * @return array<string, array<string, mixed>> PHPCS has no native isRisky method; only the reviewed classes below are allowed.
      */
     private function sniffRules(ECSConfig $container, array $configuration): array
     {
         $sniffs = array_values($container->findByContract(Sniff::class));
-        self::assertSame([MultilineBooleanConditionSniff::class], array_map(static fn(Sniff $sniff): string => $sniff::class, $sniffs), 'Unknown default Sniffs require an explicit policy review.');
-        self::assertSame(realpath(dirname(__DIR__, 2) . '/src/Sniff/MultilineBooleanConditionSniff.php'), (new \ReflectionClass($sniffs[0]))->getFileName());
+        $policies = [
+            MultilineBooleanConditionSniff::class => 'owned-whitespace-only',
+            MultilineConditionSpacingSniff::class => 'native-psr12-whitespace-adapter',
+        ];
+        self::assertSame(array_keys($policies), array_map(static fn(Sniff $sniff): string => $sniff::class, $sniffs), 'Unknown default Sniffs require an explicit policy review.');
+        $rules = [];
+        foreach ($sniffs as $sniff) {
+            $source = 'src/Sniff/' . (new \ReflectionClass($sniff))->getShortName() . '.php';
+            self::assertSame(realpath(dirname(__DIR__, 2) . '/' . $source), (new \ReflectionClass($sniff))->getFileName());
+            $rules[$sniff::class] = [
+                'type' => 'sniff',
+                'class' => $sniff::class,
+                'configuration' => $configuration[$sniff::class],
+                'risky' => null,
+                'risk_policy' => $policies[$sniff::class],
+                'source' => $source,
+            ];
+        }
 
-        return [MultilineBooleanConditionSniff::class => [
-            'type' => 'sniff',
-            'class' => MultilineBooleanConditionSniff::class,
-            'configuration' => $configuration[MultilineBooleanConditionSniff::class],
-            'risky' => null,
-            'risk_policy' => 'owned-whitespace-only',
-            'source' => 'src/Sniff/MultilineBooleanConditionSniff.php',
-        ]];
+        return $rules;
     }
 }

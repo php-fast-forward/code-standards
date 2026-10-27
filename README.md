@@ -116,16 +116,25 @@ both ECS and a competing PHP-CS-Fixer pass. Standalone ECS users may import the
 same library preset and set their own paths. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
 
-The preset adds an owned whitespace policy to native PER 3.0: in an already
-multiline `if`, `elseif`, `while` or `do-while` condition, each symbolic `&&` and
-`||` starts its own line. The policy includes grouped expressions, call arguments
+For braced multiline `if`, `elseif`, `while` and `do-while` conditions, the
+native PSR-12 wrapper places the first expression on the next line and the
+closing parenthesis on its own line (`) {`, or `);` for do-while). The native
+leading-operator policy follows PER 3.0. An owned whitespace policy additionally
+puts each symbolic `&&` and `||` on its own line in those multiline conditions.
+The policy includes grouped expressions, call arguments
 and array indexes within that condition; function, arrow and anonymous-class
 declarations remain opaque. Single-line conditions and other expression contexts
-retain their native rules. This is a project policy, not an additional PER claim.
-The native ECS `withSpacing()` callback controls indentation and line endings.
+retain their native rules. Splitting every operator, including nested expression
+parts, is a project extension rather than an additional PER requirement.
+The default is four spaces and LF. Native ECS `withSpacing()` overrides for two
+spaces, tabs or CRLF remain supported as explicit deviations from PSR-12/PER,
+not standards-compliant alternatives.
 Consumers can explicitly skip `FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff`
 through `withSkip()`; that native method replaces the skip list, so preserve any
 other intended preservation skips. See [the resolved preset](docs/resolved-preset.md).
+The separate `MultilineConditionSpacingSniff` adapts the native wrapper to the
+same spacing service. Alternative colon syntax is preserved; the wrapper tests
+do not certify that syntax, or the complete preset, against every PSR/PER rule.
 
 The formatter worker uses ECS's public factory and command APIs with this tool's
 own Composer installation. An isolated tool does not implicitly load the target
@@ -160,7 +169,11 @@ and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
 The [architecture decision](docs/architecture.md) defines library/tool dependency
 directions and CPX/autoload limits.
 The formatter preserves descriptive PHPDoc and inherited documentation.
-Semantic refactoring and type analysis are outside the formatter scope.
+The separate opt-in [`refactor` command](docs/rector.md) previews an explicit
+native Rector configuration and requires `--apply` for semantic writes. It is
+never invoked by formatting `check` or `fix`; target PHP and cache remain native
+consumer configuration decisions. Custom PHPDoc transformations and deeper
+static analysis remain separate; no DevTools extraction parity is asserted.
 
 ## 🧰 API summary
 
@@ -168,8 +181,9 @@ Semantic refactoring and type analysis are outside the formatter scope.
 | --- | --- |
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
+| `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
-| `help check` / `help fix` | Show the installed Symfony option definitions. |
+| `help check` / `help fix` / `help refactor` | Show the installed Symfony option definitions. |
 
 Internal CLI services are implementation details. Supported configuration uses
 native ECS rule imports, skips and configured rules; there is no second DSL.
@@ -202,9 +216,10 @@ Composer package constraint.
 The CLI selects working-tree files from Git, not staged index blobs. Changed
 mode requires a clean tracked checkout and cannot certify staged-only content.
 
-**Does it run PHPStan, Rector or my application's tests?**
-No. The formatter checks syntax and style. Type analysis, semantic refactoring
-and application testing have separate scopes and compatibility requirements.
+**Do formatting check/fix run PHPStan, Rector or my application's tests?**
+No. Formatting checks syntax and style. The separate opt-in `refactor` command
+uses an explicit native Rector configuration; it never runs through check/fix.
+Type analysis and application testing remain separate scopes.
 
 **Does a successful fix always mean the source is clean?**
 The CLI verifies each formatted batch and reports remaining violations. Rules
