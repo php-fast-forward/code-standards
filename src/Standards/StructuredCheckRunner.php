@@ -21,6 +21,8 @@ final readonly class StructuredCheckRunner
     ) {}
 
     /**
+     * Checks selected files while retaining findings and incomplete coverage.
+     *
      * @param list<string> $files Validated absolute PHP paths.
      * @return CheckResult Complete findings or an honest partial result; no source-write authority is granted.
      */

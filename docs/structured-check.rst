@@ -52,8 +52,12 @@ and clean without starting a checker.
      - Native nonzero status
      - ``php -n -l`` did not validate a selected file; exact diagnostics are data, not parsed classifications.
    * - ``operational-error``
-     - 1, or 2 for invalid selection input
+     - 1, or 2 for controlled selection failures
      - Selection, execution, report validation or encoding could not establish a trustworthy result.
+
+Controlled selection failures retain text-mode status 2, including invalid input,
+missing configuration, unavailable Git history, a mismatched HEAD or a dirty tracked
+checkout. Unexpected failures and checker/report errors use status 1.
 
 Native stderr remains separate diagnostic data and is also written to stderr;
 warnings alone do not imply failure. Operation errors additionally produce a fixed

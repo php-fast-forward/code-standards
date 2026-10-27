@@ -8,6 +8,8 @@ namespace FastForward\CodeStandards\Standards;
 final readonly class CheckResult
 {
     /**
+     * Records a check outcome and coverage without interpreting native diagnostics.
+     *
      * @param string $status Clean, findings, syntax-failed or operational-error.
      * @param bool $complete Whether every syntax check and selected ECS batch completed consistently.
      * @param int $styleSubmitted Files submitted to completed native batches; ECS may skip unchanged or excluded files.
@@ -26,7 +28,11 @@ final readonly class CheckResult
         public string $stderr = '',
     ) {}
 
-    /** @return array<string,mixed> Versioned, single-document presentation without timing or human banners. */
+    /**
+     * Serializes the outcome with explicit coverage and schema identity.
+     *
+     * @return array<string,mixed> Versioned, single-document presentation without timing or human banners.
+     */
     public function toArray(): array
     {
         return [

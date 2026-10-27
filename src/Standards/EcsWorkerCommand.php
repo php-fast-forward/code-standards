@@ -8,6 +8,8 @@ namespace FastForward\CodeStandards\Standards;
 final class EcsWorkerCommand
 {
     /**
+     * Builds the shared worker invocation without shell expansion.
+     *
      * @param list<string> $files Absolute source paths, never shell-expanded.
      * @return list<string> Explicit installation, mode, format and selected-file arguments.
      */

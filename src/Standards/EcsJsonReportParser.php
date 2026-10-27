@@ -12,6 +12,8 @@ use RuntimeException;
 final class EcsJsonReportParser
 {
     /**
+     * Validates a native report against the selected paths and process status.
+     *
      * @param list<string> $selected Exact paths supplied to this worker invocation.
      * @return array{errors:int,diffs:int,files:array<string,array<string,mixed>>} Consistent native findings, never omitted system errors.
      * @throws RuntimeException When status, schema, paths or totals cannot establish a complete report.

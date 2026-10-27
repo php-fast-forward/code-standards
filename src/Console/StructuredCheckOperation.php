@@ -12,6 +12,7 @@ use FastForward\CodeStandards\Standards\CheckResult;
 use FastForward\CodeStandards\Standards\StructuredCheckRunner;
 use InvalidArgumentException;
 use JsonException;
+use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
@@ -36,7 +37,8 @@ final readonly class StructuredCheckOperation
             $files = $this->phpFiles->filter($scope->directory, $paths);
             $result = $this->standards->run($scope->directory, $files, $scope->config);
         } catch (Throwable $exception) {
-            $result = new CheckResult('operational-error', $exception instanceof InvalidArgumentException ? 2 : 1, false, 0, 0, 0, errors: [
+            $exitCode = $exception instanceof InvalidArgumentException || $exception instanceof RuntimeException ? 2 : 1;
+            $result = new CheckResult('operational-error', $exitCode, false, 0, 0, 0, errors: [
                 ['phase' => 'selection', 'message' => $exception->getMessage()],
             ]);
         }

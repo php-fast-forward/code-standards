@@ -136,6 +136,35 @@ final class StandardsTest extends TestCase
         self::assertStringContainsString('clean tracked checkout', $dirty->getErrorOutput());
     }
 
+    /** Selection failures retain text-mode status while JSON reports remain incomplete and source stays unchanged. */
+    public function testJsonSelectionFailuresPreserveTextModeExitStatus(): void
+    {
+        $this->put('a.php', '<?php echo 1;');
+        $base = $this->commit();
+        $this->put('a.php', '<?php echo 2;');
+        $head = $this->commit();
+
+        foreach (['mismatch', 'dirty'] as $scenario) {
+            if ('dirty' === $scenario) {
+                $this->put('a.php', '<?php echo 3;');
+            }
+            $arguments = ['check', '--base=' . $base, '--head=' . ('mismatch' === $scenario ? $base : $head)];
+            $source = file_get_contents($this->directory . '/a.php');
+            $text = $this->cli($arguments);
+            $json = $this->cli([...$arguments, '--format=json']);
+            $report = json_decode($json->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+
+            self::assertSame(2, $text->getExitCode(), $scenario);
+            self::assertSame($text->getExitCode(), $json->getExitCode(), $scenario);
+            self::assertSame(2, $report['exit_code'], $scenario);
+            self::assertSame('operational-error', $report['status'], $scenario);
+            self::assertFalse($report['complete'], $scenario);
+            self::assertSame('selection', $report['errors'][0]['phase'], $scenario);
+            self::assertSame(0, $report['selection']['files'], $scenario);
+            self::assertSame($source, file_get_contents($this->directory . '/a.php'), $scenario);
+        }
+    }
+
     /** Uses real ECS to prove violation status, source preservation and second-pass fix stability. */
     public function testStyleCheckDoesNotWriteAndExplicitFixIsIdempotent(): void
     {
