@@ -15,11 +15,48 @@ and Composer runtime API `^2.2`. Earlier releases are outside this skill's
 validated baseline. Inspect the installed version and help before choosing a route;
 this baseline is not an instruction to change a consumer's dependency constraint.
 
+## Ordinary check/fix route
+
+This entrypoint is sufficient when only the skill payload is available. Repository
+guides are optional references, not prerequisites for ordinary formatting.
+When installation is requested and the package is absent, use normal Composer
+resolution; preserve an existing consumer constraint instead of silently upgrading:
+
+```sh
+composer require --dev fast-forward/code-standards
+composer show fast-forward/code-standards
+vendor/bin/code-standards --help
+vendor/bin/code-standards check --all
+```
+
+Run from the consumer's Git checkout root. A check selects tracked PHP files,
+parses their syntax and reports ECS violations without changing source. Exit 0
+means the selected checks passed; a nonzero status requires inspecting diagnostics,
+not assuming every failure is a formatting difference. The formatter's executing
+PHP version does not certify the consumer's minimum supported PHP version.
+
+For an explicitly requested local fix:
+
+```sh
+vendor/bin/code-standards fix --all
+git diff --check
+git diff
+vendor/bin/code-standards check --all
+```
+
+Fix may be partial on failure. Preserve unrelated edits, review changed syntax
+against the consumer's PHP requirements and run affected tests before accepting it.
+If the dependency graph cannot support the tool runtime, stop instead of changing
+the consumer's PHP platform or dependency constraints implicitly.
+
+## Configuration and optional routes
+
 1. Read consumer AGENTS, Git status, PHP requirements and existing style config.
    Preserve local edits. Do not replace another preset or migrate consumers
    without an explicit request and a fixture-backed policy comparison.
-2. Select a published version or reviewed commit and inspect that ref's README,
-   workflow and CLI `help`; never invent a version. A verified GitHub v0 channel
+2. Select a published version or reviewed commit and inspect its installed version
+   and CLI `help`; never invent a version. Inspect that ref's workflow when CI
+   adoption is requested. A verified GitHub v0 channel
    is the selected workflow policy;
    the runtime stays bound to the actual executing workflow commit. GitHub v0
    is not a Composer/CPX version constraint.
