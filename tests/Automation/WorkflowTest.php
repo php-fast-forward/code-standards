@@ -9,6 +9,30 @@ use PHPUnit\Framework\TestCase;
 /** Contract assertions complement actionlint and real Git/CLI regressions. */
 final class WorkflowTest extends TestCase
 {
+    /** Gives the consumer reusable only a native PR trigger while retaining manual project tests. */
+    public function testConsumerCallerDeclaresOnlyPullRequestsWithoutRemovingQualityEvents(): void
+    {
+        $directory = dirname(__DIR__, 2) . '/.github/workflows';
+        $callers = [];
+        foreach ([...glob($directory . '/*.yml'), ...glob($directory . '/*.yaml')] as $file) {
+            if (preg_match('~^\s+uses:\s+["\']?\./\.github/workflows/code-standards\.yml(?:["\']|\s|$)~m', file_get_contents($file))) {
+                $callers[] = basename($file);
+            }
+        }
+        self::assertSame(['repository-pr-standards.yml'], $callers);
+
+        $consumer = file_get_contents($directory . '/repository-pr-standards.yml');
+        self::assertMatchesRegularExpression('~^on:\n  pull_request:\npermissions:\n  contents: read\njobs:~m', $consumer);
+        self::assertStringContainsString("  reusable-check:\n    uses: ./.github/workflows/code-standards.yml", $consumer);
+        self::assertStringContainsString("      magic-numbers: true\n      magic-numbers-policy: report", $consumer);
+
+        $quality = file_get_contents($directory . '/repository-ci.yml');
+        self::assertMatchesRegularExpression('~^on:\n  pull_request:\n  push:\n    branches: \[main\]\n  workflow_dispatch:\npermissions:~m', $quality);
+        self::assertStringContainsString("  tests:\n    runs-on: ubuntu-latest", $quality);
+        self::assertStringContainsString("php: ['8.3', '8.4', '8.5']", $quality);
+        self::assertStringContainsString('run: composer check', $quality);
+    }
+
     /** Keeps each external Action on its own verified published major channel. */
     public function testExternalActionsUsePublishedMajorChannels(): void
     {
