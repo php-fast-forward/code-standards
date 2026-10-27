@@ -1,6 +1,6 @@
 # Resolved PER preset
 
-Snapshot: ECS 13.3.8 from this repository’s Composer lock. The compiled container
+Snapshot: ECS 13.3.9 from this repository’s Composer lock. The compiled container
 contains 63 distinct PHP-CS-Fixer rules, all reporting `isRisky() === false`.
 This is the actual Code Standards preset, not a resolved DevTools or CoiSA preset.
 
@@ -84,7 +84,7 @@ updating the fixture; do not regenerate it merely to silence a failure.
 | `unary_operator_spaces` | `{"only_dec_inc":true}` |
 
 The four preservation skips and callback-last precedence remain declared in the
-preset. The native PER set is ECS 13.3.8 `per-cs.php`, explicitly PER Coding Style 3.0 (not the moving PHP-CS-Fixer `@PER-CS` alias and not PER 3.1). Some skipped rules are absent from the PER set; their absence
+preset. The native PER set is ECS 13.3.9 `per-cs.php`, explicitly PER Coding Style 3.0 (not the moving PHP-CS-Fixer `@PER-CS` alias and not PER 3.1). Some skipped rules are absent from the PER set; their absence
 must not be presented as proof that broader profiles are safe. Native ECS builder
 `withSkip()` replaces the builder’s skip list, while configured rules of the same
 class use the last configuration. Consumers own their explicit overrides.

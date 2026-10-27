@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#52](https://github.com/php-fast-forward/code-standards/pull/52))
 
+### Changed
+
+- Composer(deps): bump symplify/easy-coding-standard from 13.3.8 to 13.3.9 in the composer-production group across 1 directory
+
+  Update dependencies: `symplify/easy-coding-standard`.
+
+  ([#57](https://github.com/php-fast-forward/code-standards/pull/57), @dependabot[bot])
+
 ## [0.3.2] - 2026-10-27
 
 ### Fixed
