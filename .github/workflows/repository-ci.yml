@@ -32,4 +32,15 @@ jobs:
           COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
       - run: composer validate --strict
       - run: composer check
+      - name: Provision isolated Twig evaluation dependencies
+        run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
+        env:
+          COMPOSER_HOME: ${{ runner.temp }}/standards-twig-composer-home
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-twig-composer-cache
+          COMPOSER_VENDOR_DIR: ${{ runner.temp }}/standards-twig-vendor
+      - name: Evaluate native Twig contracts
+        run: php tests/Evaluation/Twig/evaluate.php
+        env:
+          TWIG_EVALUATION_AUTOLOAD: ${{ runner.temp }}/standards-twig-vendor/autoload.php
+          TWIG_EVALUATION_TEMP: ${{ runner.temp }}
       - run: git diff --exit-code

@@ -1,0 +1,22 @@
+{
+    "name": "fixture/code-standards-twig-evaluation",
+    "description": "Isolated test dependencies for the native Twig evaluation",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "symfony/console": "^7.4",
+        "symfony/filesystem": "^7.4",
+        "symfony/finder": "^7.4",
+        "symfony/process": "^7.4",
+        "twig/twig": "3.30.*",
+        "vincentlanglet/twig-cs-fixer": "4.1.*"
+    },
+    "config": {
+        "allow-plugins": false,
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true
+    }
+}
