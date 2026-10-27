@@ -10,5 +10,9 @@ consumer procedure. It is not copied to `.agents/skills` and needs no host alias
 Read root instructions, then only the linked domain guide or skill needed by
 the task. The root Child DOX Index provides the reading route.
 
+The opt-in refactoring guide remains under this same root authority. It records
+the native Rector invocation and executable-config boundary; it introduces no
+new instruction subtree, automatic semantic profile or consumer installer.
+
 No previous instruction tree is migrated. Rollback restores the root contract,
 its index and this map together through Git; it changes no host configuration.

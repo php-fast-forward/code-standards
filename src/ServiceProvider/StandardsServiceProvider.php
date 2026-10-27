@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\ServiceProvider;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
+use FastForward\CodeStandards\Refactoring\RectorRunner;
 use FastForward\CodeStandards\Standards\StandardsRunner;
 use FastForward\Container\Factory\CallableFactory;
 use FastForward\Container\Factory\FactoryInterface;
@@ -59,6 +60,11 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
                 dirname(__DIR__, 2) . '/bin/ecs-worker',
                 $this->vendorDirectory . '/autoload.php',
                 $this->engineDirectory,
+            ),
+            RectorRunner::class => new InvokableFactory(
+                RectorRunner::class,
+                ProcessRunner::class,
+                $this->vendorDirectory . '/rector/rector/bin/rector',
             ),
         ];
     }
