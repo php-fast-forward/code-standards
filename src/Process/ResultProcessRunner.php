@@ -15,7 +15,7 @@ interface ResultProcessRunner extends ProcessRunner
      *
      * @param list<string> $arguments Executable followed by literal arguments, without shell interpolation.
      * @param string $directory Child working directory, leaving the caller's unchanged.
-     * @param positive-float $timeout Finite execution limit in seconds.
+     * @param float $timeout Positive, finite execution limit in seconds.
      * @return ProcessResult Completed result, without interpreting diagnostics or classifying success.
      * @throws \Throwable When execution cannot complete or the timeout is invalid.
      */

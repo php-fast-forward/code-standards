@@ -14,7 +14,7 @@ interface ProcessRunner
      *
      * @param list<string> $arguments Executable followed by literal arguments, without shell interpolation.
      * @param string $directory Child working directory.
-     * @param positive-float $timeout Finite execution limit in seconds.
+     * @param float $timeout Positive, finite execution limit in seconds.
      * @return string Successful stdout, excluding stderr diagnostics.
      * @throws \Throwable When execution cannot complete successfully.
      */
@@ -28,7 +28,7 @@ interface ProcessRunner
      *
      * @param list<string> $arguments Executable followed by literal arguments, without shell interpolation.
      * @param string $directory Child working directory.
-     * @param positive-float $timeout Finite execution limit in seconds.
+     * @param float $timeout Positive, finite execution limit in seconds.
      * @return int Completed command status; interpreting tool-specific outcomes belongs to the caller.
      * @throws \Throwable When execution cannot complete.
      */
