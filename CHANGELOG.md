@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-27
+
+### Added
+
+- Add weekly Dependabot checks for root Composer dependencies and GitHub Actions.
+  Group minor and patch version updates separately for production and development
+  Composer dependencies, and group GitHub Actions minor and patch updates. Keep
+  major updates individual and leave security-update grouping at its defaults.
+
+  ([#48](https://github.com/php-fast-forward/code-standards/pull/48))
+
+### Changed
+
+- Describes current usage and installs the compatible Composer package without a
+  fixed release in the README example.
+
+  ([#51](https://github.com/php-fast-forward/code-standards/pull/51))
+
+- Apply the consumer's root and nested Git ignore rules dynamically to tracked candidates in full and changed scans, including force-added matching files. Preserve Git's negation, anchor, escape and directory semantics without a second parser or host-global excludes. Replace generated-directory name exclusions with consumer-owned rules while retaining structural Git metadata and source-containment protection. Ignore-rule changes, removals and renames trigger a complete eligible tracked scan; case-insensitive policy-name detection prevents missed invalidation on case-folding filesystems. ([#39](https://github.com/php-fast-forward/code-standards/pull/39))
+
+### Fixed
+
+- Uses the published Changelog 0.4.1 lifecycle's native repository and version title
+  template when preparing or refreshing the managed version pull request, without
+  overriding the generated title in this repository.
+
+  ([#50](https://github.com/php-fast-forward/code-standards/pull/50))
+
 ## [0.2.0] - 2026-10-26
 
 ### Changed
@@ -80,5 +108,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.3.0]: https://github.com/php-fast-forward/code-standards/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/php-fast-forward/code-standards/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/php-fast-forward/code-standards/releases/tag/v0.1.0
