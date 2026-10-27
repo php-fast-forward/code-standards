@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Config;
 
+use PhpCsFixer\Fixer\ControlStructure\TrailingCommaInMultilineFixer;
 use PhpCsFixer\Fixer\FunctionNotation\MethodArgumentSpaceFixer;
 use PhpCsFixer\Fixer\Phpdoc\GeneralPhpdocAnnotationRemoveFixer;
 use PhpCsFixer\Fixer\Phpdoc\NoEmptyPhpdocFixer;
@@ -32,6 +33,10 @@ final class ECSConfig
                 NoEmptyPhpdocFixer::class,
                 PhpdocNoEmptyReturnFixer::class,
                 GeneralPhpdocAnnotationRemoveFixer::class,
+            ])
+            ->withConfiguredRule(TrailingCommaInMultilineFixer::class, [
+                'after_heredoc' => true,
+                'elements' => ['arguments', 'array_destructuring', 'arrays', 'match'],
             ])
             ->withConfiguredRule(MethodArgumentSpaceFixer::class, ['on_multiline' => 'ignore'])
             ->withConfiguredRule(PhpdocAlignFixer::class, ['align' => 'left'])
