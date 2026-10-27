@@ -10,7 +10,7 @@ use InvalidArgumentException;
 final readonly class ProjectScopeResolver
 {
     /** Injects the packaged preset location; resolution never discovers a competing consumer preset implicitly. */
-    public function __construct(private string $defaultConfig) {}
+    public function __construct(private string $defaultConfig, private ProjectDirectoryResolver $directories) {}
 
     /**
      * Requires exactly one scan mode and existing project/config paths, without writing or loading config PHP.
@@ -19,16 +19,7 @@ final readonly class ProjectScopeResolver
      */
     public function resolve(bool $all, ?string $base, ?string $head, ?string $directory, ?string $config): ProjectScope
     {
-        if ($all === (null !== $base || null !== $head) || (!$all && (null === $base || null === $head))) {
-            throw new InvalidArgumentException('Select exactly --all or both --base and --head.');
-        }
-
-        $project = $directory ?? getcwd();
-        $root = is_string($project) && '' !== $project ? realpath($project) : false;
-        if (false === $root || !is_dir($root)) {
-            throw new InvalidArgumentException('Invalid project directory.');
-        }
-
+        $root = $this->directories->resolve($all, $base, $head, $directory);
         $configuration = $this->configuration($root, $config);
 
         return new ProjectScope($root, $configuration, $base, $head);

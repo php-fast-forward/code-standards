@@ -161,8 +161,9 @@ static analysis remain separate; no DevTools extraction parity is asserted.
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
 | `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
+| [`code-standards magic-numbers`](docs/magic-numbers.rst) | Analyze selected source with opt-in PHPMND, independently of check/fix; findings keep a nonzero status. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
-| `help check` / `help fix` / `help refactor` | Show the installed Symfony option definitions. |
+| `help check` / `help fix` / `help refactor` / `help magic-numbers` | Show the installed Symfony option definitions. |
 
 Internal CLI services are implementation details. Supported configuration uses
 native ECS rule imports, skips and configured rules; there is no second DSL.
@@ -190,6 +191,13 @@ publications and can advance across development minors; it is not a
 Composer package constraint.
 
 ## ❓ FAQ
+
+### Optional magic-number analysis
+
+Run `vendor/bin/code-standards magic-numbers --all` explicitly for PHPMND
+analysis. Add `--format=xml` for its native machine-readable report. The command
+uses the same tracked-file/Git ignore policy and does not run as part of
+`check` or `fix`. See [options, status and adoption guidance](docs/magic-numbers.rst).
 
 **Can I use this as a staged-only pre-commit check?**
 The CLI selects working-tree files from Git, not staged index blobs. Changed

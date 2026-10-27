@@ -37,6 +37,12 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
   current HEAD with no pending findings before merge. Unavailable, skipped,
   requested-only or stale reviews do not count. Do not expand permissions to
   install those integrations. Technical review replies are authorized here.
+- Every new or changed public command requires documentation matching its actual
+  registration and installed `--help`: options, defaults, examples, side effects
+  and exit codes. Update README entry points and cross-links when applicable.
+  Preserve the canonical PHP documentation flow and present-tense instructions;
+  do not document commands absent from the corresponding branch. This audit is
+  a merge gate, including after base reconciliation.
 - During 0.x, compatible corrections use patch and functionality/breaking
   development changes explicitly use minor. No major release is authorized.
   Changelog automation owns version PRs/tags; never create manual bootstrap tags.
@@ -67,6 +73,7 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 - [README.md](README.md): library/CLI adoption, explicit fix and tool scope.
 - [Policy comparison](docs/policy.rst): evidence, rule differences and extraction gates.
 - [Explicit Rector](docs/rector.rst): opt-in native semantic preview/application; executable configuration owns target PHP, rules, source paths and caches.
+- [Magic-number analysis](docs/magic-numbers.rst): opt-in native PHPMND selection, policy options, output and exit contracts; separate from check/fix.
 - [Resolved preset](docs/resolved-preset.rst): compiled rules, golden contracts and dependency-update review.
 - [Legacy fixer comparison](docs/legacy-fixer-comparison.rst): fixed-source inventory, loaded dependencies and remaining profile decisions.
 - [PHPDoc comparison](docs/phpdoc-comparison.rst): actual custom-rule registration, source contracts and remaining golden decisions.

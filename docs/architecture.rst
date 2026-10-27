@@ -76,7 +76,7 @@ This small slice validates syntax and PER Coding Style 3.0. Type analysis and se
 Coordinated backlog boundaries
 ------------------------------
 
-Code Standards #1 is the destination epic for DevTools #379. Optional magic-value and Twig evaluations move to #8/#9 and do not block 0.1.0. Relevant skill procedures from DevTools #195 and ECS/Rector structured-result criteria from #248 belong here, while both mixed source issues remain open. LLM Skills owns discovery/install/update; this tool owns its canonical skill payload and does not introduce another installer or sync system.
+Code Standards #1 is the destination epic for DevTools #379. Issue #8 owns the separate opt-in `magic-number analysis <magic-numbers.rst>`__; #9 owns the contributor Twig evaluation. These do not widen the default formatter. Relevant skill procedures from DevTools #195 and ECS/Rector structured-result criteria from #248 belong here, while both mixed source issues remain open. LLM Skills owns discovery/install/update; this tool owns its canonical skill payload and does not introduce another installer or sync system.
 
 DevTools #14/#265/#266/#267 remain conditional analysis candidates. Ownership between a Code Standards module and another analysis domain remains undecided; Code Standards #3 is a bounded investigation, not an implicit transfer or engine choice. Validate #267's actual engine before treating its proposed PHPCS/PHPStan relationship as fact. None is a prerequisite for initial 0.1.0.
 
