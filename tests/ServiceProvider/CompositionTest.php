@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\Tests\ServiceProvider;
 use FastForward\CodeStandards\Console\Application;
 use FastForward\CodeStandards\Console\Command\CheckCommand;
 use FastForward\CodeStandards\Console\Command\FixCommand;
+use FastForward\CodeStandards\Console\Command\RefactorCommand;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\ServiceProvider\StandardsServiceProvider;
@@ -49,6 +50,8 @@ final class CompositionTest extends TestCase
             self::assertInstanceOf(FixCommand::class, $container->get(FixCommand::class));
             self::assertFalse(is_subclass_of(CheckCommand::class, Command::class));
             self::assertFalse(is_subclass_of(FixCommand::class, Command::class));
+            self::assertInstanceOf(RefactorCommand::class, $container->get(RefactorCommand::class));
+            self::assertFalse(is_subclass_of(RefactorCommand::class, Command::class));
 
             $tester = new ApplicationTester($application);
             self::assertSame(23, $tester->run(['command' => $name, '--all' => true, '--directory' => dirname(__DIR__, 2)]));
@@ -110,13 +113,13 @@ final class RecordingTransport implements ProcessRunner
     public array $commands = [];
 
     /** Reads only Git metadata through the production shell-free transport. */
-    public function capture(array $arguments, string $directory): string
+    public function capture(array $arguments, string $directory, float $timeout = 120): string
     {
-        return (new NativeProcessRunner())->capture($arguments, $directory);
+        return (new NativeProcessRunner())->capture($arguments, $directory, $timeout);
     }
 
     /** Returns a synthetic style failure to verify end-to-end exit-code propagation. */
-    public function run(array $arguments, string $directory): int
+    public function run(array $arguments, string $directory, float $timeout = 300): int
     {
         $this->commands[] = $arguments;
 

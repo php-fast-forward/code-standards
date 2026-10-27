@@ -71,13 +71,13 @@ final class RecordingProcess implements ProcessRunner
     ) {}
 
     /** Fails if standards orchestration unexpectedly performs a capture operation. */
-    public function capture(array $arguments, string $directory): string
+    public function capture(array $arguments, string $directory, float $timeout = 120): string
     {
         throw new \LogicException('Not expected.');
     }
 
     /** Records argument boundaries and returns the selected synthetic tool status. */
-    public function run(array $arguments, string $directory): int
+    public function run(array $arguments, string $directory, float $timeout = 300): int
     {
         $this->commands[] = $arguments;
 

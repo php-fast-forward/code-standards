@@ -2,7 +2,7 @@ Fast Forward Code Standards
 ===========================
 
 Code Standards owns PHP formatting, syntax validation and exact-PR file selection.
-It provides a native ECS preset, two explicit CLI commands and unprivileged
+It provides a native ECS preset, explicit check/fix/refactor commands and unprivileged
 GitHub Actions. It does not run application tests, type analysis, coverage or
 semantic migrations in a consumer check.
 
@@ -28,5 +28,6 @@ Architecture, policy and evidence
    legacy-fixer-comparison
    phpdoc-comparison
    policy
+   rector
    resolved-preset
    static-analysis-evaluation

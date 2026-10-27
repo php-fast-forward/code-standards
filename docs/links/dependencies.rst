@@ -23,6 +23,10 @@ that a documentation site or coverage report is published:
 
 Runtime libraries include Console for input/help, Process for child execution,
 ECS for formatting, Container for composition and its provider/PSR contracts.
+The explicit semantic command uses Rector with PHPStan as an engine dependency;
+the `native refactoring guide <../rector.rst>`__ records the qualified dependency
+versions and shared-graph compatibility restriction. No type-analysis command
+is implied by that dependency.
 Composer's runtime API supplies the installed binary proxy's autoload location.
 The lock file records transitive versions; this documentation does not replace
 that graph with a handwritten dependency catalog.

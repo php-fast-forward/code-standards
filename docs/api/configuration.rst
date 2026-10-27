@@ -6,6 +6,11 @@ The supported preset extension is
 native ``ECSConfigBuilder`` and applies the optional callback last. There is no
 second configuration schema or automatic consumer-config discovery.
 
+Semantic refactoring uses a separately selected native Rector configuration;
+it does not reuse or translate the ECS builder. Its explicit target PHP,
+configuration trust and execution contracts are documented in the
+`refactoring guide <../rector.rst>`__.
+
 .. code-block:: php
 
    <?php
@@ -44,6 +49,8 @@ Internal services
      - Select Git destinations and enforce the owned PHP scope.
    * - StandardsRunner / ProcessRunner
      - Run bounded syntax/style processes and preserve their statuses.
+   * - RectorRunner
+     - Preflight explicit native target/rules and run bounded opt-in semantic preview/application.
 
 These services describe current implementation, not a compatibility promise
 for every internal constructor. Symfony Console owns binding and help; the

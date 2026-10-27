@@ -12,8 +12,9 @@ Does --all include untracked files?
    No. It selects tracked files from Git and permits local tracked edits.
 
 Can I run without Git?
-   The CLI requires a Git checkout root. Direct native ECS consumption has its
-   own explicit paths and is a separate integration.
+   Formatting check/fix require a Git checkout root. Direct native ECS consumption
+   and the explicit native Rector configuration have their own source paths;
+   semantic refactoring does not borrow the formatter's Git selection.
 
 Can I use it as a staged pre-commit check?
    The CLI analyzes the working tree, not index blobs. Changed mode requires a
@@ -29,8 +30,11 @@ Why was the whole checkout checked?
    including ignore-policy removal and rename.
 
 Is PHPStan or Rector included?
-   No. Type analysis and semantic refactoring are separate scoped increments;
-   PHP syntax validation does not prove type correctness.
+   The formatter runs neither. The separate opt-in ``refactor`` command uses
+   native Rector with explicit configuration and target PHP; see the
+   `refactoring guide <rector.rst>`__. PHPStan is its engine dependency, not
+   an exposed type-analysis command. PHP syntax validation does not prove type
+   correctness or semantic safety.
 
 How can I customize a rule?
    Pass a native builder callback to ECSConfig::configure(), save the returned

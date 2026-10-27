@@ -1,10 +1,17 @@
 Commands and file selection
 ===========================
 
-Both commands accept ``--all`` or the pair ``--base`` and ``--head``. They also
+The formatting commands ``check`` and ``fix`` accept ``--all`` or the pair
+``--base`` and ``--head``. They also
 accept ``--directory`` and ``--config``. Symfony Console supports both
 ``--option=value`` and ``--option value``. See ``help check`` and ``help fix``
 for the installed command definitions.
+
+The separate opt-in ``refactor`` command uses an explicit native Rector
+configuration's source paths rather than this Git changed-file selection.
+See the `semantic refactoring contract <../rector.rst>`__ for required target
+PHP, optional native cache configuration, bounded timeouts and execution limits.
+Use ``help refactor`` for its installed options.
 
 .. code-block:: console
 

@@ -147,7 +147,11 @@ and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
 The [architecture decision](docs/architecture.rst) defines library/tool dependency
 directions and CPX/autoload limits.
 The formatter preserves descriptive PHPDoc and inherited documentation.
-Semantic refactoring and type analysis are outside the formatter scope.
+The separate opt-in [`refactor` command](docs/rector.rst) previews an explicit
+native Rector configuration and requires `--apply` for semantic writes. It is
+never invoked by formatting `check` or `fix`; target PHP and cache remain native
+consumer configuration decisions. Custom PHPDoc transformations and deeper
+static analysis remain separate; no DevTools extraction parity is asserted.
 
 ## 🧰 API summary
 
@@ -155,8 +159,9 @@ Semantic refactoring and type analysis are outside the formatter scope.
 | --- | --- |
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
+| `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
-| `help check` / `help fix` | Show the installed Symfony option definitions. |
+| `help check` / `help fix` / `help refactor` | Show the installed Symfony option definitions. |
 
 Internal CLI services are implementation details. Supported configuration uses
 native ECS rule imports, skips and configured rules; there is no second DSL.
@@ -189,9 +194,10 @@ Composer package constraint.
 The CLI selects working-tree files from Git, not staged index blobs. Changed
 mode requires a clean tracked checkout and cannot certify staged-only content.
 
-**Does it run PHPStan, Rector or my application's tests?**
-No. The formatter checks syntax and style. Type analysis, semantic refactoring
-and application testing have separate scopes and compatibility requirements.
+**Do formatting check/fix run PHPStan, Rector or my application's tests?**
+No. Formatting checks syntax and style. The separate opt-in `refactor` command
+uses an explicit native Rector configuration; it never runs through check/fix.
+Type analysis and application testing remain separate scopes.
 
 **Does a successful fix always mean the source is clean?**
 The CLI verifies each formatted batch and reports remaining violations. Rules

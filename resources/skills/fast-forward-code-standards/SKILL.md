@@ -24,7 +24,12 @@ metadata:
    privileged token or on a privileged target event. No incidental dependency update.
 5. Only when fixing is requested run `code-standards fix --all`, inspect the diff
    and rerun check. Do not commit/push automatically. Semantic migrations need a
-   separate reviewed procedure; none are enabled by this initial package.
+   separate reviewed procedure: the opt-in `refactor` command requires explicit
+   native Rector configuration, an explicit consumer PHP target and reviewed
+   rules. Native cache configuration is optional; Rector may use memory in CI.
+   Preview is default; only explicit `--apply` grants semantic writes.
+   Read `docs/rector.rst` for executable-config/autoload limits. Never substitute
+   this command for ordinary formatting `fix` or automatically migrate consumers.
 6. For requested CI adoption copy `resources/workflows/code-standards.yml` from
    the selected ref after v0 points to a confirmed 0.x release, and use `pull_request` with
    read-only permissions and a hosted runner. No secrets/inherit, write token,
