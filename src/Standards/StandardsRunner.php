@@ -9,8 +9,18 @@ use FastForward\CodeStandards\Process\ProcessRunner;
 /** Owns style versus syntax policy; no dependency operations occur here. */
 final class StandardsRunner
 {
-    /** @param string $ecs Absolute ECS entrypoint from this tool's installation. */
-    public function __construct(private readonly ProcessRunner $process, private readonly string $ecs) {}
+    /**
+     * @param ProcessRunner $process Existing transport and its subprocess environment policy.
+     * @param string $worker Absolute internal worker entrypoint from this package.
+     * @param string $autoload Composer autoloader of this tool's own installation.
+     * @param string $engine Absolute installed ECS package directory, resolved before consumer config runs.
+     */
+    public function __construct(
+        private readonly ProcessRunner $process,
+        private readonly string $worker,
+        private readonly string $autoload,
+        private readonly string $engine,
+    ) {}
 
     /**
      * Checks syntax before style; only explicit fix permits ECS source writes.
@@ -30,20 +40,24 @@ final class StandardsRunner
 
         // Bounded batches avoid ARG_MAX. Stop at the first failure; never report partial success.
         foreach (array_chunk($files, 50) as $batch) {
-            $check = [PHP_BINARY, $this->ecs, 'check', '--config=' . $config, '--no-progress-bar', '--no-interaction'];
-            $command = $check;
-            if ($fix) {
-                $command[] = '--fix';
-            }
-            $status = $this->process->run([...$command, '--', ...$batch], $directory);
+            $status = $this->process->run($this->formatterCommand($config, $fix, $batch), $directory);
             if (0 !== $status) {
                 return $status;
             }
-            if ($fix && 0 !== $status = $this->process->run([...$check, '--', ...$batch], $directory)) {
+            if ($fix && 0 !== $status = $this->process->run($this->formatterCommand($config, false, $batch), $directory)) {
                 return $status;
             }
         }
 
         return 0;
+    }
+
+    /**
+     * @param list<string> $files Absolute selected paths, retained as separate process arguments.
+     * @return list<string> Fixed internal protocol fields followed by separate source paths.
+     */
+    private function formatterCommand(string $config, bool $fix, array $files): array
+    {
+        return [PHP_BINARY, $this->worker, $this->autoload, $this->engine, $config, $fix ? '--fix' : '--check', '--', ...$files];
     }
 }

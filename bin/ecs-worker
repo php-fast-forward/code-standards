@@ -1,0 +1,55 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Symplify\EasyCodingStandard\Console\Command\CheckCommand;
+use Symplify\EasyCodingStandard\Console\Output\ConsoleOutputFormatter;
+use Symplify\EasyCodingStandard\DependencyInjection\EasyCodingStandardContainerFactory;
+
+// Internal process protocol: own autoloader, installed engine, config, mode, --, absolute files.
+try {
+    if ($argc < 7 || '--' !== $argv[5] || !in_array($argv[4], ['--check', '--fix'], true)) {
+        throw new InvalidArgumentException('ECS worker requires installation paths, an explicit mode and selected files.');
+    }
+    [$script, $autoload, $engine, $config, $mode] = array_slice($argv, 0, 5);
+    foreach ([$autoload, $config, $engine . '/vendor/squizlabs/php_codesniffer/autoload.php'] as $path) {
+        if (!str_starts_with($path, '/') || !is_file($path) || !is_readable($path)) {
+            throw new InvalidArgumentException('ECS worker requires readable absolute installation and config paths.');
+        }
+    }
+    $files = array_slice($argv, 6);
+    foreach ($files as $file) {
+        if (!str_starts_with($file, '/')) {
+            throw new InvalidArgumentException('ECS worker requires absolute selected file paths.');
+        }
+    }
+
+    // Keep Composer's own installation bootstrap, but do not run ECS's cwd-autoloading CLI bootstrap.
+    require $autoload;
+    require_once $engine . '/vendor/squizlabs/php_codesniffer/autoload.php';
+
+    $container = (new EasyCodingStandardContainerFactory())->createFromArgv(['ecs', 'check', '--config=' . $config]);
+    $command = $container->make(CheckCommand::class);
+
+    exit($command->run(
+        '--fix' === $mode,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        $config,
+        ConsoleOutputFormatter::NAME,
+        '',
+        '',
+        '',
+        ...$files,
+    ));
+} catch (Throwable $exception) {
+    fwrite(STDERR, 'ECS worker: ' . $exception->getMessage() . PHP_EOL);
+
+    exit(1);
+}
