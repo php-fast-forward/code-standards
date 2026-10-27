@@ -14,13 +14,19 @@ Replace the placeholders with existing immutable commit SHAs. Changed mode
 requires HEAD to equal the requested head and a clean tracked checkout. It
 selects ``base...head`` destinations using the merge base. Renames, deletions,
 spaces and control bytes are handled with Git's NUL-delimited protocol.
-Composer/ECS/EditorConfig changes trigger a complete tracked scan.
+Composer/ECS/EditorConfig and root or nested ``.gitignore`` changes trigger a
+complete eligible tracked scan, including ignore-policy removal and rename.
 
 ``--all`` checks tracked PHP files and PHP entrypoints under ``bin/`` and allows
 local tracked edits. Untracked files are outside this contract. It is not a
-staged-index check. Directory-component exclusions include ``vendor``, ``.git``,
-``.build``, ``.dev-tools``, ``backup``, ``cache``, ``public``, ``resources``,
-``tmp`` and ``node_modules``. Candidate PHP symlinks fail closed.
+staged-index check. Git dynamically applies the consumer's root and nested
+``.gitignore`` rules, including anchors, escapes and negations. Matching tracked
+or force-added files are excluded. Global ignores and ``.git/info/exclude`` do
+not change this project-owned policy. Only ``.git`` metadata is structurally
+excluded, whether it is a directory or a worktree metadata file. Directories
+such as ``public``, ``resources`` and ``backup`` are eligible unless the consumer
+ignores them. Containment checks and candidate PHP symlink rejection remain in
+effect.
 
 Exit statuses
 -------------

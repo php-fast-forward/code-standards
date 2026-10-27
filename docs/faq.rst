@@ -24,8 +24,9 @@ Why did changed mode reject HEAD?
    history and inspect your checkout rather than weakening the check.
 
 Why was the whole checkout checked?
-   Composer/ECS/EditorConfig changes can change the effective rules and trigger
-   a full tracked scan.
+   Composer/ECS/EditorConfig and root or nested ``.gitignore`` changes can change
+   effective rules or eligibility and trigger a full eligible tracked scan,
+   including ignore-policy removal and rename.
 
 Is PHPStan or Rector included?
    No. Type analysis and semantic refactoring are separate scoped increments;
