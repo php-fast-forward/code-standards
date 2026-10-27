@@ -76,12 +76,12 @@ jobs:
             printf 'sha=%s\n' "$runtime"
           } >> "$GITHUB_OUTPUT"
       - name: Check out this exact trusted implementation
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
         with:
           repository: ${{ steps.runtime.outputs.repository }}
           ref: ${{ steps.runtime.outputs.sha }}
           persist-credentials: false
-      - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # 2.37.1
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           coverage: none
