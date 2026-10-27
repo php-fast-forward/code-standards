@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add an explicit `magic-numbers` command backed by published PHPMND, separate from check/fix. Reuse exact Git/PHP selection and consumer ignores, preserve native policy overrides and exit status, and offer deterministic native XML without loading consumer autoload implicitly. Document opt-in adoption, baseline limits and bounded invocation size. ([#66](https://github.com/php-fast-forward/code-standards/pull/66))
 - Migrate the documentation to a single reStructuredText guide rendered by the existing PHP phpDocumentor tooling covering installation, commands, configuration, workflow trust and troubleshooting. ([#29](https://github.com/php-fast-forward/code-standards/pull/29))
 
+### Fixed
+
+- Document the process interfaces' normative execution, output and failure contracts, explain capture/run/result selection, and preserve descriptive PHPDoc and inheritance markers through qualified native formatting and refactoring. ([#74](https://github.com/php-fast-forward/code-standards/pull/74))
+
 ## [0.4.0] - 2026-10-27
 
 ### Added

@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Process;
 
-/** Optional lossless capture capability; existing ProcessRunner implementations remain valid. */
+/** Adds optional capture of output and status as data. */
 interface ResultProcessRunner extends ProcessRunner
 {
     /**
-     * Captures a completed process without streaming or throwing merely for a nonzero exit.
+     * Captures output and status as data.
      *
-     * @param list<string> $arguments Literal executable and argument vector, without shell interpolation.
-     * @param string $directory Explicit child working directory; the caller's directory remains unchanged.
-     * @param positive-float $timeout Finite maximum seconds using the same transport bounds as run().
-     * @return ProcessResult Exact native status and separate output bytes, without a clean/failure interpretation.
-     * @throws \InvalidArgumentException When the timeout is nonfinite or not positive.
-     * @throws \Symfony\Component\Process\Exception\RuntimeException When execution cannot complete, including startup or timeout failure.
+     * Stdout and stderr MUST remain separate, unmodified byte strings, without streaming.
+     * A completed nonzero status MUST remain data; failure before completion MUST raise an exception.
+     *
+     * @param list<string> $arguments Executable followed by literal arguments, without shell interpolation.
+     * @param string $directory Child working directory, leaving the caller's unchanged.
+     * @param float $timeout Positive, finite execution limit in seconds.
+     * @return ProcessResult Completed result, without interpreting diagnostics or classifying success.
+     * @throws \Throwable When execution cannot complete or the timeout is invalid.
      */
     public function captureResult(array $arguments, string $directory, float $timeout = 300): ProcessResult;
 }
