@@ -10,7 +10,8 @@ type-analysis or Rector migration parity with DevTools.
 ## Ownership
 
 `src/` owns reusable behavior; the CLI and Actions orchestrate the same services.
-The sole distributable skill is under `resources/skills/fast-forward-code-standards`.
+Canonical distributable skills live under `resources/skills`: `fast-forward-code-standards`
+owns tool consumption; `fast-forward-phpdoc` owns source-documentation authoring.
 Consumer examples live under `resources`, executable Actions under `.github/actions`,
 reusables under `.github/workflows/code-standards*.yml`, own event workflows use
 `repository-`. Ordinary folders share this root contract.
@@ -83,3 +84,4 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 - [Released channel helper](.github/update-release-channels.md): repository-only publication verification, CAS update and permission-failure recovery; never creates releases or changes repository settings.
 - [Instruction map](docs/instruction-map.rst): single root scope and skill ownership.
 - [Consumer skill](resources/skills/fast-forward-code-standards/SKILL.md): portable consumption procedure; no automatic installation or rollout.
+- [PHPDoc skill](resources/skills/fast-forward-phpdoc/SKILL.md): concise source documentation and implementation-independent semantic contracts; no global installation required.

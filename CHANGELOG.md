@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-27
+
+### Added
+
+- Add an explicit `magic-numbers` command backed by published PHPMND, separate from check/fix. Reuse exact Git/PHP selection and consumer ignores, preserve native policy overrides and exit status, and offer deterministic native XML without loading consumer autoload implicitly. Document opt-in adoption, baseline limits and bounded invocation size. ([#66](https://github.com/php-fast-forward/code-standards/pull/66))
+- Ship a dedicated portable PHPDoc authoring skill with concise interface-contract guidance, semantic-preservation checks and independent distribution references. ([#77](https://github.com/php-fast-forward/code-standards/pull/77))
+- Migrate the documentation to a single reStructuredText guide rendered by the existing PHP phpDocumentor tooling covering installation, commands, configuration, workflow trust and troubleshooting. ([#29](https://github.com/php-fast-forward/code-standards/pull/29))
+
+### Fixed
+
+- Document the process interfaces' normative execution, output and failure contracts, explain capture/run/result selection, and preserve descriptive PHPDoc and inheritance markers through qualified native formatting and refactoring. ([#74](https://github.com/php-fast-forward/code-standards/pull/74))
+
 ## [0.4.0] - 2026-10-27
 
 ### Added
@@ -176,6 +188,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.5.0]: https://github.com/php-fast-forward/code-standards/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/php-fast-forward/code-standards/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/php-fast-forward/code-standards/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/php-fast-forward/code-standards/compare/v0.3.0...v0.3.1

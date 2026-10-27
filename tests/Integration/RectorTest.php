@@ -51,6 +51,30 @@ final class RectorTest extends TestCase
         self::assertSame($config, file_get_contents($this->directory . '/policy.php'));
     }
 
+    /** Preserves interface documentation during refactoring. */
+    public function testNativeArrayRulePreservesNormativeInterfaceDocumentation(): void
+    {
+        $fixtures = dirname(__DIR__) . '/Fixtures/';
+        $source = file_get_contents($fixtures . 'normative-contract.before.php.inc');
+        $expected = file_get_contents($fixtures . 'normative-contract.after.php.inc');
+        self::assertIsString($source);
+        self::assertIsString($expected);
+        file_put_contents($this->directory . '/source.php', $source);
+        $this->configuration('\\Rector\\Php54\\Rector\\Array_\\LongArrayToShortArrayRector', 70400);
+        $before = $this->ownedBytes();
+
+        $preview = $this->cli();
+        self::assertSame(2, $preview->getExitCode(), $preview->getOutput() . $preview->getErrorOutput());
+        self::assertSame($before, $this->ownedBytes());
+        $apply = $this->cli(['--apply']);
+        self::assertSame(0, $apply->getExitCode(), $apply->getOutput() . $apply->getErrorOutput());
+        self::assertSame($expected, file_get_contents($this->directory . '/source.php'));
+        $after = $this->ownedBytes();
+        self::assertSame(0, $this->cli()->getExitCode());
+        self::assertSame(0, $this->cli(['--apply'])->getExitCode());
+        self::assertSame($after, $this->ownedBytes());
+    }
+
     /** Empty native custom config is rejected before Rector's successful-but-writing initializer. */
     public function testEmptyConfigDoesNotGenerateRectorFile(): void
     {

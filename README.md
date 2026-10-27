@@ -43,11 +43,18 @@ Workflow guards and their contributor tests additionally require Bash and jq.
 Hosted Ubuntu runners provide both; the Composer library and CLI use the PHP
 dependencies declared in this package.
 
-Composer exposes the portable skill through `extra.skills.source` at
+Composer exposes the portable skills through `extra.skills.source` at
 `resources/skills`. `llm/skills` is an optional consumer integration; installation
 and activation are explicit. The development `check` script validates Composer
 metadata and the actual platform before running this package's tests and style
 check.
+
+Use the [Code Standards skill](resources/skills/fast-forward-code-standards/SKILL.md)
+for tool adoption and explicit formatting. Use the dedicated
+[PHPDoc skill](resources/skills/fast-forward-phpdoc/SKILL.md) to write or review
+concise summaries, semantic contracts, useful tags and inherited documentation.
+Each payload includes its license and relative references; neither activates an
+agent or installs another tool automatically.
 
 For a reviewed source checkout:
 
@@ -186,6 +193,7 @@ bin/code-standards                       CLI entrypoint
 config/ecs.php                          default native ECS configuration
 src/Config/ECSConfig.php                 reusable preset API
 resources/skills/fast-forward-code-standards/  canonical consumer skill
+resources/skills/fast-forward-phpdoc/     portable PHPDoc authoring skill
 resources/workflows/code-standards.yml   consumer workflow wrapper
 .github/actions/check/                  small check adapter
 docs/                                   architecture, policy and integration guides

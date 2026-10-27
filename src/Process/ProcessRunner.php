@@ -4,18 +4,33 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Process;
 
-/** Executes bounded argument arrays without shell interpolation. */
+/** Executes bounded commands with literal arguments. */
 interface ProcessRunner
 {
     /**
-     * @param list<string> $arguments Returns stdout or throws on failure.
-     * @param positive-float $timeout Finite maximum seconds for this subprocess; defaults retain Git's existing limit.
+     * Captures successful standard output.
+     *
+     * A nonzero exit MUST raise an exception rather than return successful output.
+     *
+     * @param list<string> $arguments Executable followed by literal arguments, without shell interpolation.
+     * @param string $directory Child working directory.
+     * @param float $timeout Positive, finite execution limit in seconds.
+     * @return string Successful stdout, excluding stderr diagnostics.
+     * @throws \Throwable When execution cannot complete successfully.
      */
     public function capture(array $arguments, string $directory, float $timeout = 120): string;
 
     /**
-     * @param list<string> $arguments Streams diagnostics and returns the actual exit code.
-     * @param positive-float $timeout Finite maximum seconds for this subprocess; default formatting limit is unchanged.
+     * Runs a command and returns its exit status.
+     *
+     * Completed statuses, including nonzero ones, MUST be returned unchanged.
+     * Diagnostics MAY be emitted; failure before completion MUST raise an exception.
+     *
+     * @param list<string> $arguments Executable followed by literal arguments, without shell interpolation.
+     * @param string $directory Child working directory.
+     * @param float $timeout Positive, finite execution limit in seconds.
+     * @return int Completed command status; interpreting tool-specific outcomes belongs to the caller.
+     * @throws \Throwable When execution cannot complete.
      */
     public function run(array $arguments, string $directory, float $timeout = 300): int;
 }

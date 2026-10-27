@@ -22,7 +22,13 @@ final class ArchiveTest extends TestCase
         $root = dirname(__DIR__, 2);
         $paths = explode("\0", $this->execute(['git', 'ls-files', '-z'], $root));
         $paths[] = '.gitattributes';
-        $paths[] = 'resources/skills/fast-forward-code-standards/LICENSE';
+        $skillFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/resources/skills', \FilesystemIterator::SKIP_DOTS));
+        foreach ($skillFiles as $file) {
+            self::assertFalse($file->isLink(), 'Canonical skills must be regular, portable files.');
+            if ($file->isFile()) {
+                $paths[] = substr($file->getPathname(), strlen($root) + 1);
+            }
+        }
 
         foreach (array_unique($paths) as $path) {
             if ('' === $path || !is_file($root . '/' . $path)) {
@@ -59,7 +65,7 @@ final class ArchiveTest extends TestCase
         (new Filesystem())->remove($this->directory);
     }
 
-    /** Both routes honor one export-ignore policy while retaining the runtime, canonical skill and README artwork. */
+    /** Both routes honor one export-ignore policy while retaining runtime, complete skill payloads and README artwork. */
     public function testGitAndComposerExportTheSamePackageFiles(): void
     {
         mkdir($this->directory . '/.build/archives', recursive: true);
@@ -76,6 +82,13 @@ final class ArchiveTest extends TestCase
         }
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/LICENSE'), $git['resources/skills/fast-forward-code-standards/LICENSE']);
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/resources/skills/fast-forward-code-standards/SKILL.md'), $git['resources/skills/fast-forward-code-standards/SKILL.md']);
+        $root = dirname(__DIR__, 2);
+        foreach (['SKILL.md', 'LICENSE', 'references/contracts.md', 'references/cleanup.md', 'references/verification.md'] as $name) {
+            $path = 'resources/skills/fast-forward-phpdoc/' . $name;
+            self::assertArrayHasKey($path, $git);
+            self::assertSame(hash_file('sha256', $root . '/' . $path), $git[$path]);
+        }
+        self::assertArrayNotHasKey('resources/skills/fast-forward-phpdoc/NOTICE', $git);
         foreach (array_keys($git) as $path) {
             self::assertDoesNotMatchRegularExpression('~^(?:vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
