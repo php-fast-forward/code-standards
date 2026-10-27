@@ -48,6 +48,13 @@ An explicit user-selected config remains executable code; only use it in this
 unprivileged sandbox. GitHub Actions private-repository sharing policies must
 already permit the caller. This project never broadens organization access.
 
+The formatter subprocess uses an internal packaged worker and ECS's public APIs,
+not ECS's CLI bootstrap. It keeps the consumer cwd and selected absolute paths
+without automatically importing consumer `vendor/autoload.php`. Explicit config
+is the opt-in boundary for executable consumer bootstrap/custom checkers. The
+tool's own Composer bootstrap and existing credential filtering remain active;
+this is not a claim that arbitrary explicit PHP config is sandboxed.
+
 Before a first release, use a reviewed, pushed implementation commit or a local
 repository reusable call. Own CI exercises the local reusable on PRs and does
 not depend on `v0` already existing. The resource wrapper selects `@v0` by the
