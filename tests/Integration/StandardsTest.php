@@ -47,6 +47,7 @@ final class StandardsTest extends TestCase
     /** Exercises divergence, rename destinations, deleted sources and binary-safe path arguments. */
     public function testChangedFilesUseMergeBaseDestinationsAndNulSafePaths(): void
     {
+        $this->put('.gitignore', "/vendor/\n");
         $this->put('old name.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'old';\n");
         $this->put('deleted.php', '<?php echo 1;');
         $this->put('unchanged.php', '<?php echo 1;');
@@ -58,6 +59,7 @@ final class StandardsTest extends TestCase
         $this->put('-leading.php', '<?php echo 2;');
         $this->put('bin/a command', "#!/usr/bin/env php\n<?php\necho 2;\n");
         $this->put('vendor/ignored.php', '<?php echo 2;');
+        $this->git(['add', '-f', 'vendor/ignored.php']);
         $head = $this->commit();
         $this->git(['switch', 'main']);
         $this->put('base only.php', '<?php echo 3;');
@@ -439,6 +441,149 @@ PHP;
         self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
         self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
         self::assertSame($clean, file_get_contents($this->directory . '/source.php'));
+    }
+
+    /** Applies arbitrary consumer patterns to tracked files, preserving Git negation, escape and parent-directory semantics. */
+    public function testConsumerGitIgnoresFilterTrackedFilesDynamically(): void
+    {
+        $source = "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n";
+        $ignored = [
+            'root-only.php', 'deep/scratch-one.php', 'bundle-42/data.php',
+            '#tag.php', '!bang.php', 'space name.php', "line\nbreak.php",
+            'module/drop.php', 'blocked-parent/keep.php',
+        ];
+        $eligible = [
+            'source.php', 'deep/root-only.php', 'module/keep.php',
+            'public/source.php', 'resources/source.php', 'backup/source.php',
+            'global.php', 'info.php',
+        ];
+        $this->put('.gitignore', "# Consumer-owned rules\n/root-only.php\n**/scratch-*.php\nbundle-*/\n\\#tag.php\n\\!bang.php\nspace\\ name.php\nline?break.php\nblocked-parent/\n");
+        $this->put('module/.gitignore', "*.php\n!keep.php\n");
+        $this->put('blocked-parent/.gitignore', "!keep.php\n");
+        foreach ([...$ignored, ...$eligible] as $path) {
+            $this->put($path, $source);
+        }
+        $this->put('.build/global-ignore', "global.php\n");
+        $this->git(['config', 'core.excludesFile', $this->directory . '/.build/global-ignore']);
+        file_put_contents($this->directory . '/.git/info/exclude', "info.php\n");
+        $this->git(['add', '-f', '--all']);
+        $base = $this->commit();
+        $selection = new FileSelection(new NativeProcessRunner());
+        $selected = (new PhpFiles())->filter($this->directory, $selection->select($this->directory, null, null));
+        $expected = array_map(fn(string $path): string => $this->directory . '/' . $path, $eligible);
+        sort($expected, SORT_STRING);
+        self::assertSame($expected, $selected);
+
+        $this->put('root-only.php', str_replace("'ok'", "'ignored edit'", $source));
+        $this->put('source.php', str_replace("'ok'", "'visible edit'", $source));
+        $head = $this->commit();
+        self::assertSame(['source.php'], $selection->select($this->directory, $base, $head));
+        self::assertSame(0, $this->cli(['check', '--all'])->getExitCode());
+        self::assertStringContainsString('blocked-parent/', file_get_contents($this->directory . '/.gitignore'));
+    }
+
+    /** Root and nested ignore changes/removals rescan unchanged eligible tracked code. */
+    public function testChangedIgnorePoliciesInvalidateTheSelectedScope(): void
+    {
+        $this->put('unchanged.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $selection = new FileSelection(new NativeProcessRunner());
+
+        foreach (['.gitignore', 'nested/.gitignore'] as $policy) {
+            foreach (['modify', 'delete', 'rename'] as $operation) {
+                $ignored = dirname($policy) . '/blocked.php';
+                $ignored = str_starts_with($ignored, './') ? substr($ignored, 2) : $ignored;
+                $this->put($policy, "blocked.php\n");
+                $this->put($ignored, '<?php echo 1;');
+                $this->git(['add', '-f', $ignored]);
+                $base = $this->commit();
+                self::assertNotContains($ignored, $selection->select($this->directory, null, null));
+
+                if ('delete' === $operation) {
+                    $this->git(['rm', $policy]);
+                } elseif ('rename' === $operation) {
+                    $this->git(['mv', $policy, $policy . '.archive']);
+                } else {
+                    $this->put($policy, "different.php\n");
+                }
+                $head = $this->commit();
+                $selected = $selection->select($this->directory, $base, $head);
+                self::assertContains('unchanged.php', $selected, $policy . ':' . $operation);
+                self::assertContains($ignored, $selected, $policy . ':' . $operation);
+            }
+        }
+    }
+
+    /** Case-folding filesystems can read mixed-case ignore names; conservatively rescan on every host. */
+    public function testCaseVariantIgnorePolicyChangesInvalidateTheSelectedScope(): void
+    {
+        $this->put('unchanged.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $selection = new FileSelection(new NativeProcessRunner());
+
+        foreach (['.GiTiGnOrE', 'nested/.GiTiGnOrE'] as $policy) {
+            $ignored = dirname($policy) . '/bad.php';
+            $ignored = str_starts_with($ignored, './') ? substr($ignored, 2) : $ignored;
+            $this->put($policy, "bad.php\n");
+            $this->put($ignored, "<?php invalid syntax !!!\n");
+            $this->git(['add', '-f', $ignored]);
+            $base = $this->commit();
+            $nativeIgnored = array_filter(explode("\0", $this->git([
+                'ls-files', '--cached', '--ignored', '--exclude-per-directory=.gitignore', '-z',
+            ])));
+            if (is_file(dirname($this->directory . '/' . $policy) . '/.gitignore')) {
+                self::assertContains($ignored, $nativeIgnored, 'Git must actually read the mixed-case policy on a case-folding filesystem.');
+                self::assertNotContains($ignored, $selection->select($this->directory, null, null));
+            } else {
+                self::assertNotContains($ignored, $nativeIgnored, 'A case-sensitive filesystem does not activate the differently named policy.');
+            }
+
+            $this->put($policy, "different.php\n");
+            $head = $this->commit();
+            $selected = $selection->select($this->directory, $base, $head);
+
+            self::assertContains('unchanged.php', $selected, $policy);
+            self::assertContains($ignored, $selected, $policy);
+            self::assertNotSame(0, $this->cli(['check', '--base=' . $base, '--head=' . $head])->getExitCode());
+            self::assertSame("<?php invalid syntax !!!\n", file_get_contents($this->directory . '/' . $ignored));
+        }
+    }
+
+    /** A missing Git executable fails explicitly; no parser fallback silently changes the consumer scope. */
+    public function testMissingGitFailsInsteadOfIgnoringConsumerRules(): void
+    {
+        $result = $this->cli(['check', '--all'], ['PATH' => $this->directory . '/no-executables']);
+
+        self::assertSame(2, $result->getExitCode());
+        self::assertStringContainsString('git', strtolower($result->getErrorOutput()));
+    }
+
+    /** Linked worktrees use a .git file; a non-Git project still fails explicitly rather than silently passing. */
+    public function testLinkedWorktreeMetadataFileAndNonGitProjectScope(): void
+    {
+        $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $this->commit();
+        $linked = $this->directory . '/.build/linked';
+        $this->git(['worktree', 'add', '--detach', $linked, 'HEAD']);
+
+        self::assertFileExists($linked . '/.git');
+        self::assertFalse(is_dir($linked . '/.git'));
+        self::assertSame(0, $this->cli(['check', '--all', '--directory=' . $linked])->getExitCode());
+
+        $plain = $this->directory . '-plain';
+        mkdir($plain);
+        file_put_contents($plain . '/source.php', '<?php broken source');
+
+        try {
+            $identity = new Process(['git', 'rev-parse', '--is-inside-work-tree'], $plain);
+            $identity->run();
+            self::assertFalse($identity->isSuccessful(), 'The fixture must actually be outside Git.');
+
+            $result = $this->cli(['check', '--all', '--directory=' . $plain]);
+            self::assertSame(2, $result->getExitCode());
+            self::assertNotSame('', $result->getErrorOutput());
+        } finally {
+            unlink($plain . '/source.php');
+            rmdir($plain);
+        }
     }
 
     /** Writes a synthetic fixture beneath the disposable test root, creating its parents. */

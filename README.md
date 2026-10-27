@@ -117,13 +117,19 @@ ECS's configured paths do not expand the CLI's explicit selected file list.
 ## 🔌 Integration and file scope
 
 - Tracked `*.php` and PHP entrypoints under `bin/` are included.
-- `vendor`, `.git`, `.build`, `.dev-tools`, `backup`, `cache`, `public`,
-  `resources`, `tmp`, `node_modules` directory components are excluded.
+- The consumer's root and nested `.gitignore` files dynamically exclude matching
+  paths, including already tracked/force-added files. Git interprets patterns,
+  anchors, escapes and negations; this tool has no replacement glob parser.
+  Global ignores and `.git/info/exclude` do not alter this project-owned policy.
+  Untracked files remain outside the CLI's candidate universe. Only `.git`
+  metadata is structurally excluded, including worktree metadata files; names
+  such as `public`, `resources` or `backup` are eligible unless the consumer
+  ignores them. Containment and PHP symlink rejection still apply.
 - Candidate PHP/bin symlink paths fail closed; unrelated non-PHP aliases are ignored.
   Spaces, tabs, newlines and leading dashes remain
   individual subprocess arguments; deleted files are omitted, renames use destinations.
 - Changed mode uses `base...head`, so unrelated base-branch changes are excluded.
-  Composer, ECS and EditorConfig changes escalate to a complete tracked scan.
+  Composer, ECS, EditorConfig and root/nested `.gitignore` changes escalate to a complete tracked scan.
 - Tools run in bounded batches and stop on failure. Syntax checks use `php -n -l`,
   so selected application sources are parsed without executing them.
 
