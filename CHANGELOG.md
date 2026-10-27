@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add development-only LLM Skills configuration for the bundled Code Standards skill, trusted Fast Forward Composer donors, Changelog and Dash artwork instructions. Keep documentation-authoring skills outside the synchronized sources. Introduce contextual Dash artwork for the repository README.
+
+  Centralize distribution exclusions in Git export-ignore attributes, preserving runtime configuration, the canonical consumer skill and the README artwork.
+
+  ([#33](https://github.com/php-fast-forward/code-standards/pull/33))
+
 - Add a separate opt-in native Rector command with dry-run by default, explicit
   configuration and apply authority, empty-rule initialization protection and
   post-apply verification. Require an explicit native consumer PHP target before
