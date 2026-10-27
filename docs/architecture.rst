@@ -35,6 +35,25 @@ The supported configuration extension is the native ECS builder. A small PSR-4 p
 
 No configuration is needed for the default preset. A consumer selects an existing readable PHP file with ``--config``; relative paths resolve from the project root. That file must return the configuration supported by the installed ECS version. Native builder methods define rule imports, skips and overrides. Invalid paths, unsupported options and conflicting scan modes fail with an objective error; empty paths are rejected rather than coerced to the current directory. ECS configuration errors propagate as failures. Standard Symfony flag semantics apply, including idempotent repeated boolean flags and both ``--option=value`` and ``--option value``. Behavioral tests exercise the default preset, real rule overrides, help outside a checkout and invalid invocations.
 
+Optional lossless process capture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``ResultProcessRunner`` extends the existing process interface with ``captureResult()``.
+The native transport returns an immutable ``ProcessResult`` containing the exact
+exit code and separate stdout/stderr bytes, including non-UTF-8 and ANSI bytes.
+Nonzero exits remain results; startup, timeout and invalid-bound failures retain
+their native exceptions. Capture uses the same credential filtering, explicit
+working directory, argument vector and finite timeout policy, without invoking
+the streaming output sink.
+
+Existing ``ProcessRunner`` implementations and provider overrides need no new
+method. Existing ``capture()`` still throws on nonzero exits, and ``run()`` retains
+its streaming behavior. The service provider and command output are unchanged.
+This library capability does not parse tool output, infer a clean outcome or
+expose CLI JSON. Callers must preserve unsupported output rather than extract a
+JSON suffix, merge the two channels or treat empty diagnostics as success.
+Check, fix and semantic-operation authority remain with their existing runners.
+
 Implementation quality
 ----------------------
 
