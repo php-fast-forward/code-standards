@@ -43,8 +43,9 @@ final class FileSelection
             'git', 'diff', '--no-renames', '--name-only', '-z', $base . '...' . $head, '--',
         ], $directory));
         foreach ($allChanges as $path) {
+            // Case-folding hosts can load mixed-case policy names; an extra full scan elsewhere is conservative.
             if ((null !== $config && $directory . '/' . $path === $config)
-                || 1 === preg_match('~(^|/)(composer\.(json|lock)|ecs[^/]*\.php|\.editorconfig|\.gitignore)$|^src/Config/|^config/~', $path)) {
+                || 1 === preg_match('~(^|/)(composer\.(json|lock)|ecs[^/]*\.php|\.editorconfig|\.gitignore)$|^src/Config/|^config/~i', $path)) {
                 return $this->withoutIgnored($directory, $this->paths($this->process->capture(['git', 'ls-files', '-z'], $directory)));
             }
         }

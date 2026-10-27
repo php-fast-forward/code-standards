@@ -513,6 +513,40 @@ PHP;
         }
     }
 
+    /** Case-folding filesystems can read mixed-case ignore names; conservatively rescan on every host. */
+    public function testCaseVariantIgnorePolicyChangesInvalidateTheSelectedScope(): void
+    {
+        $this->put('unchanged.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ok';\n");
+        $selection = new FileSelection(new NativeProcessRunner());
+
+        foreach (['.GiTiGnOrE', 'nested/.GiTiGnOrE'] as $policy) {
+            $ignored = dirname($policy) . '/bad.php';
+            $ignored = str_starts_with($ignored, './') ? substr($ignored, 2) : $ignored;
+            $this->put($policy, "bad.php\n");
+            $this->put($ignored, "<?php invalid syntax !!!\n");
+            $this->git(['add', '-f', $ignored]);
+            $base = $this->commit();
+            $nativeIgnored = array_filter(explode("\0", $this->git([
+                'ls-files', '--cached', '--ignored', '--exclude-per-directory=.gitignore', '-z',
+            ])));
+            if (is_file(dirname($this->directory . '/' . $policy) . '/.gitignore')) {
+                self::assertContains($ignored, $nativeIgnored, 'Git must actually read the mixed-case policy on a case-folding filesystem.');
+                self::assertNotContains($ignored, $selection->select($this->directory, null, null));
+            } else {
+                self::assertNotContains($ignored, $nativeIgnored, 'A case-sensitive filesystem does not activate the differently named policy.');
+            }
+
+            $this->put($policy, "different.php\n");
+            $head = $this->commit();
+            $selected = $selection->select($this->directory, $base, $head);
+
+            self::assertContains('unchanged.php', $selected, $policy);
+            self::assertContains($ignored, $selected, $policy);
+            self::assertNotSame(0, $this->cli(['check', '--base=' . $base, '--head=' . $head])->getExitCode());
+            self::assertSame("<?php invalid syntax !!!\n", file_get_contents($this->directory . '/' . $ignored));
+        }
+    }
+
     /** A missing Git executable fails explicitly; no parser fallback silently changes the consumer scope. */
     public function testMissingGitFailsInsteadOfIgnoringConsumerRules(): void
     {
