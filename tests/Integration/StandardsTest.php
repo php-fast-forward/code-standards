@@ -156,6 +156,72 @@ final class StandardsTest extends TestCase
         self::assertSame($fixed, file_get_contents($this->directory . '/' . $path));
     }
 
+    /** Preserves older parameter syntax by default, existing commas and explicit fix/check boundaries. */
+    public function testDefaultFormattingDoesNotIntroduceParameterCommasFromTheHostRuntime(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../Fixtures/consumer-language.php.inc');
+        $this->put('source.php', $source);
+        $this->commit();
+
+        $check = $this->cli(['check', '--all']);
+        self::assertSame(2, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+        self::assertSame(['source.php'], $this->trackedAndUntrackedSources());
+
+        $fix = $this->cli(['fix', '--all']);
+        self::assertSame(0, $fix->getExitCode(), $fix->getOutput() . $fix->getErrorOutput());
+        $fixed = file_get_contents($this->directory . '/source.php');
+        self::assertStringContainsString("?string \$name = null\n", $fixed);
+        self::assertStringContainsString("string \$label\n", $fixed);
+        self::assertStringContainsString("string \$name,\n", $fixed);
+        self::assertStringContainsString("'array value',\n", $fixed);
+        self::assertStringContainsString("'argument value',\n", $fixed);
+        self::assertStringContainsString('(new Example())->run();', $fixed);
+        self::assertStringContainsString('(new class', $fixed);
+        self::assertStringContainsString('})->run();', $fixed);
+
+        foreach (['check', 'fix', 'check'] as $command) {
+            $result = $this->cli([$command, '--all']);
+            self::assertSame(0, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+            self::assertSame($fixed, file_get_contents($this->directory . '/source.php'));
+        }
+    }
+
+    /** Allows an explicitly reviewed native override to select parameter commas for PHP 8.0 or later. */
+    public function testConsumerCanExplicitlyOverrideTheConservativeParameterCommaPolicy(): void
+    {
+        $source = file_get_contents(__DIR__ . '/../Fixtures/consumer-language.php.inc');
+        $this->put('source.php', $source);
+        $this->put('.build/ecs.php', <<<'PHP'
+<?php
+
+return \FastForward\CodeStandards\Config\ECSConfig::configure(
+    static function (\Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder $config): void {
+        $config->withConfiguredRule(
+            \PhpCsFixer\Fixer\ControlStructure\TrailingCommaInMultilineFixer::class,
+            ['after_heredoc' => true, 'elements' => ['parameters']],
+        );
+    },
+);
+PHP);
+        $this->commit();
+
+        $check = $this->cli(['check', '--all', '--config=.build/ecs.php']);
+        self::assertSame(2, $check->getExitCode(), $check->getOutput() . $check->getErrorOutput());
+        self::assertSame($source, file_get_contents($this->directory . '/source.php'));
+
+        $fix = $this->cli(['fix', '--all', '--config=.build/ecs.php']);
+        self::assertSame(0, $fix->getExitCode(), $fix->getOutput() . $fix->getErrorOutput());
+        $fixed = file_get_contents($this->directory . '/source.php');
+        self::assertStringContainsString("?string \$name = null,\n", $fixed);
+        self::assertStringContainsString("string \$label,\n", $fixed);
+        self::assertStringNotContainsString("'array value',\n", $fixed);
+        self::assertStringNotContainsString("'argument value',\n", $fixed);
+        self::assertSame(0, $this->cli(['check', '--all', '--config=.build/ecs.php'])->getExitCode());
+        self::assertSame(0, $this->cli(['fix', '--all', '--config=.build/ecs.php'])->getExitCode());
+        self::assertSame($fixed, file_get_contents($this->directory . '/source.php'));
+    }
+
     /** Proves parsing never executes selected source and syntax failures leave its bytes intact. */
     public function testSyntaxIsParsedWithoutExecutingSource(): void
     {
