@@ -34,7 +34,10 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
     {
         $engine = realpath($vendorDirectory . '/symplify/easy-coding-standard');
         $entrypoint = $engine . '/bin/ecs';
-        if (!str_starts_with($vendorDirectory, '/') || false === $engine || !is_file($entrypoint) || !is_readable($entrypoint)
+        if (!str_starts_with($vendorDirectory, '/')
+            || false === $engine
+            || !is_file($entrypoint)
+            || !is_readable($entrypoint)
             || !is_readable($vendorDirectory . '/autoload.php')
         ) {
             throw new InvalidArgumentException('Vendor directory must contain a readable installed ECS entrypoint.');
