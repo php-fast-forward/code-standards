@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-10-27
+
+### Changed
+
+- Keep the adapted PHPDoc skill's original MIT copyright and permission notice in
+  its LICENSE file, removing the redundant separate NOTICE from the skill payload.
+
+  ([#80](https://github.com/php-fast-forward/code-standards/pull/80))
+
 ## [0.5.0] - 2026-10-27
 
 ### Added
@@ -188,6 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.5.1]: https://github.com/php-fast-forward/code-standards/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/php-fast-forward/code-standards/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/php-fast-forward/code-standards/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/php-fast-forward/code-standards/compare/v0.3.1...v0.3.2
