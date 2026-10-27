@@ -5,11 +5,19 @@ declare(strict_types=1);
 
 use Symplify\EasyCodingStandard\Console\Command\CheckCommand;
 use Symplify\EasyCodingStandard\Console\Output\ConsoleOutputFormatter;
+use Symplify\EasyCodingStandard\Console\Output\JsonOutputFormatter;
 use Symplify\EasyCodingStandard\DependencyInjection\EasyCodingStandardContainerFactory;
 
 // Internal process protocol: own autoloader, installed engine, config, mode, --, absolute files.
 try {
-    if ($argc < 7 || '--' !== $argv[5] || !in_array($argv[4], ['--check', '--fix'], true)) {
+    $json = '--format=json' === ($argv[5] ?? null);
+    $separator = $json ? 6 : 5;
+    if (
+        $argc < $separator + 2
+        || '--' !== $argv[$separator]
+        || !in_array($argv[4], ['--check', '--fix'], true)
+        || ($json && '--check' !== $argv[4])
+    ) {
         throw new InvalidArgumentException('ECS worker requires installation paths, an explicit mode and selected files.');
     }
     [$script, $autoload, $engine, $config, $mode] = array_slice($argv, 0, 5);
@@ -18,7 +26,7 @@ try {
             throw new InvalidArgumentException('ECS worker requires readable absolute installation and config paths.');
         }
     }
-    $files = array_slice($argv, 6);
+    $files = array_slice($argv, $separator + 1);
     foreach ($files as $file) {
         if (!str_starts_with($file, '/')) {
             throw new InvalidArgumentException('ECS worker requires absolute selected file paths.');
@@ -28,6 +36,8 @@ try {
     // Keep Composer's own installation bootstrap, but do not run ECS's cwd-autoloading CLI bootstrap.
     require $autoload;
     require_once $engine . '/vendor/squizlabs/php_codesniffer/autoload.php';
+
+    $format = $json ? JsonOutputFormatter::getName() : ConsoleOutputFormatter::NAME;
 
     $container = (new EasyCodingStandardContainerFactory())->createFromArgv(['ecs', 'check', '--config=' . $config]);
     $command = $container->make(CheckCommand::class);
@@ -42,7 +52,7 @@ try {
         false,
         false,
         $config,
-        ConsoleOutputFormatter::NAME,
+        $format,
         '',
         '',
         '',

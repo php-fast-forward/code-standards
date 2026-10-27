@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#75](https://github.com/php-fast-forward/code-standards/pull/75))
 
+- Add explicit JSON check reports with native ECS findings, syntax results, incomplete-batch accounting and bounded nonstreaming capture; preserve default text and explicit fix behavior. ([#79](https://github.com/php-fast-forward/code-standards/pull/79))
+
 ### Changed
 
 - Clarify the portable Code Standards skill with the supported command contract, complete optional-tool routes, native configuration examples and explicit installation ownership. ([#82](https://github.com/php-fast-forward/code-standards/pull/82))
