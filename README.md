@@ -8,9 +8,9 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/php-fast-forward?color=EC4899)](https://github.com/sponsors/php-fast-forward)
 
 Focused PHP style and static syntax checks, independent of DevTools. The library
-provides an extendable ECS PER Coding Style 3.0 preset; the CLI checks tracked PHP files or the files
-changed by an exact PR head. It validates PHP syntax and style; type analysis,
-application tests and coverage belong to their respective tools.
+provides an extendable ECS PER Coding Style 3.0 preset; the CLI checks tracked PHP
+files or the files changed by an exact PR head. It validates PHP syntax and style;
+type analysis, application tests and coverage belong to their respective tools.
 
 ## ✨ Features
 
@@ -32,11 +32,10 @@ vendor/bin/code-standards check --all
 The GitHub `v0` workflow channel and the Composer package are separate
 distribution mechanisms.
 
-
-Requires PHP 8.3+, Git and Composer runtime API 2.2+ for installed binary proxies.
-Composer resolves the tool runtime independently from
-the consumer application's PHP minimum; syntax is checked using the executing
-PHP binary. No PHP migration rules are enabled. Review compatibility with the
+Requires PHP 8.3 or later in the 8.x series, Git and Composer runtime API 2.2+
+for installed binary proxies. Composer resolves the tool with the project's
+dependency constraints; syntax is checked using the executing PHP binary.
+No PHP migration rules are enabled. Review compatibility with the
 application's minimum PHP before adopting a preset.
 
 Workflow guards and their contributor tests additionally require Bash and jq.
@@ -47,7 +46,7 @@ Composer exposes the portable skill through `extra.skills.source` at
 `resources/skills`. `llm/skills` is an optional consumer integration; installation
 and activation are explicit. The development `check` script validates Composer
 metadata and the actual platform before running this package's tests and style
-check. Operational channel dependencies remain development-only.
+check.
 
 For a reviewed source checkout:
 
@@ -85,11 +84,9 @@ conflicting scan modes and unsupported arguments are rejected explicitly.
 
 ## ⚙️ Configuration and extension
 
-Install `fast-forward/code-standards` as development tooling. Select the reviewed
-Composer version and workflow/runtime refs independently and deliberately. For
-an isolated source trial, a local Composer path repository may require `*@dev`
-with plugins/scripts disabled; that constraint describes the checkout, not a
-published release.
+Install `fast-forward/code-standards` as development tooling. Select the Composer
+package and workflow/runtime refs independently: Composer resolves package
+dependencies, while the GitHub workflow uses its reviewed ref.
 
 ```php
 <?php
@@ -167,8 +164,8 @@ Development releases stay in `0.x`. A compatible correction uses a patch;
 functionality and breaking development changes use a minor. Changelog automation
 prepares and publishes versions through reviewed PRs. Verify actual
 [releases](https://github.com/php-fast-forward/code-standards/releases) before
-selecting a Composer constraint. The GitHub `v0` channel is created only after a
-verified publication and can advance across development minors; it is not a
+selecting a Composer constraint. The GitHub `v0` channel follows verified
+publications and can advance across development minors; it is not a
 Composer package constraint.
 
 ## ❓ FAQ
@@ -178,19 +175,18 @@ The CLI selects working-tree files from Git, not staged index blobs. Changed
 mode requires a clean tracked checkout and cannot certify staged-only content.
 
 **Does it run PHPStan, Rector or my application's tests?**
-No. This increment checks syntax and style. Type analysis, semantic refactoring
+No. The formatter checks syntax and style. Type analysis, semantic refactoring
 and application testing have separate scopes and compatibility requirements.
 
-**Does a successful first fix always mean the source is clean?**
+**Does a successful fix always mean the source is clean?**
 The CLI verifies each formatted batch and reports remaining violations. Rules
 can interact across passes; inspect the diff before explicitly fixing again.
 
 **Where do agent skills come from?**
 The canonical payload is under `resources/skills`, advertised by
-`extra.skills.source`. Consumers may explicitly select the optional LLM Skills manager. This package
-does not provide another installer, activate skills or migrate consumer settings.
-The DevTools README/Sphinx authoring skills were read as references and were not
-imported into this repository.
+`extra.skills.source`. Consumers may explicitly select the optional LLM Skills
+manager. This package does not provide another installer, activate skills or
+migrate consumer settings.
 
 ## 🛡️ License
 
