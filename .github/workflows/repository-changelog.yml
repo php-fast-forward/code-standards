@@ -17,7 +17,7 @@ jobs:
       pull-requests: write
       issues: read
       statuses: write
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@203db95e68fc974e95ba1a921f08d01f88851be1 # v0.4.1
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@v0
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main
