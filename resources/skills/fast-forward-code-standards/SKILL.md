@@ -2,18 +2,25 @@
 name: fast-forward-code-standards
 description: Check or explicitly fix PHP formatting and syntax using Fast Forward Code Standards, including changed-file PR workflow adoption and review of local ECS overrides.
 license: MIT
+compatibility: Check/fix baseline fast-forward/code-standards 0.3.2, PHP ^8.3 and Composer runtime API ^2.2. Qualify optional commands against the installed CLI help.
 metadata:
+  api-baseline: fast-forward/code-standards 0.3.2 (check/fix)
   repository: https://github.com/php-fast-forward/code-standards
 ---
 
 # Fast Forward Code Standards
 
+The check/fix baseline is `fast-forward/code-standards` 0.3.2 with PHP `^8.3`
+and Composer runtime API `^2.2`. Earlier releases are outside this skill's
+validated baseline. Inspect the installed version and help before choosing a route;
+this baseline is not an instruction to change a consumer's dependency constraint.
+
 1. Read consumer AGENTS, Git status, PHP requirements and existing style config.
    Preserve local edits. Do not replace another preset or migrate consumers
    without an explicit request and a fixture-backed policy comparison.
-2. Inspect the selected reviewed release/ref's README, workflow and CLI `help`.
-   Before the first release use a reviewed commit or local path trial, never an
-   invented version. A verified GitHub v0 channel is the selected workflow policy;
+2. Select a published version or reviewed commit and inspect that ref's README,
+   workflow and CLI `help`; never invent a version. A verified GitHub v0 channel
+   is the selected workflow policy;
    the runtime stays bound to the actual executing workflow commit. GitHub v0
    is not a Composer/CPX version constraint.
 3. Use `code-standards check --all` for a full tracked scan. For a clean PR head,
@@ -24,12 +31,25 @@ metadata:
    privileged token or on a privileged target event. No incidental dependency update.
 5. Only when fixing is requested run `code-standards fix --all`, inspect the diff
    and rerun check. Do not commit/push automatically. Semantic migrations need a
-   separate reviewed procedure: the opt-in `refactor` command requires explicit
-   native Rector configuration, an explicit consumer PHP target and reviewed
-   rules. Native cache configuration is optional; Rector may use memory in CI.
+   separate reviewed procedure. First confirm that the selected CLI's `help`
+   lists `refactor`; the 0.3.2 baseline has only check/fix. If absent, stop this
+   route without silently upgrading the consumer. When available, `refactor` requires explicit
+   native Rector configuration, an explicit consumer PHP target, source paths and
+   reviewed rules. Native cache configuration is optional; Rector may use memory in CI.
    Preview is default; only explicit `--apply` grants semantic writes.
-   Read `docs/rector.rst` for executable-config/autoload limits. Never substitute
-   this command for ordinary formatting `fix` or automatically migrate consumers.
+   Use only trusted, deterministic native configuration: preview runs one
+   inventory and one processing invocation; successful apply adds verification.
+   Rector can evaluate configuration repeatedly within each invocation. Changing
+   targets or rules between evaluations can defeat preflight validation.
+   Dry-run is not a sandbox: configuration, Composer autoload files, custom rules
+   and bootstraps can execute code and mutate files. Never use these with secrets,
+   privileged events or untrusted consumers. The child process does not isolate
+   namespaces: audit class origins against the consumer checkout and qualify
+   tool/consumer autoload/bootstrap compatibility; fail on collisions rather than
+   accepting a false clean result. Review semantic diffs and run affected consumer
+   tests; zero status alone does not prove semantic safety. The same ref's
+   `docs/rector.rst` is an optional detailed guide. Never substitute this command
+   for ordinary formatting `fix` or automatically migrate consumers.
 6. For requested CI adoption copy `resources/workflows/code-standards.yml` from
    the selected ref after v0 points to a confirmed 0.x release, and use `pull_request` with
    read-only permissions and a hosted runner. No secrets/inherit, write token,
