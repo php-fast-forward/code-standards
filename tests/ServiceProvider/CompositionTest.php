@@ -113,13 +113,13 @@ final class RecordingTransport implements ProcessRunner
     public array $commands = [];
 
     /** Reads only Git metadata through the production shell-free transport. */
-    public function capture(array $arguments, string $directory): string
+    public function capture(array $arguments, string $directory, float $timeout = 120): string
     {
-        return (new NativeProcessRunner())->capture($arguments, $directory);
+        return (new NativeProcessRunner())->capture($arguments, $directory, $timeout);
     }
 
     /** Returns a synthetic style failure to verify end-to-end exit-code propagation. */
-    public function run(array $arguments, string $directory): int
+    public function run(array $arguments, string $directory, float $timeout = 300): int
     {
         $this->commands[] = $arguments;
 

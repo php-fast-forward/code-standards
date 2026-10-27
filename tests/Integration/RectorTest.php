@@ -197,6 +197,30 @@ final class RectorTest extends TestCase
         self::assertSame(2, $missing->run());
     }
 
+    /** A real native preflight timeout is an execution failure and removes its owned guard without source writes. */
+    public function testNativePreflightTimeoutPreservesConsumerAndCleansGuard(): void
+    {
+        file_put_contents($this->directory . '/source.php', '<?php return array(1);');
+        $config = $this->configuration('\\Rector\\Php54\\Rector\\Array_\\LongArrayToShortArrayRector', 70400);
+        $slow = '<?php file_put_contents(__DIR__."/preflight.path", substr($_SERVER["argv"][2], strlen("--config="))); usleep(4000000);'
+            . substr($config, strlen('<?php'));
+        file_put_contents($this->directory . '/policy.php', $slow);
+        $before = $this->ownedBytes();
+        $result = $this->cli(['--timeout=2']);
+
+        self::assertSame(1, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+        self::assertStringContainsString('exceeded the timeout', $result->getErrorOutput());
+        self::assertSame($before, $this->ownedBytes());
+        $preflight = file_get_contents($this->directory . '/preflight.path');
+        self::assertStringContainsString('/code-standards-rector-', $preflight);
+        self::assertFileDoesNotExist($preflight);
+        self::assertDirectoryDoesNotExist(dirname($preflight));
+
+        file_put_contents($this->directory . '/policy.php', $config);
+        $accepted = $this->cli(['--timeout=5']);
+        self::assertSame(2, $accepted->getExitCode(), $accepted->getOutput() . $accepted->getErrorOutput());
+    }
+
     /** Returns native builder PHP unchanged; target and cache remain consumer-owned options. */
     private function configuration(string $rule, int $target): string
     {

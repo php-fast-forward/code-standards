@@ -24,22 +24,22 @@ final readonly class RectorRunner
      *
      * @return int Native process status, including 2 when dry-run proposes changes.
      */
-    public function run(string $directory, string $config, bool $apply): int
+    public function run(string $directory, string $config, bool $apply, float $timeout = 300): int
     {
-        $this->assertRules($directory, $config);
+        $this->assertRules($directory, $config, $timeout);
         $check = [PHP_BINARY, $this->rector, 'process', '--config=' . $config, '--no-progress-bar'];
-        $status = $this->process->run($apply ? $check : [...$check, '--dry-run'], $directory);
+        $status = $this->process->run($apply ? $check : [...$check, '--dry-run'], $directory, $timeout);
         if (!$apply || 0 !== $status) {
             return $status;
         }
 
-        return $this->process->run([...$check, '--dry-run'], $directory);
+        return $this->process->run([...$check, '--dry-run'], $directory, $timeout);
     }
 
     /** Uses Rector's own JSON inventory instead of evaluating or parsing consumer PHP in the parent process. */
-    private function assertRules(string $directory, string $config): void
+    private function assertRules(string $directory, string $config, float $timeout): void
     {
-        $output = $this->nativeInventory($directory, $config);
+        $output = $this->nativeInventory($directory, $config, $timeout);
         try {
             $inventory = json_decode($output, true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $error) {
@@ -55,7 +55,7 @@ final readonly class RectorRunner
     }
 
     /** Imports the original config in Rector's native container; no application/config source is copied or parsed. */
-    private function nativeInventory(string $directory, string $config): string
+    private function nativeInventory(string $directory, string $config, float $timeout): string
     {
         $temporary = sys_get_temp_dir() . '/code-standards-rector-' . bin2hex(random_bytes(16));
         if (!mkdir($temporary, 0700)) {
@@ -70,7 +70,7 @@ final readonly class RectorRunner
 
             return $this->process->capture([
                 PHP_BINARY, $this->rector, 'list-rules', '--config=' . $preflight, '--output-format=json',
-            ], $directory);
+            ], $directory, $timeout);
         } finally {
             if (is_file($preflight)) {
                 unlink($preflight);

@@ -53,14 +53,24 @@ the command preserves Rector's selection.
 php bin/code-standards refactor --config=rector.php --directory=/project
 # After reviewing the proposed semantic diff:
 php bin/code-standards refactor --config=rector.php --directory=/project --apply
+# For a larger project, choose an explicit finite per-subprocess budget:
+php bin/code-standards refactor --config=rector.php --directory=/project --timeout=900
 ```
 
 Preview passes native `--dry-run`. Explicit apply performs one write pass and
 then a dry-run verification; remaining differences fail. Native exits are 0 for
-clean/success, 1 for processing errors and 2 for proposed changes. Controlled
+clean/success, 1 for processing errors or subprocess timeouts and 2 for proposed changes. Controlled
 invocation, empty-rule and invalid-inventory errors also return 2, with an error
 diagnostic. Other native fatal exits propagate unchanged. Rector 2.4.2 uses `-n` for dry-run and does not expose the ECS
 `--no-interaction` option; its native flags are not translated blindly.
+
+`--timeout` accepts a positive whole number of seconds and defaults to 300.
+It bounds each Rector subprocess separately: preflight inventory, processing and
+post-apply verification receive the same limit. Fractional, negative, zero,
+nonfinite and overflowing values are rejected; no unlimited mode is exposed.
+The option changes this refactor invocation, leaving Git's 120-second captured
+transport default and formatting's 300-second default unchanged. Native Rector
+process/parallel-worker limits remain native configuration decisions.
 
 ## Executable configuration and initialization boundary
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Process;
 
+use InvalidArgumentException;
 use Symfony\Component\Process\Process;
 
 /** Native transport; callers own selection and operation policy. */
@@ -16,19 +17,30 @@ final class NativeProcessRunner implements ProcessRunner
     public function __construct(private readonly ?\Closure $write = null) {}
 
     /** Captures native output as bytes, including Git paths and Rector's JSON inventory. */
-    public function capture(array $arguments, string $directory): string
+    public function capture(array $arguments, string $directory, float $timeout = 120): string
     {
-        $process = new Process($arguments, $directory, self::ENVIRONMENT, timeout: 120);
+        $process = $this->createProcess($arguments, $directory, $timeout);
         $process->mustRun();
 
         return $process->getOutput();
     }
 
     /** Runs one tool, streaming its output without changing its failure status. */
-    public function run(array $arguments, string $directory): int
+    public function run(array $arguments, string $directory, float $timeout = 300): int
     {
-        $process = new Process($arguments, $directory, self::ENVIRONMENT, timeout: 300);
+        $process = $this->createProcess($arguments, $directory, $timeout);
 
         return $process->run($this->write);
+    }
+
+    /** @param list<string> $arguments Positive finite bounds never become Symfony's zero/null unlimited mode. */
+    private function createProcess(array $arguments, string $directory, float $timeout): Process
+    {
+        if (!is_finite($timeout)
+            || $timeout <= 0) {
+            throw new InvalidArgumentException('Subprocess timeout must be a positive finite number of seconds.');
+        }
+
+        return new Process($arguments, $directory, self::ENVIRONMENT, timeout: $timeout);
     }
 }

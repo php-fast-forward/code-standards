@@ -27,7 +27,7 @@ from blocked PR #376 or composer-installers #15 was executed or changed.
 | Scope | source resolver excludes generated/resources/public/vendor | consumer Finder, hidden files, VCS ignores, path exclusions | Tracked PHP/bin candidates filtered by root/nested consumer .gitignore (including tracked matches); only .git structurally excluded; PHP symlinks rejected |
 | Overrides | customize callback last | extraRules last | customize callback last; explicit config selection |
 | Check | combined orchestration has independent mutation risks | dry-run fixer | syntax parse then ECS check, no source writes |
-| Semantic transformations | Rector seven sets, PHP migration, Safe migration, Faker and custom PHPDoc | mixed into risky fixer | Not implemented; requires explicit target, opt-in and independent tests |
+| Semantic transformations | Rector seven sets, PHP migration, Safe migration, Faker and custom PHPDoc | mixed into risky fixer | Not implemented in the initial extraction snapshot; required explicit target, opt-in and independent tests |
 
 The explicit rule deltas above are intentional. Transitive upstream preset
 membership is dependency-version specific and fixed for contributor builds by
@@ -53,13 +53,17 @@ exercise headers and overrides in golden fixtures and decide which semantic
 transformations belong in an opt-in profile. Optional Twig/magic-value policy,
 Composer metadata normalization and existing public DevTools APIs stay untouched.
 
-Static quality in this first increment means parseable PHP and formatting
-conformance. Type analysis, dead-code analysis and semantic refactors are not
-claimed. Application tests, coverage and complete reports remain outside this domain.
+The initial extraction snapshot limited static quality to parseable PHP and
+formatting conformance; it did not claim type analysis, dead-code analysis or
+semantic refactors. Application tests, coverage and complete reports remain
+outside this domain.
 
-The separately opted-in [native Rector command](rector.md) selects no legacy
-semantic profile and is never invoked by
-formatting check/fix; the consumer explicitly owns rules, target PHP and caches.
+The current default formatter does not select a semantic profile. The separately
+opted-in [native Rector command](rector.md) exists and requires explicit native
+configuration, reviewed rules and a consumer PHP target; formatting check/fix
+never invoke it. Native cache configuration is optional and remains consumer-owned,
+including Rector's in-memory cache selection in CI. This command does not claim
+parity with the three legacy custom PHPDoc transformations; #4 remains partial.
 
 The [PHPDoc comparison](phpdoc-comparison.md) records actual custom Rector
 activation and the fixtures required before adopting a documentation policy.

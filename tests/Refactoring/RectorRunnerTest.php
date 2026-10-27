@@ -23,6 +23,8 @@ final class RectorRunnerTest extends TestCase
         self::assertContains('--config=/consumer/my policy.php', $process->commands[0]);
         self::assertContains('list-rules', $process->captures[0]);
         self::assertNotContains('--no-interaction', $process->commands[0]);
+        self::assertSame([300.0], $process->captureTimeouts);
+        self::assertSame([300.0], $process->runTimeouts);
     }
 
     /** Apply is a single write pass followed by a read-only verification whose failure remains observable. */
@@ -76,6 +78,15 @@ final class RectorRunnerTest extends TestCase
             self::assertSame([], $failure->commands);
         }
     }
+
+    /** One genuine operation parameter bounds inventory, apply and verification without changing global defaults. */
+    public function testExplicitTimeoutReachesEveryRectorSubprocess(): void
+    {
+        $process = new RectorTransport(statuses: [0, 0]);
+        self::assertSame(0, (new RectorRunner($process, '/tool/rector'))->run('/consumer', '/consumer/policy.php', true, 600));
+        self::assertSame([600.0], $process->captureTimeouts);
+        self::assertSame([600.0, 600.0], $process->runTimeouts);
+    }
 }
 
 /** Records only the execution boundary; no native configuration or source is evaluated here. */
@@ -86,13 +97,16 @@ final class RectorTransport implements ProcessRunner
     public array $preflights = [];
     public array $guards = [];
     public bool $failCapture = false;
+    public array $captureTimeouts = [];
+    public array $runTimeouts = [];
 
     /** @param list<int> $statuses Native process/verification outcomes in execution order. */
     public function __construct(private string $inventory = '{"rectors":["ReviewedRule"]}', private array $statuses = [0]) {}
 
-    public function capture(array $arguments, string $directory): string
+    public function capture(array $arguments, string $directory, float $timeout = 120): string
     {
         $this->captures[] = $arguments;
+        $this->captureTimeouts[] = $timeout;
         $preflight = substr($arguments[3], strlen('--config='));
         $this->preflights[] = $preflight;
         $this->guards[] = file_get_contents($preflight);
@@ -103,9 +117,10 @@ final class RectorTransport implements ProcessRunner
         return $this->inventory;
     }
 
-    public function run(array $arguments, string $directory): int
+    public function run(array $arguments, string $directory, float $timeout = 300): int
     {
         $this->commands[] = $arguments;
+        $this->runTimeouts[] = $timeout;
 
         return array_shift($this->statuses);
     }
