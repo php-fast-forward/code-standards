@@ -55,6 +55,8 @@ for tool adoption and explicit formatting. Use the dedicated
 concise summaries, semantic contracts, useful tags and inherited documentation.
 Each payload includes its license and relative references; neither activates an
 agent or installs another tool automatically.
+See the [optional skill installation and lifecycle guide](resources/skills/fast-forward-code-standards/references/installation.md)
+for project discovery, trust and update ownership.
 
 For a reviewed source checkout:
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Clarify the portable Code Standards skill with the supported command contract, complete optional-tool routes, native configuration examples and explicit installation ownership. ([#82](https://github.com/php-fast-forward/code-standards/pull/82))
 - Keep the adapted PHPDoc skill's original MIT copyright and permission notice in
   its LICENSE file, removing the redundant separate NOTICE from the skill payload.
 
