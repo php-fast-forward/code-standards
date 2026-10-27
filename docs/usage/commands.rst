@@ -13,6 +13,13 @@ See the `semantic refactoring contract <../rector.rst>`__ for required target
 PHP, optional native cache configuration, bounded timeouts and execution limits.
 Use ``help refactor`` for its installed options.
 
+The opt-in ``magic-numbers`` command uses the same Git selection as ``check`` and
+``fix``, independently of formatting. It accepts ``--all`` or ``--base``/``--head``
+and ``--directory``; it does not accept or load ECS configuration. Use
+``help magic-numbers`` for the installed defaults and native policy options.
+See `magic-number analysis <../magic-numbers.rst>`__ for text/XML output,
+optional DOM requirements, bounded execution, finding statuses and adoption.
+
 .. code-block:: console
 
    php bin/code-standards check --base=BASE_40_CHARACTER_SHA --head=HEAD_40_CHARACTER_SHA
@@ -35,8 +42,8 @@ such as ``public``, ``resources`` and ``backup`` are eligible unless the consume
 ignores them. Containment checks and candidate PHP symlink rejection remain in
 effect.
 
-Exit statuses
--------------
+Formatting exit statuses
+------------------------
 
 * Zero means the selected check passed or there were no selected PHP files.
 * Invalid input, missing configuration, unavailable history or a mismatched
@@ -45,5 +52,5 @@ Exit statuses
   ECS configuration errors are failures too; do not equate every status 2 with
   input validation.
 
-Selection, syntax parsing and ECS execution happen in bounded subprocess
+Formatting selection, syntax parsing and ECS execution happen in bounded subprocess
 batches. Syntax validation uses ``php -n -l`` without loading application code.

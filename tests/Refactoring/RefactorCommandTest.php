@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\Tests\Refactoring;
 use FastForward\CodeStandards\Console\Command\RefactorCommand;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
+use FastForward\CodeStandards\Project\ProjectDirectoryResolver;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
 use FastForward\CodeStandards\Refactoring\RectorRunner;
 use PHPUnit\Framework\TestCase;
@@ -29,7 +30,7 @@ final class RefactorCommandTest extends TestCase
         $process->expects(self::once())->method('run')->with(self::callback(static fn(array $arguments): bool => in_array('--dry-run', $arguments, true)), $directory)->willReturn(2);
         $application = new Application();
         $application->setAutoExit(false);
-        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default'), new RectorRunner($process, '/tool/rector')));
+        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default', new ProjectDirectoryResolver()), new RectorRunner($process, '/tool/rector')));
         $tester = new ApplicationTester($application);
 
         try {
@@ -99,7 +100,7 @@ final class RefactorCommandTest extends TestCase
         $process->expects(self::never())->method('run');
         $application = new Application();
         $application->setAutoExit(false);
-        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default'), new RectorRunner($process, '/tool/rector')));
+        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default', new ProjectDirectoryResolver()), new RectorRunner($process, '/tool/rector')));
         $tester = new ApplicationTester($application);
 
         $previousColumns = getenv('COLUMNS');
@@ -135,7 +136,7 @@ final class RefactorCommandTest extends TestCase
         $process->expects(self::never())->method('run');
         $application = new Application();
         $application->setAutoExit(false);
-        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default'), new RectorRunner($process, '/tool/rector')));
+        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default', new ProjectDirectoryResolver()), new RectorRunner($process, '/tool/rector')));
         $tester = new ApplicationTester($application);
         try {
             self::assertSame(2, $tester->run(['command' => 'refactor', '--config' => $config, '--timeout' => $timeout]));
@@ -155,7 +156,7 @@ final class RefactorCommandTest extends TestCase
         $process->expects(self::once())->method('run')->with(self::isArray(), $directory, 600.0)->willReturn(0);
         $application = new Application();
         $application->setAutoExit(false);
-        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default'), new RectorRunner($process, '/tool/rector')));
+        $application->addCommand(new RefactorCommand(new ProjectScopeResolver('/unused-default', new ProjectDirectoryResolver()), new RectorRunner($process, '/tool/rector')));
         $tester = new ApplicationTester($application);
         try {
             self::assertSame(0, $tester->run(['command' => 'refactor', '--config' => $config, '--directory' => $directory, '--timeout' => '600']));

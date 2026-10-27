@@ -1,7 +1,7 @@
 Static analysis: candidates and ownership boundary
 ==================================================
 
-This source comparison records candidates without deciding ownership or implementing an analyzer. DevTools issues `#14 <https://github.com/php-fast-forward/dev-tools/issues/14>`__, `#265 <https://github.com/php-fast-forward/dev-tools/issues/265>`__, `#266 <https://github.com/php-fast-forward/dev-tools/issues/266>`__ and `#267 <https://github.com/php-fast-forward/dev-tools/issues/267>`__ remain open. These decisions are not prerequisites for the initial 0.1.0 style/syntax profile.
+This source comparison records the type/security-analysis candidates below without deciding their ownership or exposing them as commands. DevTools issues `#14 <https://github.com/php-fast-forward/dev-tools/issues/14>`__, `#265 <https://github.com/php-fast-forward/dev-tools/issues/265>`__, `#266 <https://github.com/php-fast-forward/dev-tools/issues/266>`__ and `#267 <https://github.com/php-fast-forward/dev-tools/issues/267>`__ remain open. The separate opt-in `magic-number command <magic-numbers.rst>`__ analyzes numeric literals; it does not implement these candidate contracts or widen syntax/style checking.
 
 Existing source
 ---------------
@@ -42,4 +42,4 @@ Remaining gates
 - Decide Code Standards ownership versus another tool before closing or moving the four DevTools candidates. Do not implement every optional engine at once.
 - Select actual published versions, inspect licenses/compatibility and prove execution/format/exit/read-only behavior with synthetic cross-file fixtures.
 - Keep TypePerfect semantic changes opt-in and independently scoped; its actual package/groups remain to verify rather than copying an issue's assumption.
-- Preserve current first-release boundary: syntax + non-risky ECS style only; tests/coverage/full reporting remain other domains. No consumer migration.
+- Keep ``check``/``fix`` focused on syntax and non-risky ECS style; semantic refactoring and magic-number analysis are separate opt-in commands. Tests, coverage and full reporting remain other domains. No consumer migration.
