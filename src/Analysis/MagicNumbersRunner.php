@@ -31,7 +31,7 @@ final readonly class MagicNumbersRunner
      * @param string $ignoreNumbers Native comma-separated additions to PHPMND's fixed zero/one exceptions.
      * @param string|null $ignoreFuncs Native function exceptions for argument-context analysis.
      * @param string|null $extensions Native context additions/removals; these are not file suffixes.
-     * @return int Exact native exit status: zero is clean and one indicates findings or analyzer failure.
+     * @return int Exact native exit status, or zero for empty selection; native nonzero statuses pass through unchanged.
      * @throws InvalidArgumentException When input or invocation size is outside the supported contract.
      */
     public function run(array $files, string $format, string $ignoreNumbers, ?string $ignoreFuncs, ?string $extensions): int

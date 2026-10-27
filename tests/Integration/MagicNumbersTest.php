@@ -56,7 +56,7 @@ final class MagicNumbersTest extends TestCase
         }
         sort($paths, SORT_STRING);
         self::assertSame(array_map(fn(string $path): string => $this->directory . '/' . $path, $paths), $reported);
-        self::assertSame('3', $document->documentElement->getAttribute('errorCount'));
+        self::assertSame('3', $this->errorCount($document));
         self::assertSame($result->getOutput(), $this->cli(['--all', '--format=xml'])->getOutput());
         foreach ($paths as $path) {
             self::assertSame($source, file_get_contents($this->directory . '/' . $path));
@@ -73,7 +73,7 @@ final class MagicNumbersTest extends TestCase
         self::assertSame(1, $this->cli(['--all'])->getExitCode());
         $override = $this->cli(['--all', '--format=xml', '--ignore-numbers=0,1,42']);
         self::assertSame(0, $override->getExitCode(), $override->getErrorOutput());
-        self::assertSame('0', $this->xml($override->getOutput())->documentElement->getAttribute('errorCount'));
+        self::assertSame('0', $this->errorCount($this->xml($override->getOutput())));
 
         $this->put('source.php', '<?php output(42);' . "\n");
         self::assertSame(0, $this->cli(['--all'])->getExitCode());
@@ -88,15 +88,15 @@ final class MagicNumbersTest extends TestCase
         $this->git(['add', '--all']);
         $empty = $this->cli(['--all', '--format=xml', '--ignore-numbers=']);
         self::assertSame(1, $empty->getExitCode(), $empty->getErrorOutput());
-        self::assertSame('1', $this->xml($empty->getOutput())->documentElement->getAttribute('errorCount'));
+        self::assertSame('1', $this->errorCount($this->xml($empty->getOutput())));
         $addition = $this->cli(['--all', '--format=xml', '--ignore-numbers=42']);
         self::assertSame(0, $addition->getExitCode(), $addition->getErrorOutput());
-        self::assertSame('0', $this->xml($addition->getOutput())->documentElement->getAttribute('errorCount'));
+        self::assertSame('0', $this->errorCount($this->xml($addition->getOutput())));
         $this->put('source.php', '<?php if ($value === 42.5) {}' . "\n");
         foreach (['42.5', '4.25e1'] as $number) {
             $addition = $this->cli(['--all', '--format=xml', '--ignore-numbers=' . $number]);
             self::assertSame(0, $addition->getExitCode(), $addition->getErrorOutput());
-            self::assertSame('0', $this->xml($addition->getOutput())->documentElement->getAttribute('errorCount'));
+            self::assertSame('0', $this->errorCount($this->xml($addition->getOutput())));
         }
         $overflow = $this->cli(['--all', '--format=xml', '--ignore-numbers=1e9999']);
         self::assertSame(2, $overflow->getExitCode());
@@ -135,7 +135,9 @@ final class MagicNumbersTest extends TestCase
         $this->git(['add', '--all']);
         $result = $this->cli(['--all', '--format=xml']);
         self::assertSame(1, $result->getExitCode(), $result->getErrorOutput());
-        self::assertSame(rtrim($source, "\n"), $this->xml($result->getOutput())->getElementsByTagName('snippet')->item(0)->textContent);
+        $snippet = $this->xml($result->getOutput())->getElementsByTagName('snippet')->item(0);
+        self::assertNotNull($snippet);
+        self::assertSame(rtrim($source, "\n"), $snippet->textContent);
         self::assertSame($source, file_get_contents($this->directory . '/source.php'));
     }
 
@@ -205,7 +207,12 @@ final class MagicNumbersTest extends TestCase
         self::assertSame($source, file_get_contents($this->directory . '/broken.php'));
     }
 
-    /** A real DOM-free runtime permits text execution but rejects XML before process execution or stdout. */
+    /**
+     * Exercises actual extension availability; a mocked capability callback would not prove this runtime boundary.
+     *
+     * A real DOM-free subprocess permits the recording text transport but rejects XML before transport or stdout.
+     * Hosts with statically available DOM skip honestly rather than simulating its absence in production code.
+     */
     public function testDomFreeRuntimeKeepsTextAndRejectsXml(): void
     {
         $probe = new Process([PHP_BINARY, '-n', '-r', 'exit(extension_loaded("dom") ? 1 : 0);'], timeout: 10);
@@ -249,6 +256,15 @@ final class MagicNumbersTest extends TestCase
         self::assertTrue($document->loadXML($output, LIBXML_NONET));
 
         return $document;
+    }
+
+    /** Requires the native report root before reading its finding count. */
+    private function errorCount(DOMDocument $document): string
+    {
+        $root = $document->documentElement;
+        self::assertNotNull($root);
+
+        return $root->getAttribute('errorCount');
     }
 
     /** Writes only within this test's exclusive synthetic fixture. */

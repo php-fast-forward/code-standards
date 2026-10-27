@@ -81,9 +81,14 @@ When selection is empty, the engine is not executed. The command emits the
 native empty-result XML structure with the installed version, or a text
 selection message. It does not report that any file was analyzed.
 
-Exit ``0`` means no findings; exit ``1`` preserves native findings/analyzer
-failure status. Invalid command settings, Git scope or process errors fail
-with status ``2``. Failure is never converted to a clean result. Redirected XML
+Exit ``0`` means no findings, or an empty selection for which the engine did
+not run. Native exit ``1`` can indicate findings or an analyzer failure.
+Invalid command settings, Git scope or process exceptions fail with status
+``2``, but native status ``2`` can also pass through; it does not exclusively
+identify input validation. Every other native nonzero status is returned
+unchanged, including statuses such as ``17`` or ``255``. Inspect stderr and the
+native report before classifying a nonzero result. Failure is never converted
+to a clean result. Redirected XML
 is an artifact explicitly requested by the caller; source and lock files are
 unchanged.
 
