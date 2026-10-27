@@ -100,7 +100,11 @@ the consumer's PHP platform or dependency constraints implicitly.
    Review native numeric/function/context exceptions explicitly. They are broad
    policy overrides, not per-finding baselines; do not auto-accept existing debt.
 
-This directory is the sole source payload. Installation/host activation is explicit;
+For authoring or reviewing semantic PHPDoc rather than executing a formatter,
+select the separately distributed `fast-forward-phpdoc` skill. Ordinary check/fix
+does not require that payload and cannot prove that a documented promise is true.
+
+This directory is the canonical payload for this skill. Installation/host activation is explicit;
 copying this skill does not install the runtime or authorize consumer rollout.
 LLM Skills owns discovery/install/update; follow the selected ref's distribution
 contract rather than adding another copy/symlink installer in this tool.
