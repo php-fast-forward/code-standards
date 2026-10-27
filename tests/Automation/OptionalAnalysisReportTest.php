@@ -59,6 +59,43 @@ final class OptionalAnalysisReportTest extends TestCase
         (new NativeReportParser())->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
     }
 
+    /** @return iterable<string, array{string, int}> Unexpected nodes are rejected equally at all traversed structural boundaries. */
+    public static function unexpectedStructuralNodes(): iterable
+    {
+        foreach ([
+            'text' => 'unexpected',
+            'CDATA' => '<![CDATA[unexpected]]>',
+            'whitespace CDATA' => '<![CDATA[ ]]>',
+            'processing instruction' => '<?probe unexpected?>',
+        ] as $label => $node) {
+            yield 'root ' . $label => ['<phpmnd version="3.6.1" fileCount="0" errorCount="0">' . $node . '<files/></phpmnd>', 0];
+            yield 'files ' . $label => ['<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files>' . $node . '</files></phpmnd>', 0];
+            yield 'file ' . $label => ['<phpmnd version="3.6.1" fileCount="1" errorCount="1"><files><file path="/consumer/a.php" errors="1">' . $node . '<entry line="7"><snippet><![CDATA[<?php $value = 42;]]></snippet></entry></file></files></phpmnd>', 1];
+        }
+    }
+
+    /** Structural CDATA/PI must not be silently discarded before classifying a complete report. */
+    #[DataProvider('unexpectedStructuralNodes')]
+    public function testUnexpectedStructuralNodesRejectClassification(string $report, int $status): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new NativeReportParser())->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
+    }
+
+    /** Structural whitespace/comments are harmless; actual snippet CDATA remains native source payload. */
+    public function testStructuralWhitespaceAndCommentsPreserveLegitimateSnippetCdata(): void
+    {
+        $report = '<phpmnd version="3.6.1" fileCount="1" errorCount="1">' . "\n<!-- root -->\n"
+            . '<files>' . "\n<!-- files -->\n"
+            . '<file path="/consumer/a.php" errors="1">' . "\n<!-- file -->\n"
+            . '<entry line="7"><snippet><![CDATA[<?php if ($value === 42) echo "<!DOCTYPE html>";]]></snippet><suggestions/></entry>'
+            . "\n</file>\n</files>\n</phpmnd>";
+        $result = (new NativeReportParser())->magicNumbers(new ProcessResult(1, $report, ''), ['/consumer/a.php']);
+        self::assertSame('findings', $result->status);
+        self::assertSame(1, $result->findingCount);
+        self::assertSame(7, $result->diagnostics[0]['line']);
+    }
+
     /** Rejecting a DTD must not first open its external subset or entity through a PHP stream wrapper. */
     public function testXmlRejectsExternalEntitiesWithoutOpeningTheirSources(): void
     {

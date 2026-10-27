@@ -163,8 +163,8 @@ findings. Operational failures always fail, including invalid/incomplete native
 reports. A visible summary distinguishes disabled, not executed, clean, findings
 and operational error, with native counts and available file/line information.
 See [optional workflow analyses](docs/optional-analysis.rst) for inputs, limits,
-trust boundaries and consumer examples. Verify that the selected workflow ref
-declares these inputs before copying optional settings.
+trust boundaries and consumer examples. The selected workflow revision defines
+its input contract independently of Composer package constraints.
 
 | Entry point | Contract |
 | --- | --- |

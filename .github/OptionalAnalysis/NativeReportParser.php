@@ -122,7 +122,7 @@ final class NativeReportParser
         }
     }
 
-    /** @return list<DOMElement> Direct structural children only; snippets are not interpreted as XML schema. */
+    /** @return list<DOMElement> Expected structural elements only; whitespace text/comments are allowed, snippets remain opaque. */
     private function children(DOMElement $parent, string $name): array
     {
         $elements = [];
@@ -132,9 +132,15 @@ final class NativeReportParser
                     throw new InvalidArgumentException('Unexpected PHPMND XML structure.');
                 }
                 $elements[] = $child;
-            } elseif (XML_TEXT_NODE === $child->nodeType && '' !== trim($child->textContent)) {
-                throw new InvalidArgumentException('Unexpected text in PHPMND XML structure.');
+
+                continue;
             }
+            if (XML_COMMENT_NODE === $child->nodeType
+                || (XML_TEXT_NODE === $child->nodeType && '' === trim($child->textContent))) {
+                continue;
+            }
+
+            throw new InvalidArgumentException('Unexpected PHPMND XML structural node.');
         }
 
         return $elements;

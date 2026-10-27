@@ -29,12 +29,13 @@ changes the treatment of **verified findings**. Operational errors always block,
 including when the selected policy is ``report``. Tools are not enabled because
 their dependency is installed or a configuration filename happens to exist.
 
-Start with the consumer wrapper in ``resources/workflows/code-standards.yml``.
-Keep its existing unprivileged PR event and released/ref provenance contract.
-Verify that the selected workflow ref declares these inputs before uncommenting
-optional settings. The GitHub ``v0`` channel and Composer constraints remain
-separate distribution choices; no unexisting release or automatic upgrade is
-implied by copying an example.
+The consumer wrapper in ``resources/workflows/code-standards.yml`` provides the
+basic PR style check through the published ``v0`` channel. The fragment below
+describes the optional-analysis inputs. The selected workflow revision defines
+its supported input contract; callers supply inputs belonging to that revision.
+GitHub workflow channels and Composer/CPX package constraints are separate
+distribution choices. The unprivileged PR event and runtime/ref provenance
+contract apply to both basic checks and explicitly enabled analyses.
 
 .. code-block:: yaml
 
@@ -116,7 +117,10 @@ remain available. This narrows ambient capabilities; it does not claim that
 arbitrary PHP is sandboxed from the runner filesystem.
 
 Reports are parsed without network/external-entity resolution and XML DTDs are
-rejected. The summary displays bounded, escaped preformatted text; source snippets,
+rejected. Root/files/file structural boundaries allow only the expected elements,
+whitespace text and comments; other nodes, including CDATA and processing
+instructions, reject classification. CDATA inside native source snippets remains
+payload. The summary displays bounded, escaped preformatted text; source snippets,
 full diffs and untrusted HTML/Markdown are not interpreted. Control/non-ASCII
 characters use visible JSON escapes. Display is limited to 100 diagnostics per
 tool and 64 KiB overall with explicit omission/truncation notices; validated

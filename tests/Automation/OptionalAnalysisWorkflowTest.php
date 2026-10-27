@@ -71,6 +71,26 @@ final class OptionalAnalysisWorkflowTest extends TestCase
         self::assertStringNotContainsString('--apply', $workflow);
     }
 
+    /** The basic released-channel wrapper stays compatible while documented optional inputs match the source API. */
+    public function testBasicConsumerWrapperAndOptionalApiFragmentHaveDistinctContracts(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $wrapper = file_get_contents($root . '/resources/workflows/code-standards.yml');
+        self::assertStringContainsString('uses: php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0', $wrapper);
+        preg_match_all('/^      ([a-z][a-z-]*):/m', $wrapper, $basic);
+        self::assertSame(['php-version'], $basic[1]);
+        self::assertSame(0, preg_match('/^\s*#\s*(?:magic-numbers|rector)(?:-policy|-config)?:/m', $wrapper));
+
+        $public = file_get_contents($root . '/.github/workflows/code-standards.yml');
+        $documentation = file_get_contents($root . '/docs/optional-analysis.rst');
+        preg_match_all('/^      ([a-z][a-z-]*):$/m', $public, $declared);
+        preg_match_all('/^     ([a-z][a-z-]*):/m', $documentation, $documented);
+        self::assertNotEmpty($documented[1]);
+        foreach ($documented[1] as $input) {
+            self::assertContains($input, $declared[1]);
+        }
+    }
+
     /** Extracts the actual named YAML run block; no duplicate implementation replaces the tested gate. */
     private function script(string $name): string
     {
