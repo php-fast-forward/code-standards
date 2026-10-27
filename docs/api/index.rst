@@ -5,3 +5,4 @@ API and extensions
    :maxdepth: 1
 
    configuration
+   ../process-contracts
