@@ -82,6 +82,11 @@ final class ArchiveTest extends TestCase
         }
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/LICENSE'), $git['resources/skills/fast-forward-code-standards/LICENSE']);
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/resources/skills/fast-forward-code-standards/SKILL.md'), $git['resources/skills/fast-forward-code-standards/SKILL.md']);
+        foreach (['configuration-and-ci.md', 'optional-tools.md', 'installation.md'] as $name) {
+            $path = 'resources/skills/fast-forward-code-standards/references/' . $name;
+            self::assertArrayHasKey($path, $git);
+            self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/' . $path), $git[$path]);
+        }
         $root = dirname(__DIR__, 2);
         foreach (['SKILL.md', 'LICENSE', 'references/contracts.md', 'references/cleanup.md', 'references/verification.md'] as $name) {
             $path = 'resources/skills/fast-forward-phpdoc/' . $name;
