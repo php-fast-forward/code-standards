@@ -22,6 +22,7 @@ final class ArchiveTest extends TestCase
         $root = dirname(__DIR__, 2);
         $paths = explode("\0", $this->execute(['git', 'ls-files', '-z'], $root));
         $paths[] = '.gitattributes';
+        $paths[] = 'resources/skills/fast-forward-code-standards/LICENSE';
 
         foreach (array_unique($paths) as $path) {
             if ('' === $path || !is_file($root . '/' . $path)) {
@@ -69,9 +70,12 @@ final class ArchiveTest extends TestCase
         self::assertSame($git, $composer);
         foreach (['bin/code-standards', 'config/ecs.php', 'composer.lock', 'README.md', 'CHANGELOG.md', 'LICENSE',
             '.github/actions/check/action.yml', 'resources/workflows/code-standards.yml',
-            'resources/skills/fast-forward-code-standards/SKILL.md', 'docs/_static/mascot-banner.png'] as $path) {
+            'resources/skills/fast-forward-code-standards/SKILL.md',
+            'resources/skills/fast-forward-code-standards/LICENSE', 'docs/_static/mascot-banner.png'] as $path) {
             self::assertArrayHasKey($path, $git);
         }
+        self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/LICENSE'), $git['resources/skills/fast-forward-code-standards/LICENSE']);
+        self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/resources/skills/fast-forward-code-standards/SKILL.md'), $git['resources/skills/fast-forward-code-standards/SKILL.md']);
         foreach (array_keys($git) as $path) {
             self::assertDoesNotMatchRegularExpression('~^(?:vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
