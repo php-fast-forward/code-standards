@@ -1,4 +1,3 @@
-# Copy after the first real 0.x release has established the published v0 channel.
 name: PHP standards
 on:
   pull_request:

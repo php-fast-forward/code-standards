@@ -1,0 +1,11 @@
+name: 'Repository: PR Standards'
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  reusable-check:
+    uses: ./.github/workflows/code-standards.yml
+    with:
+      magic-numbers: true
+      magic-numbers-policy: report

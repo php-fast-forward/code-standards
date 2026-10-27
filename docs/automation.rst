@@ -14,6 +14,8 @@ Following Changelog's separation:
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | ``.github/workflows/repository-ci.yml``               | This project's own tests, style, workflow contracts                                        |
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
+| ``.github/workflows/repository-pr-standards.yml``     | This project's PR-only consumer call, separate from push and manual project tests          |
++-------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | ``.github/workflows/repository-changelog.yml``        | Chosen Changelog lifecycle for this project's approved 0.x releases                        |
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | ``.github/workflows/repository-release-channels.yml`` | Internal released-only v0 update after successful publication; explicit recovery from main |
@@ -22,6 +24,8 @@ Following Changelog's separation:
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | ``resources/skills/fast-forward-code-standards``      | Canonical portable consumer skill                                                          |
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
+
+The project's own consumer call is declared in ``repository-pr-standards.yml`` with only the native ``pull_request`` trigger. Its ``reusable-check`` job retains the same inputs and nested job IDs; the top-level workflow is named ``Repository: PR Standards``. ``Repository: Quality`` retains its PHP matrix and project checks on PRs, main pushes and manual dispatch. This separates the PR-only execution surface from events that can write default-branch caches without changing required-check settings.
 
 The reusable runs only on ``pull_request``, on an ephemeral ``ubuntu-latest`` runner, with ``contents: read``. It rejects privileged target events before checkout. It uses separate sibling tool and consumer checkouts, exact consumer head SHA, full Git history and ``persist-credentials: false``. No application dependencies, plugins or scripts are installed. Only the tool's locked dependencies are installed with plugins/scripts disabled. Config PHP executes without supplied secrets; consumers must never call this check from a privileged workflow.
 

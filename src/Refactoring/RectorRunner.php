@@ -22,12 +22,25 @@ final readonly class RectorRunner
      * successful apply adds verification. Native Rector may evaluate configuration more than once per invocation.
      * This transport is not a filesystem sandbox.
      *
+     * JSON is native preview output only; apply plus verification would produce multiple documents.
+     * Invalid output/write combinations fail before evaluating executable configuration.
+     *
      * @return int Native process status, including 2 when dry-run proposes changes.
      */
-    public function run(string $directory, string $config, bool $apply, float $timeout = 300): int
+    public function run(string $directory, string $config, bool $apply, float $timeout = 300, string $format = 'text'): int
     {
+        if (!in_array($format, ['text', 'json'], true)) {
+            throw new InvalidArgumentException('Rector format must be text or json.');
+        }
+        if ($apply && 'json' === $format) {
+            throw new InvalidArgumentException('JSON output is preview-only; use text output for explicit --apply.');
+        }
+
         $this->assertRules($directory, $config, $timeout);
         $check = [PHP_BINARY, $this->rector, 'process', '--config=' . $config, '--no-progress-bar'];
+        if ('json' === $format) {
+            $check[] = '--output-format=json';
+        }
         $status = $this->process->run($apply ? $check : [...$check, '--dry-run'], $directory, $timeout);
         if (!$apply || 0 !== $status) {
             return $status;

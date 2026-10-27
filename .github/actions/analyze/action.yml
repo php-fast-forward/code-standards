@@ -1,0 +1,51 @@
+name: Analyze optional PHP quality
+description: Classify explicitly enabled native analyzers and write a bounded job summary.
+inputs:
+  directory:
+    required: true
+    description: Absolute exact consumer checkout directory.
+  base-sha:
+    required: true
+    description: Exact PR base commit.
+  head-sha:
+    required: true
+    description: Exact PR head commit.
+  magic-numbers:
+    default: 'false'
+    description: Explicitly enable native Magic Numbers analysis.
+  magic-numbers-policy:
+    default: report
+    description: report or fail for verified Magic Numbers findings; operational errors always block.
+  rector:
+    default: 'false'
+    description: Explicitly enable native Rector preview, never semantic apply.
+  rector-policy:
+    default: report
+    description: report or fail for verified Rector changes; operational errors always block.
+  rector-config:
+    default: ''
+    description: Required consumer-relative native PHP configuration when Rector is enabled.
+outputs:
+  summary-written:
+    description: True only after the classified results were written to the job summary.
+    value: ${{ steps.report.outputs.summary-written }}
+  blocking:
+    description: Explicit policy decision; the workflow must enforce it in its final gate.
+    value: ${{ steps.report.outputs.blocking }}
+runs:
+  using: composite
+  steps:
+    - name: Classify optional results and write summary
+      id: report
+      shell: bash
+      env:
+        STANDARDS_ROOT: ${{ github.action_path }}/../../..
+        STANDARDS_DIRECTORY: ${{ inputs.directory }}
+        STANDARDS_BASE: ${{ inputs.base-sha }}
+        STANDARDS_HEAD: ${{ inputs.head-sha }}
+        STANDARDS_MAGIC_NUMBERS: ${{ inputs.magic-numbers }}
+        STANDARDS_MAGIC_NUMBERS_POLICY: ${{ inputs.magic-numbers-policy }}
+        STANDARDS_RECTOR: ${{ inputs.rector }}
+        STANDARDS_RECTOR_POLICY: ${{ inputs.rector-policy }}
+        STANDARDS_RECTOR_CONFIG: ${{ inputs.rector-config }}
+      run: php "$STANDARDS_ROOT/.github/run-optional-analysis.php"

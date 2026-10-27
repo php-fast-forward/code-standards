@@ -19,7 +19,7 @@ type analysis, application tests and coverage belong to their respective tools.
 - Read-only syntax/style checking and explicitly requested local fixes.
 - Exact PR merge-base selection with binary-safe file paths.
 - Invocable Symfony Console commands composed with Fast Forward Container.
-- An unprivileged reusable workflow and a portable consumption skill.
+- An unprivileged reusable workflow with explicit optional analysis summaries and a portable consumption skill.
 
 ## 📦 Installation and requirements
 
@@ -165,12 +165,23 @@ static analysis remain separate; no DevTools extraction parity is asserted.
 
 ## 🧰 API summary
 
+The reusable keeps optional analyses disabled by default. Enable
+`magic-numbers: true` or `rector: true` explicitly; Rector also requires
+`rector-config`. Each tool's `*-policy` accepts `report` or `fail` for verified
+findings. Operational failures always fail, including invalid/incomplete native
+reports. A visible summary distinguishes disabled, not executed, clean, findings
+and operational error, with native counts and available file/line information.
+See [optional workflow analyses](docs/optional-analysis.rst) for inputs, limits,
+trust boundaries and consumer examples. The selected workflow revision defines
+its input contract independently of Composer package constraints.
+
 | Entry point | Contract |
 | --- | --- |
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
 | `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
 | [`code-standards magic-numbers`](docs/magic-numbers.rst) | Analyze selected source with opt-in PHPMND, independently of check/fix; findings keep a nonzero status. |
+| `code-standards refactor --config=rector.php --format=json` | Emit native JSON for preview only; JSON cannot be combined with `--apply`. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
 | `help check` / `help fix` / `help refactor` / `help magic-numbers` | Show the installed Symfony option definitions. |
 

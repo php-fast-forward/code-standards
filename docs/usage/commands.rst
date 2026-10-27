@@ -12,6 +12,9 @@ configuration's source paths rather than this Git changed-file selection.
 See the `semantic refactoring contract <../rector.rst>`__ for required target
 PHP, optional native cache configuration, bounded timeouts and execution limits.
 Use ``help refactor`` for its installed options.
+Native JSON preview is explicit with ``--format=json``; it cannot be combined
+with ``--apply``. Human text remains the default. See the
+`optional workflow analyses <../optional-analysis.rst>`__ for CI policies and summaries.
 
 The opt-in ``magic-numbers`` command uses the same Git selection as ``check`` and
 ``fix``, independently of formatting. It accepts ``--all`` or ``--base``/``--head``
