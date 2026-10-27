@@ -99,5 +99,9 @@ GitHub `v0` may advance across breaking development minors. It is not a Composer
 
 Checking can fail the workflow. Making it a required status is a separate GitHub
 protection decision. `fix` has no automatic push workflow and never runs during
-PR checks. Full tracked scans occur for Composer/ECS/EditorConfig changes; after
-other policy imports change, run an explicit full check in addition to PR checks.
+PR checks. Full tracked scans occur for Composer/ECS/EditorConfig/root or nested
+`.gitignore` changes, including removal and rename. Policy-name invalidation is
+case-insensitive: a case-folding filesystem can let Git read `.GiTiGnOrE` as
+`.gitignore`. On a case-sensitive filesystem, this conservative detection can
+cause an extra full scan; it does not change which ignore rules Git applies.
+After other policy imports change, run an explicit full check in addition to PR checks.
