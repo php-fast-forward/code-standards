@@ -65,8 +65,14 @@ The initial `.changelog` fragment is explicitly `minor`; Changelog's supported
 baseline `0.0.0` yields `0.1.0` without a manual tag or engine change. Before wiring
 publication, verify the selected published Changelog tag, source workflow inputs,
 release transaction and token availability. The caller selects the verified
-published `v0.3.0` commit `85474de5a16bb08f83c9f30e0ed72f331a210f07`.
+published `v0.4.1` commit `203db95e68fc974e95ba1a921f08d01f88851be1`.
 Its documented no-tag baseline and minor fragment support initial `0.1.0`.
+The caller deliberately omits `version-pr-title`: the selected lifecycle supplies
+its native `chore(release): {repository} v{current_version} → v{next_version}`
+template. Repository and version values come from the validated release plan;
+this is not a manually renamed PR or a title copied into consumer configuration.
+The generator can refresh an existing managed PR's title without replacing human
+body text. This change does not itself authorize merging a version PR or publishing.
 It uses the existing GitHub Actions token; if repository policy prevents PR
 creation, report the gate without changing that setting or creating credentials.
 0.x policy requires reviewing every prepared version PR; reject any plan
@@ -86,5 +92,9 @@ GitHub `v0` may advance across breaking development minors. It is not a Composer
 
 Checking can fail the workflow. Making it a required status is a separate GitHub
 protection decision. `fix` has no automatic push workflow and never runs during
-PR checks. Full tracked scans occur for Composer/ECS/EditorConfig changes; after
-other policy imports change, run an explicit full check in addition to PR checks.
+PR checks. Full tracked scans occur for Composer/ECS/EditorConfig/root or nested
+`.gitignore` changes, including removal and rename. Policy-name invalidation is
+case-insensitive: a case-folding filesystem can let Git read `.GiTiGnOrE` as
+`.gitignore`. On a case-sensitive filesystem, this conservative detection can
+cause an extra full scan; it does not change which ignore rules Git applies.
+After other policy imports change, run an explicit full check in addition to PR checks.

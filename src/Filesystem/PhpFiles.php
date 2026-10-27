@@ -7,7 +7,7 @@ namespace FastForward\CodeStandards\Filesystem;
 /** Applies the owned PHP scope before invoking tools. */
 final class PhpFiles
 {
-    public const EXCLUDED = ['vendor', '.git', '.build', '.dev-tools', 'backup', 'cache', 'public', 'resources', 'tmp', 'node_modules'];
+    public const EXCLUDED = ['.git'];
 
     /**
      * Rejects escaping/symlink paths and preserves spaces and control bytes as arguments.
