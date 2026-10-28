@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-10-28
+
+### Added
+
+- Add opt-in `normalize-composer` metadata checking and explicit `--apply`, using the composer-normalize library while retaining literal dependency constraints and significant ordering. Keep PHP check/fix unchanged; never execute Composer scripts/plugins or update locks, and report stale hashes before/after explicit manifest writes.
+
+  Declare the added runtime libraries with compatible caret constraints while retaining the verified locked package versions.
+
+  Keep rejected metadata contents out of invalid-JSON diagnostics, including verbose output.
+
+  ([#83](https://github.com/php-fast-forward/code-standards/pull/83))
+
+### Fixed
+
+- Use caret constraints for Container, PHPStan and Rector. Raise the Rector/PHPStan minimums together to the compatible 2.8.2/2.3.3 pair, replacing the historical patch-line restrictions without allowing the known parser failure.
+
+  Keep empty and fully skipped configurations rejected before processing with Rector's native active-rule check. Qualify the new native file-cache behavior without changing consumer-owned source/configuration/lock preservation.
+
+  ([#87](https://github.com/php-fast-forward/code-standards/pull/87))
+
 ## [0.7.0] - 2026-10-28
 
 ### Added
@@ -220,6 +240,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.8.0]: https://github.com/php-fast-forward/code-standards/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/php-fast-forward/code-standards/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/php-fast-forward/code-standards/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/php-fast-forward/code-standards/compare/v0.4.0...v0.5.0
