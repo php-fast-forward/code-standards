@@ -18,7 +18,8 @@ foreach (['src', 'config', 'resources', 'bin', 'LICENSE'] as $path) {
 }
 $source = json_decode(file_get_contents($root . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
 $sourceIdentity = require $root . '/vendor/composer/installed.php';
-$lock = json_decode(file_get_contents($root . '/composer.lock'), true, flags: JSON_THROW_ON_ERROR);
+$lockContent = file_get_contents($root . '/composer.lock');
+$lock = json_decode($lockContent, true, flags: JSON_THROW_ON_ERROR);
 $packages = array_merge($lock['packages'], $lock['packages-dev']);
 $versions = array_column($packages, 'version', 'name');
 $require = $source['require'];
@@ -48,8 +49,8 @@ foreach ($installed['packages'] as $package) {
 ksort($inventory);
 writeJson($runtime . '/distribution-manifest.json', [
     'root' => array_intersect_key($identity['root'], array_flip(['name', 'version', 'pretty_version', 'reference'])),
-    'composer_lock_sha256' => hash_file('sha256', $root . '/composer.lock'),
-    'source_files_sha256' => inputHashes($root),
+    'composer_lock_sha256' => hash('sha256', $lockContent),
+    'source_files_sha256' => inputHashes($runtime),
     'packages' => $inventory,
     'compression' => 'GZ',
 ]);
