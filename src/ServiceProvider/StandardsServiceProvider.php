@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\ServiceProvider;
 
 use FastForward\CodeStandards\Analysis\MagicNumbersRunner;
+use FastForward\CodeStandards\Composer\MetadataNormalizer;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\Project\ProjectDirectoryResolver;
@@ -57,6 +58,10 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
     {
         return [
             OutputInterface::class => new ServiceFactory($this->output),
+            MetadataNormalizer::class => new InvokableFactory(
+                MetadataNormalizer::class,
+                $this->vendorDirectory . '/composer/composer/res/composer-schema.json',
+            ),
             ProcessRunner::class => new CallableFactory($this->process(...)),
             ProjectScopeResolver::class => new InvokableFactory(
                 ProjectScopeResolver::class,

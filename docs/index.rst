@@ -26,6 +26,7 @@ Architecture, policy and evidence
 
    architecture
    automation
+   composer-normalization
    instruction-map
    optional-analysis
    legacy-fixer-comparison

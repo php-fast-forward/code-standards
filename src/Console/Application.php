@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\Console;
 use FastForward\CodeStandards\Console\Command\CheckCommand;
 use FastForward\CodeStandards\Console\Command\FixCommand;
 use FastForward\CodeStandards\Console\Command\MagicNumbersCommand;
+use FastForward\CodeStandards\Console\Command\NormalizeComposerCommand;
 use FastForward\CodeStandards\Console\Command\RefactorCommand;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Console\Command\Command;
@@ -24,6 +25,7 @@ final class Application extends SymfonyApplication
         FixCommand $fix,
         RefactorCommand $refactor,
         MagicNumbersCommand $magicNumbers,
+        NormalizeComposerCommand $normalizeComposer,
     ) {
         parent::__construct('Fast Forward Code Standards');
 
@@ -31,6 +33,7 @@ final class Application extends SymfonyApplication
         $this->addCommand($fix);
         $this->addCommand($refactor);
         $this->addCommand($magicNumbers);
+        $this->addCommand($normalizeComposer);
         $this->setAutoExit(false);
     }
 

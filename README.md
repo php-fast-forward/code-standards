@@ -183,11 +183,13 @@ its input contract independently of Composer package constraints.
 | --- | --- |
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
+| [`code-standards normalize-composer`](docs/composer-normalization.rst) | Check Composer metadata without writing; `--apply` changes only `composer.json` and reports stale lock hashes. |
 | `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
 | [`code-standards magic-numbers`](docs/magic-numbers.rst) | Analyze selected source with opt-in PHPMND, independently of check/fix; findings keep a nonzero status. |
 | `code-standards refactor --config=rector.php --format=json` | Emit native JSON for preview only; JSON cannot be combined with `--apply`. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
 | `help check` / `help fix` / `help refactor` / `help magic-numbers` | Show the installed Symfony option definitions. |
+| `help normalize-composer` | Show metadata normalization options and explicit write authority. |
 
 Internal CLI services are implementation details. Supported configuration uses
 native ECS rule imports, skips and configured rules; there is no second DSL.
