@@ -80,6 +80,8 @@ Use `check --all --format=json` for an explicit single-document machine report,
 including native ECS findings, failure classification and remaining-work counts.
 See the [structured check contract](docs/structured-check.rst). Text is the
 default; `fix` uses text output.
+Use `--format=json-pretty` for the same report with indentation; see
+[result presentation](docs/process-contracts.rst#structured-check-presentation).
 The default preset stores its ECS cache beneath the system temporary directory,
 in `fast-forward-code-standards/<SHA-256 of the executing checkout path>/<owned-policy fingerprint>`.
 The fingerprint includes the installed preset and owned checker paths and source

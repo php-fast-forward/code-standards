@@ -35,13 +35,13 @@ final class RectorJsonPreviewTest extends TestCase
     /** Invalid representation or JSON apply cannot evaluate configuration or grant write authority. */
     public function testInvalidOutputAndJsonApplyFailBeforeAnySubprocess(): void
     {
-        foreach ([[false, 'xml'], [true, 'json']] as [$apply, $format]) {
+        foreach ([[false, 'xml'], [false, 'json-pretty'], [true, 'json']] as [$apply, $format]) {
             $process = $this->createMock(ProcessRunner::class);
             $process->expects(self::never())->method('capture');
             $process->expects(self::never())->method('run');
 
             try {
-                (new RectorRunner($process, '/tool/rector'))->run('/consumer', '/consumer/policy.php', $apply, format: $format);
+                (new RectorRunner($process, '/tool/rector'))->run(directory: '/consumer', config: '/consumer/policy.php', apply: $apply, format: $format);
                 self::fail('An unsupported output/write combination must be rejected.');
             } catch (InvalidArgumentException $exception) {
                 self::assertNotSame('', $exception->getMessage());
