@@ -10,6 +10,7 @@ use FastForward\CodeStandards\Process\ProcessRunner;
 use FastForward\CodeStandards\Project\ProjectDirectoryResolver;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
 use FastForward\CodeStandards\Workflow\BoundedProcess;
+use FastForward\CodeStandards\Refactoring\RectorJsonReportParser;
 use FastForward\CodeStandards\Workflow\NativeReportParser;
 use FastForward\CodeStandards\Workflow\OptionalAnalysisRunner;
 use FastForward\CodeStandards\Workflow\WorkflowInput;
@@ -120,7 +121,7 @@ final class OptionalAnalysisInputTest extends TestCase
     /** The fake installation is deliberately absent: tests which accidentally launch it must fail. */
     private function runner(ProcessRunner $process): OptionalAnalysisRunner
     {
-        return new OptionalAnalysisRunner(new FileSelection($process), new PhpFiles(), new ProjectScopeResolver('/unused', new ProjectDirectoryResolver()), new BoundedProcess(), new NativeReportParser(), '/nonexistent-tool');
+        return new OptionalAnalysisRunner(new FileSelection($process), new PhpFiles(), new ProjectScopeResolver('/unused', new ProjectDirectoryResolver()), new BoundedProcess(), new NativeReportParser(new RectorJsonReportParser()), '/nonexistent-tool');
     }
 
     /** Produces only explicit fixture options; no native analysis executes inside this test class. */

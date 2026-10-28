@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Tests\Automation;
 
 use FastForward\CodeStandards\Process\ProcessResult;
+use FastForward\CodeStandards\Refactoring\RectorJsonReportParser;
 use FastForward\CodeStandards\Workflow\AnalysisResult;
 use FastForward\CodeStandards\Workflow\NativeReportParser;
 use FastForward\CodeStandards\Workflow\SummaryRenderer;
@@ -25,7 +26,7 @@ final class OptionalAnalysisReportTest extends TestCase
         if (!extension_loaded('dom')) {
             self::markTestSkipped('Native XML classification requires the real DOM extension.');
         }
-        $parser = new NativeReportParser();
+        $parser = new NativeReportParser(new RectorJsonReportParser());
         $clean = $parser->magicNumbers(new ProcessResult(0, $this->xml(), ''), ['/consumer/a.php', '/consumer/b.php']);
         self::assertSame('clean', $clean->status);
         self::assertSame(2, $clean->selectedCount);
@@ -56,7 +57,7 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testInvalidMagicReportIsOperationalFailure(string $report, int $status): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new NativeReportParser())->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
+        (new NativeReportParser(new RectorJsonReportParser()))->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
     }
 
     /** @return iterable<string, array{string, int}> Unexpected nodes are rejected equally at all traversed structural boundaries. */
@@ -79,7 +80,7 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testUnexpectedStructuralNodesRejectClassification(string $report, int $status): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new NativeReportParser())->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
+        (new NativeReportParser(new RectorJsonReportParser()))->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
     }
 
     /** Structural whitespace/comments are harmless; actual snippet CDATA remains native source payload. */
@@ -90,7 +91,7 @@ final class OptionalAnalysisReportTest extends TestCase
             . '<file path="/consumer/a.php" errors="1">' . "\n<!-- file -->\n"
             . '<entry line="7"><snippet><![CDATA[<?php if ($value === 42) echo "<!DOCTYPE html>";]]></snippet><suggestions/></entry>'
             . "\n</file>\n</files>\n</phpmnd>";
-        $result = (new NativeReportParser())->magicNumbers(new ProcessResult(1, $report, ''), ['/consumer/a.php']);
+        $result = (new NativeReportParser(new RectorJsonReportParser()))->magicNumbers(new ProcessResult(1, $report, ''), ['/consumer/a.php']);
         self::assertSame('findings', $result->status);
         self::assertSame(1, $result->findingCount);
         self::assertSame(7, $result->diagnostics[0]['line']);
@@ -111,7 +112,7 @@ final class OptionalAnalysisReportTest extends TestCase
             ] as $declaration) {
                 $report = $declaration . '<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files>&source;</files></phpmnd>';
                 try {
-                    (new NativeReportParser())->magicNumbers(new ProcessResult(0, $report, ''), []);
+                    (new NativeReportParser(new RectorJsonReportParser()))->magicNumbers(new ProcessResult(0, $report, ''), []);
                     self::fail('DTD-bearing reports must be rejected.');
                 } catch (InvalidArgumentException) {
                     self::assertSame(0, ExternalEntityProbe::$opens);
@@ -125,7 +126,7 @@ final class OptionalAnalysisReportTest extends TestCase
     /** Native errors dominate report-only policy even when changes were also proposed. */
     public function testRectorNativeChangesAndErrorsHaveSeparateMeaning(): void
     {
-        $parser = new NativeReportParser();
+        $parser = new NativeReportParser(new RectorJsonReportParser());
         $clean = $parser->rector(new ProcessResult(0, '{"totals":{"changed_files":0,"errors":0}}', ''));
         self::assertSame('clean', $clean->status);
         self::assertNull($clean->selectedCount);
@@ -161,7 +162,7 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testInvalidRectorReportIsOperationalFailure(string $report, int $status): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new NativeReportParser())->rector(new ProcessResult($status, $report, ''));
+        (new NativeReportParser(new RectorJsonReportParser()))->rector(new ProcessResult($status, $report, ''));
     }
 
     /** Plain preformatted HTML keeps Markdown/commands inert and bounds display without changing native totals. */

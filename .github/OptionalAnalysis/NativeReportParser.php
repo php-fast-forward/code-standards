@@ -7,12 +7,15 @@ namespace FastForward\CodeStandards\Workflow;
 use DOMDocument;
 use DOMElement;
 use FastForward\CodeStandards\Process\ProcessResult;
+use FastForward\CodeStandards\Refactoring\RectorJsonReportParser;
 use InvalidArgumentException;
-use JsonException;
 
 /** Classifies qualified native schemas together with their exits; human output is never scraped. */
 final class NativeReportParser
 {
+    /** Reuses native Rector validation while keeping workflow classification and presentation here. */
+    public function __construct(private readonly RectorJsonReportParser $rectorReports) {}
+
     /**
      * Requires complete, consistent native XML before accepting exit 1 as findings.
      *
@@ -64,34 +67,12 @@ final class NativeReportParser
         if (strlen($process->stdout) > BoundedProcess::REPORT_BYTES) {
             throw new InvalidArgumentException('Rector native report exceeds the supported size.');
         }
-        try {
-            $report = json_decode($process->stdout, true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new InvalidArgumentException('Rector did not return a complete native JSON document.', previous: $exception);
-        }
-        if (!is_array($report) || !isset($report['totals']) || !is_array($report['totals'])) {
-            throw new InvalidArgumentException('Rector JSON totals are unavailable.');
-        }
-        $changes = $this->jsonInteger($report['totals']['changed_files'] ?? null);
-        $errorCount = $this->jsonInteger($report['totals']['errors'] ?? null);
-        $errors = $this->list($report['errors'] ?? []);
-        if ($errorCount !== count($errors)) {
-            throw new InvalidArgumentException('Rector error total is inconsistent.');
-        }
-        $files = $this->list($report['changed_files'] ?? []);
-        if (count($files) !== $changes || count(array_filter($files, static fn(mixed $file): bool => is_string($file) && '' !== $file)) !== count($files)) {
-            throw new InvalidArgumentException('Rector changed-file list is inconsistent.');
-        }
-        $diagnostics = [...$this->rectorErrors($errors), ...$this->rectorChanges($this->list($report['file_diffs'] ?? []), $files)];
+        $report = $this->rectorReports->parse($process);
+        $changes = $report['totals']['changed_files'];
+        $errorCount = $report['totals']['errors'];
+        $diagnostics = [...$this->rectorErrors($report['errors'] ?? []), ...$this->rectorChanges($report['changed_files'] ?? [])];
         if (0 !== $errorCount) {
-            if (1 !== $process->exitCode) {
-                throw new InvalidArgumentException('Rector error report contradicts its exit.');
-            }
-
             return new AnalysisResult('Rector', 'operational-error', findingCount: $changes, diagnostics: $diagnostics, details: $errorCount . " native processing error(s).\n" . $process->stderr, nativeExit: $process->exitCode);
-        }
-        if ((0 === $changes && 0 !== $process->exitCode) || (0 !== $changes && 2 !== $process->exitCode)) {
-            throw new InvalidArgumentException('Rector preview exit contradicts its native totals.');
         }
         return new AnalysisResult('Rector', 0 === $changes ? 'clean' : 'findings', findingCount: $changes, diagnostics: $diagnostics, details: "Scope is the explicit native configuration, not the formatter changed-file list.\n" . $process->stderr, nativeExit: $process->exitCode);
     }
@@ -160,26 +141,6 @@ final class NativeReportParser
         return $integer;
     }
 
-    /** Native JSON counts must be integers rather than coerced strings or floating point values. */
-    private function jsonInteger(mixed $value): int
-    {
-        if (!is_int($value) || $value < 0) {
-            throw new InvalidArgumentException('Rector JSON count is invalid.');
-        }
-
-        return $value;
-    }
-
-    /** @return list<mixed> Native ordered report entries, not an arbitrary keyed JSON object. */
-    private function list(mixed $value): array
-    {
-        if (!is_array($value) || !array_is_list($value)) {
-            throw new InvalidArgumentException('Rector JSON entries must be a list.');
-        }
-
-        return $value;
-    }
-
     /**
      * Retains actual native error locations; an unavailable path is not replaced with a guessed source file.
      *
@@ -190,17 +151,6 @@ final class NativeReportParser
     {
         $diagnostics = [];
         foreach ($errors as $error) {
-            if (
-                !is_array($error)
-                || (isset($error['file'])
-                    && !is_string($error['file']))
-                || !is_string($error['message'] ?? null)
-                || (isset($error['line'])
-                    && (!is_int($error['line'])
-                        || $error['line'] < 1))
-            ) {
-                throw new InvalidArgumentException('Rector JSON error location is invalid.');
-            }
             $diagnostics[] = ['file' => $error['file'] ?? '[unavailable]', 'line' => $error['line'] ?? null, 'message' => $error['message']];
         }
 
@@ -208,19 +158,13 @@ final class NativeReportParser
     }
 
     /**
-     * Lists native changed files without interpreting diff text as line or AST identity.
+     * Lists validated native paths without inferring diff lines or AST identity.
      *
-     * @param list<mixed> $changes Optional native file-diff records, validated without displaying source.
-     * @param list<string> $files The native changed-file list corresponding to the total.
+     * @param list<string> $files Native changed paths corresponding to the validated total.
      * @return list<array{file: string, line: int|null, message: string}>
      */
-    private function rectorChanges(array $changes, array $files): array
+    private function rectorChanges(array $files): array
     {
-        foreach ($changes as $change) {
-            if (!is_array($change) || !is_string($change['file'] ?? null) || !in_array($change['file'], $files, true) || !is_string($change['diff'] ?? null)) {
-                throw new InvalidArgumentException('Rector JSON change location is invalid.');
-            }
-        }
         $diagnostics = [];
         foreach ($files as $file) {
             $diagnostics[] = ['file' => $file, 'line' => null, 'message' => 'Semantic changes proposed; the native JSON does not provide a line field.'];

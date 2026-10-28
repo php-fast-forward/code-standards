@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Tests\Integration;
 
 use FastForward\CodeStandards\Process\ProcessResult;
+use FastForward\CodeStandards\Refactoring\RectorJsonReportParser;
 use FastForward\CodeStandards\Workflow\NativeReportParser;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
@@ -33,7 +34,7 @@ final class OptionalMagicNumbersReportTest extends TestCase
                     '--directory=' . $directory, '--all', '--format=xml',
                 ], $directory, timeout: 30);
                 self::assertSame($expected, $process->run(), $process->getErrorOutput());
-                $classified = (new NativeReportParser())->magicNumbers(new ProcessResult(
+                $classified = (new NativeReportParser(new RectorJsonReportParser()))->magicNumbers(new ProcessResult(
                     $expected, $process->getOutput(), $process->getErrorOutput(),
                 ), [$path]);
                 self::assertSame(0 === $expected ? 'clean' : 'findings', $classified->status);

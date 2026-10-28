@@ -69,3 +69,21 @@ Golden fixtures exercise descriptive contracts and inheritance markers through
 read-only checking, explicit fixing and idempotence. A native Rector regression
 changes array syntax while retaining the same documentation. Consumer-selected
 semantic rules can change PHPDoc; this is not a claim about every configuration.
+
+Native Rector report validation
+-------------------------------
+
+``Refactoring\RectorJsonReportParser::parse()`` validates a completed
+``ProcessResult`` against the native Rector preview schema and returns the
+decoded native report. Totals, native lists, error locations, diff paths and
+the exit code must agree. Malformed or inconsistent reports raise
+``InvalidArgumentException`` with the established native validation diagnostic.
+Optional fields and native record ordering remain intact, including absent
+empty lists and opaque diff text. No source line is inferred from a diff.
+
+The caller owns capture budgets. The optional workflow keeps its existing
+report-size limit before parsing, then maps validated native data into its
+existing statuses, diagnostic presentation and ``report``/``fail`` policies.
+The parser does not execute Rector or evaluate configuration. The public
+``refactor --format=json`` command continues to stream its native preview
+output with the same options and exits.
