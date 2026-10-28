@@ -51,6 +51,22 @@ function writeJson(string $path, array $value): void
     file_put_contents($path, json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL);
 }
 
+/** @return array<string, string> Maintained inputs bound to the compiled payload. */
+function inputHashes(string $root): array
+{
+    $hashes = ['LICENSE' => hash_file('sha256', $root . '/LICENSE')];
+    foreach (['src', 'config', 'bin', 'resources'] as $path) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $path, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file->isFile()) {
+                $hashes[substr($file->getPathname(), strlen($root) + 1)] = hash_file('sha256', $file->getPathname());
+            }
+        }
+    }
+    ksort($hashes);
+
+    return $hashes;
+}
+
 /**
  * @param list<string> $arguments
  * @param array<string, string|false> $environment Explicit isolated overrides.

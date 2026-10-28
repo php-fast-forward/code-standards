@@ -91,6 +91,9 @@ CONFIG);
     $before = array_map(static fn (string $path) => hash_file('sha256', $consumer . '/' . $path), $inputs);
     $check = runCommand([PHP_BINARY, $proxy, 'check', '--all', '--config=ecs.php'], $consumer, 2, $env);
     $probe = json_decode(file_get_contents($consumer . '/probe.json'), true, flags: JSON_THROW_ON_ERROR);
+    if (hash_file('sha256', $source . '/composer.lock') !== $probe['identity']['composer_lock_sha256'] || inputHashes($source) !== $probe['identity']['source_files_sha256']) {
+        throw new RuntimeException('Compiled payload does not match the current source and lock.');
+    }
     if (0700 !== $probe['mode'] || file_exists($probe['runtime']) || 'fast-forward/code-standards' !== $probe['identity']['root']['name']) {
         throw new RuntimeException('Private runtime identity or cleanup failed.');
     }

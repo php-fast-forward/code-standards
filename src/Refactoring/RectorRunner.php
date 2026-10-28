@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Refactoring;
 
+use FastForward\CodeStandards\Output\OutputFormat;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use InvalidArgumentException;
 use JsonException;
@@ -27,18 +28,19 @@ final readonly class RectorRunner
      *
      * @return int Native process status, including 2 when dry-run proposes changes.
      */
-    public function run(string $directory, string $config, bool $apply, float $timeout = 300, string $format = 'text'): int
+    public function run(string $directory, string $config, bool $apply, float $timeout = 300, string $format = OutputFormat::Text->value): int
     {
-        if (!in_array($format, ['text', 'json'], true)) {
-            throw new InvalidArgumentException('Rector format must be text or json.');
+        $outputFormat = OutputFormat::tryFrom($format);
+        if (null === $outputFormat || !self::supportsFormat($outputFormat)) {
+            throw new InvalidArgumentException(message: sprintf('Rector format must be %s or %s.', OutputFormat::Text->value, OutputFormat::Json->value));
         }
-        if ($apply && 'json' === $format) {
+        if ($apply && OutputFormat::Json === $outputFormat) {
             throw new InvalidArgumentException('JSON output is preview-only; use text output for explicit --apply.');
         }
 
         $this->assertRules($directory, $config, $timeout);
         $check = [PHP_BINARY, $this->rector, 'process', '--config=' . $config, '--no-progress-bar'];
-        if ('json' === $format) {
+        if (OutputFormat::Json === $outputFormat) {
             $check[] = '--output-format=json';
         }
         $status = $this->process->run($apply ? $check : [...$check, '--dry-run'], $directory, $timeout);
@@ -47,6 +49,15 @@ final readonly class RectorRunner
         }
 
         return $this->process->run([...$check, '--dry-run'], $directory, $timeout);
+    }
+
+    /** Keeps native preview representation selection shared with command completion. */
+    public static function supportsFormat(OutputFormat $format): bool
+    {
+        return match ($format) {
+            OutputFormat::Text, OutputFormat::Json => true,
+            default => false,
+        };
     }
 
     /** Uses Rector's own JSON inventory instead of evaluating or parsing consumer PHP in the parent process. */

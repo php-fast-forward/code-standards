@@ -49,6 +49,7 @@ ksort($inventory);
 writeJson($runtime . '/distribution-manifest.json', [
     'root' => array_intersect_key($identity['root'], array_flip(['name', 'version', 'pretty_version', 'reference'])),
     'composer_lock_sha256' => hash_file('sha256', $root . '/composer.lock'),
+    'source_files_sha256' => inputHashes($root),
     'packages' => $inventory,
     'compression' => 'GZ',
 ]);

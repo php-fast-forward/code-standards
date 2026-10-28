@@ -5,6 +5,10 @@ Structured check output
 ``--format=text`` retains human output and existing exit behavior. ``fix`` does not
 accept this option. Formatting and semantic refactoring remain separate operations.
 
+``--format=json-pretty`` selects the same report with indentation. The canonical
+`result presentation guide <process-contracts.rst#structured-check-presentation>`__
+defines both JSON representations, color behavior and encoding failures.
+
 .. code-block:: console
 
    vendor/bin/code-standards check --all --format=json
@@ -97,5 +101,5 @@ agent detection. Select it explicitly; environment detection never grants write
 authority or overrides the requested format.
 
 The broader `structured-output contract (#10) <https://github.com/php-fast-forward/code-standards/issues/10>`__
-also covers shared pretty/color controls and CWD/cache metadata. Those fields and
+also covers cross-command color controls and CWD/cache metadata. Those fields and
 cross-command policies are outside this check schema.
