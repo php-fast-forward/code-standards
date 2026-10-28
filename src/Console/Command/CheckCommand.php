@@ -29,14 +29,14 @@ final readonly class CheckCommand
         #[MapInput]
         ScanInput $settings,
 
-        #[Option(description: 'Output format: text or json. JSON is one nonstreaming check report.')]
+        #[Option(description: 'Output format: text, json (compact), or json-pretty (indented). JSON is one nonstreaming check report.')]
         string $format = 'text',
     ): int {
-        if ('json' === $format) {
-            return $this->structured->run($settings, $io);
+        if (in_array($format, ['json', 'json-pretty'], true)) {
+            return $this->structured->run($settings, $io, 'json-pretty' === $format);
         }
         if ('text' !== $format) {
-            $io->getErrorStyle()->error('Check format must be text or json.');
+            $io->getErrorStyle()->error('Check format must be text, json or json-pretty.');
 
             return 2;
         }

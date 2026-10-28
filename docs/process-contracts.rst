@@ -45,6 +45,39 @@ The examples assume an injected transport, existing working directory and
 selected source file. Check the optional capability before using an arbitrary
 ``ProcessRunner`` override. Result capture does not parse ECS/Rector reports.
 
+Structured check presentation
+-----------------------------
+
+``check --format=json`` writes one compact versioned JSON document to stdout.
+``check --format=json-pretty`` writes the same document with indentation. The
+default format remains ``text``. Both JSON formats use the same read-only
+selection and execution, preserve check exit codes and keep operational
+diagnostics on stderr. They never add terminal color, including with ``--ansi``;
+control characters inside diagnostic strings remain escaped JSON data.
+
+.. code-block:: console
+
+   cpx fast-forward/code-standards check --all --format=json
+   cpx fast-forward/code-standards check --all --format=json-pretty
+
+The schema contains ``schema_version``, ``command``, ``status``, ``exit_code``,
+``complete``, selection coverage, native ECS ``files``, operational ``errors``
+and stderr ``diagnostics``. Empty ``files`` is an object in both representations.
+The renderer preserves paths, diagnostic strings and native findings without
+parsing human output. Invalid UTF-8 produces an ``operational-error`` document
+with exit 1 and retained coverage instead of silently replacing bytes.
+
+Clean checks exit 0; style findings exit 2. Syntax failures retain the native
+syntax exit. Unsupported formats and selection errors exit 2; operational
+execution or encoding failures exit 1. A failing or partial check is never
+represented as clean. JSON presentation grants no source-write authority and
+does not change CWD or cache policy.
+
+These presentation modes belong to ``check``. ``refactor --format=json`` keeps
+its native Rector preview report and native exit codes; it does not acquire
+``json-pretty`` or a check schema. Semantic changes still require explicit
+configuration and ``--apply`` with text output.
+
 Native transport
 ----------------
 

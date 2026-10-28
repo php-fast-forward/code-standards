@@ -205,6 +205,14 @@ final class StandardsTest extends TestCase
         self::assertSame('', $check->getErrorOutput());
         self::assertSame('', $this->git(['diff']));
 
+        $pretty = $this->cli(['check', '--all', '--format=json-pretty', '--ansi']);
+        self::assertSame($check->getExitCode(), $pretty->getExitCode(), $pretty->getErrorOutput());
+        self::assertSame($report, json_decode($pretty->getOutput(), true, flags: JSON_THROW_ON_ERROR));
+        self::assertStringContainsString("\n    \"schema_version\"", $pretty->getOutput());
+        self::assertStringNotContainsString("\033", $pretty->getOutput());
+        self::assertSame($bad, file_get_contents($this->directory . '/' . $path));
+        self::assertSame('', $this->git(['diff']));
+
         self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
         $fixed = file_get_contents($this->directory . '/' . $path);
         $clean = $this->cli(['check', '--all', '--format=json']);
