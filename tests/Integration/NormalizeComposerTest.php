@@ -230,6 +230,28 @@ final class NormalizeComposerTest extends TestCase
         self::assertSame('{"name":"example/fixture"}', file_get_contents($this->directory . '/other.json'));
     }
 
+    /** Rejected documents may contain private URLs/tokens; neither default nor verbose diagnostics may disclose them. */
+    public function testMalformedMetadataDiagnosticsNeverExposeRejectedBytes(): void
+    {
+        $marker = 'fixture-sensitive-marker';
+        $invalid = '{"synthetic":"' . $marker . '"';
+        foreach (['composer.json', 'composer.lock'] as $file) {
+            file_put_contents($this->directory . '/composer.json', '{"name":"example/fixture"}');
+            file_put_contents($this->directory . '/' . $file, $invalid);
+            $before = $this->snapshot();
+            foreach ([[], ['--apply'], ['--apply', '-vvv']] as $options) {
+                $result = $this->cli($options);
+                $diagnostics = $result->getOutput() . $result->getErrorOutput();
+                self::assertSame(2, $result->getExitCode());
+                self::assertStringNotContainsString($marker, $diagnostics);
+                self::assertStringNotContainsString($invalid, $diagnostics);
+                self::assertStringContainsString('Composer metadata is not valid JSON.', $diagnostics);
+                self::assertSame('', $result->getOutput());
+                self::assertSame($before, $this->snapshot());
+            }
+        }
+    }
+
     /** @param list<string> $options Runs without HTTP file streams/cURL execution to detect unexpected schema downloads. */
     private function cli(array $options): Process
     {

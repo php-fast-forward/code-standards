@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Console\Command;
 
+use Ergebnis\Json\Exception\NotJson;
 use FastForward\CodeStandards\Composer\NormalizationRunner;
 use FastForward\CodeStandards\Project\ProjectDirectoryResolver;
 use InvalidArgumentException;
@@ -37,6 +38,10 @@ final readonly class NormalizeComposerCommand
             $root = $this->directories->resolve(true, null, null, $directory);
 
             return $this->normalization->run($root, $apply);
+        } catch (NotJson) {
+            $io->getErrorStyle()->error('Composer metadata is not valid JSON.');
+
+            return Command::INVALID;
         } catch (InvalidArgumentException|RuntimeException $error) {
             $io->getErrorStyle()->error($error->getMessage());
 

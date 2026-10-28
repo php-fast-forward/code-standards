@@ -27,6 +27,8 @@ global options appear in installed help. There are no file-selection, ECS
 configuration, lock-update, dependency-update or plugin-activation options.
 The operation uses the root ``composer.json`` and optional root ``composer.lock``;
 missing/unreadable manifest files and symlink metadata files are rejected.
+Invalid JSON diagnostics omit the rejected bytes, including in verbose output,
+so malformed metadata cannot disclose embedded URLs or tokens through errors.
 
 Apply writes only ``composer.json``. Inspect its diff even on failure: a failed
 write can be partial, and a successful write can make the existing lock stale.
