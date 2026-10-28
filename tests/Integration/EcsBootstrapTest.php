@@ -186,6 +186,49 @@ final class EcsBootstrapTest extends TestCase
         self::assertSame("<?php\n\ndeclare(strict_types=1);\n\necho 'ready';\n", file_get_contents($this->directory . '/source.php'));
     }
 
+    /** @return iterable<string, array{string}> Supported direct-entrypoint layouts. */
+    public static function installationLayouts(): iterable
+    {
+        yield 'checkout' => ['.build/checkout'];
+        yield 'installed package called directly by CPX' => ['.build/runtime/vendor/fast-forward/code-standards'];
+    }
+
+    /** The entrypoint resolves its installation even when cwd contains an unrelated autoloader. */
+    #[DataProvider('installationLayouts')]
+    public function testDirectEntrypointUsesInstallationAutoloader(string $package): void
+    {
+        $root = dirname(__DIR__, 2);
+        $vendor = '.build/checkout' === $package ? $package . '/vendor' : '.build/runtime/vendor';
+        $this->put($package . '/bin/code-standards', file_get_contents($root . '/bin/code-standards'));
+        $this->put($vendor . '/autoload.php', '<?php file_put_contents(__DIR__ . "/loaded", "installation"); require '
+            . var_export($root . '/vendor/autoload.php', true) . ';');
+        (new Filesystem())->mkdir($this->directory . '/' . $vendor . '/symplify');
+        symlink(realpath($root . '/vendor/symplify/easy-coding-standard'), $this->directory . '/' . $vendor . '/symplify/easy-coding-standard');
+        $this->put('vendor/autoload.php', '<?php file_put_contents(__DIR__ . "/../executed", "unexpected");');
+
+        $process = $this->process([PHP_BINARY, $this->directory . '/' . $package . '/bin/code-standards', 'list']);
+
+        self::assertSame(0, $process->getExitCode(), $process->getOutput() . $process->getErrorOutput());
+        self::assertStringContainsString('normalize-composer', $process->getOutput());
+        self::assertSame('', $process->getErrorOutput());
+        self::assertSame('installation', file_get_contents($this->directory . '/' . $vendor . '/loaded'));
+        self::assertFileDoesNotExist($this->directory . '/executed');
+    }
+
+    /** Missing dependencies produce one actionable stderr message without importing cwd PHP. */
+    public function testMissingInstallationAutoloaderFailsCleanly(): void
+    {
+        $this->put('.build/missing/package/bin/code-standards', file_get_contents(dirname(__DIR__, 2) . '/bin/code-standards'));
+        $this->put('vendor/autoload.php', '<?php file_put_contents(__DIR__ . "/../executed", "unexpected");');
+
+        $process = $this->process([PHP_BINARY, $this->directory . '/.build/missing/package/bin/code-standards', 'list']);
+
+        self::assertSame(1, $process->getExitCode());
+        self::assertSame('', $process->getOutput());
+        self::assertSame("Could not locate Composer autoload.php for fast-forward/code-standards.\n", $process->getErrorOutput());
+        self::assertFileDoesNotExist($this->directory . '/executed');
+    }
+
     /** @param list<string> $arguments User-visible command arguments. */
     private function cli(array $arguments): Process
     {
