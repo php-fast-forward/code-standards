@@ -29,10 +29,10 @@ final class CheckResultRendererTest extends TestCase
         );
 
         foreach ([false, true] as $pretty) {
-            [$status, $output] = $this->render($result, $pretty);
+            [$status, $output] = $this->render(result: $result, pretty: $pretty);
             self::assertSame(255, $status);
             self::assertStringNotContainsString("\033", $output);
-            self::assertSame(json_encode($result->toArray(), JSON_THROW_ON_ERROR), json_encode(json_decode($output, flags: JSON_THROW_ON_ERROR), JSON_THROW_ON_ERROR));
+            self::assertSame(json_encode(value: $result->toArray(), flags: JSON_THROW_ON_ERROR), json_encode(value: json_decode(json: $output, flags: JSON_THROW_ON_ERROR), flags: JSON_THROW_ON_ERROR));
             self::assertSame($pretty, str_contains($output, "\n    \"schema_version\""));
             if (!$pretty) {
                 self::assertSame(1, substr_count($output, "\n"));
@@ -45,8 +45,8 @@ final class CheckResultRendererTest extends TestCase
     {
         $result = new CheckResult(status: 'findings', exitCode: 2, complete: true, selected: 2, syntaxChecked: 2, styleSubmitted: 2, stderr: "invalid \xff");
         foreach ([false, true] as $pretty) {
-            [$status, $output] = $this->render($result, $pretty);
-            $report = json_decode($output, true, flags: JSON_THROW_ON_ERROR);
+            [$status, $output] = $this->render(result: $result, pretty: $pretty);
+            $report = json_decode(json: $output, associative: true, flags: JSON_THROW_ON_ERROR);
             self::assertSame(1, $status);
             self::assertSame('operational-error', $report['status']);
             self::assertFalse($report['complete']);
@@ -66,7 +66,7 @@ final class CheckResultRendererTest extends TestCase
             ->setConstructorArgs([$input, $output])
             ->onlyMethods(['getErrorStyle'])
             ->getMock();
-        $io->expects(self::atLeastOnce())->method('getErrorStyle')->willReturn(new SymfonyStyle($input, new BufferedOutput()));
+        $io->expects(self::atLeastOnce())->method('getErrorStyle')->willReturn(new SymfonyStyle(input: $input, output: new BufferedOutput()));
         $status = (new CheckResultRenderer())->render(result: $result, io: $io, pretty: $pretty);
 
         return [$status, $output->fetch()];

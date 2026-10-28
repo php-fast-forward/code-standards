@@ -53,7 +53,7 @@ final readonly class RefactorCommand
             $seconds = $this->timeoutSeconds($timeout);
             $scope = $this->projects->resolve(true, null, null, $directory, $config);
 
-            return $this->rector->run($scope->directory, $scope->config, $apply, $seconds, $format);
+            return $this->rector->run(directory: $scope->directory, config: $scope->config, apply: $apply, timeout: $seconds, format: $format);
         } catch (ProcessFailedException $error) {
             $io->getErrorStyle()->error($error->getMessage());
 

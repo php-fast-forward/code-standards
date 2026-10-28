@@ -42,7 +42,13 @@ final readonly class StructuredCheckRunner
                 throw new \RuntimeException('JSON checking requires limited result capture.');
             }
             foreach ($files as $file) {
-                $result = $this->process->captureLimitedResult([PHP_BINARY, '-n', '-l', $file], $directory, 65_536, 65_536, 300);
+                $result = $this->process->captureLimitedResult(
+                    arguments: [PHP_BINARY, '-n', '-l', $file],
+                    directory: $directory,
+                    stdoutLimit: 65_536,
+                    stderrLimit: 65_536,
+                    timeout: 300,
+                );
                 $stderr = $this->appendDiagnostic($stderr, $result->stderr);
                 ++$syntaxChecked;
                 if (0 !== $result->exitCode) {
@@ -61,8 +67,14 @@ final readonly class StructuredCheckRunner
 
             $phase = 'ecs';
             foreach (array_chunk($files, 50) as $batch) {
-                $command = EcsWorkerCommand::build($this->worker, $this->autoload, $this->engine, $config, false, $batch, 'json');
-                $result = $this->process->captureLimitedResult($command, $directory, 2_097_152, 65_536, 300);
+                $command = EcsWorkerCommand::build(worker: $this->worker, autoload: $this->autoload, engine: $this->engine, config: $config, fix: false, files: $batch, format: 'json');
+                $result = $this->process->captureLimitedResult(
+                    arguments: $command,
+                    directory: $directory,
+                    stdoutLimit: 2_097_152,
+                    stderrLimit: 65_536,
+                    timeout: 300,
+                );
                 $stderr = $this->appendDiagnostic($stderr, $result->stderr);
                 $report = $this->reports->parse($result, $batch);
                 $styleSubmitted += count($batch);

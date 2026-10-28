@@ -17,7 +17,7 @@ final readonly class CheckResultRenderer
     {
         $flags = JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | ($pretty ? JSON_PRETTY_PRINT : 0);
         try {
-            $json = json_encode($result->toArray(), $flags);
+            $json = json_encode(value: $result->toArray(), flags: $flags);
         } catch (JsonException) {
             $result = new CheckResult(
                 status: 'operational-error',
@@ -28,7 +28,7 @@ final readonly class CheckResultRenderer
                 styleSubmitted: $result->styleSubmitted,
                 errors: [['phase' => 'encoding', 'message' => 'Check output contains bytes that cannot be represented as JSON.']],
             );
-            $json = json_encode($result->toArray(), $flags);
+            $json = json_encode(value: $result->toArray(), flags: $flags);
         }
         if ([] !== $result->errors) {
             $io->getErrorStyle()->writeln(messages: 'Code Standards check did not complete successfully.', type: OutputInterface::OUTPUT_RAW);

@@ -7,9 +7,11 @@ accept ``--directory`` and ``--config``. Symfony Console supports both
 ``--option=value`` and ``--option value``. See ``help check`` and ``help fix``
 for the installed command definitions.
 
-``check`` additionally accepts ``--format=text|json`` with text as the default.
+``check`` additionally accepts ``--format=text|json|json-pretty`` with text as the default.
 The explicit `structured check contract <../structured-check.rst>`__ documents
 single-document stdout, native findings, operational failures and partial coverage.
+See `result presentation <../process-contracts.rst#structured-check-presentation>`__
+for compact and indented JSON with identical data and exits.
 ``fix`` retains text output and does not accept this option.
 
 The separate opt-in ``refactor`` command uses an explicit native Rector
