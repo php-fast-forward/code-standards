@@ -111,6 +111,11 @@ final readonly class RectorRunner
                     || SimpleParameterProvider::provideIntParameter(Option::PHP_VERSION_FEATURES) <= 0) {
                     throw new InvalidArgumentException('Select an explicit PHP target with native RectorConfig::phpVersion() or withPhpVersion().');
                 }
+                $config->boot();
+                if (!$config->make(\Rector\Configuration\ConfigInitializer::class)->areSomeRectorsLoaded()) {
+                    fwrite(STDERR, 'Select a native Rector configuration with at least one rule; automatic initialization is disabled.' . PHP_EOL);
+                    exit(2);
+                }
             };
             PHP, var_export($config, true));
     }
