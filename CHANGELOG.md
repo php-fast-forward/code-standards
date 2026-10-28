@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-28
+
+### Added
+
+- Check and fix one symbolic boolean part per line in existing multiline if, elseif, while and do-while conditions through an owned native ECS Sniff. Preserve single-line conditions, function/arrow/class expressions and native spacing/skip overrides. Fingerprint owned policy source for cache invalidation and record the Sniff separately from native fixer risk classifications.
+
+  Enforce first-expression and closing-wrapper placement through the native PHPCS PSR-12 implementation, adapted to the ECS spacing service. Default to four spaces/LF; document nonstandard spacing overrides explicitly and preserve alternative syntax without claiming complete standards certification.
+
+  ([#63](https://github.com/php-fast-forward/code-standards/pull/63))
+
 ## [0.6.0] - 2026-10-27
 
 ### Added
@@ -210,6 +220,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.7.0]: https://github.com/php-fast-forward/code-standards/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/php-fast-forward/code-standards/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/php-fast-forward/code-standards/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/php-fast-forward/code-standards/compare/v0.3.2...v0.4.0
