@@ -24,7 +24,7 @@ final class RectorJsonReportParserTest extends TestCase
             'totals' => ['changed_files' => 1, 'errors' => 1],
             'native_extension' => ['retained' => true],
         ];
-        $process = new ProcessResult(1, json_encode($report, JSON_THROW_ON_ERROR), 'native stderr');
+        $process = new ProcessResult(exitCode: 1, stdout: json_encode(value: $report, flags: JSON_THROW_ON_ERROR), stderr: 'native stderr');
 
         self::assertSame($report, (new RectorJsonReportParser())->parse($process));
         self::assertSame('native stderr', $process->stderr);
@@ -34,7 +34,7 @@ final class RectorJsonReportParserTest extends TestCase
     public function testCleanReportRetainsAbsentOptionalLists(): void
     {
         $report = ['totals' => ['changed_files' => 0, 'errors' => 0]];
-        self::assertSame($report, (new RectorJsonReportParser())->parse(new ProcessResult(0, json_encode($report, JSON_THROW_ON_ERROR), '')));
+        self::assertSame($report, (new RectorJsonReportParser())->parse(new ProcessResult(exitCode: 0, stdout: json_encode(value: $report, flags: JSON_THROW_ON_ERROR), stderr: '')));
     }
 
     /** @return iterable<string,array{string,int,string}> Existing native validation errors remain objective. */
@@ -59,6 +59,6 @@ final class RectorJsonReportParserTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
-        (new RectorJsonReportParser())->parse(new ProcessResult($exit, $json, ''));
+        (new RectorJsonReportParser())->parse(new ProcessResult(exitCode: $exit, stdout: $json, stderr: ''));
     }
 }

@@ -34,7 +34,7 @@ final class OptionalMagicNumbersReportTest extends TestCase
                     '--directory=' . $directory, '--all', '--format=xml',
                 ], $directory, timeout: 30);
                 self::assertSame($expected, $process->run(), $process->getErrorOutput());
-                $classified = (new NativeReportParser(new RectorJsonReportParser()))->magicNumbers(new ProcessResult(
+                $classified = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(new ProcessResult(
                     $expected, $process->getOutput(), $process->getErrorOutput(),
                 ), [$path]);
                 self::assertSame(0 === $expected ? 'clean' : 'findings', $classified->status);

@@ -20,9 +20,9 @@ final class RectorJsonReportParser
     public function parse(ProcessResult $process): array
     {
         try {
-            $report = json_decode($process->stdout, true, flags: JSON_THROW_ON_ERROR);
+            $report = json_decode(json: $process->stdout, associative: true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new InvalidArgumentException('Rector did not return a complete native JSON document.', previous: $exception);
+            throw new InvalidArgumentException(message: 'Rector did not return a complete native JSON document.', previous: $exception);
         }
         if (!is_array($report) || !isset($report['totals']) || !is_array($report['totals'])) {
             throw new InvalidArgumentException('Rector JSON totals are unavailable.');

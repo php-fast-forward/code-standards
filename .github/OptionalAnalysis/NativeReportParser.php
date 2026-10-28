@@ -72,9 +72,9 @@ final class NativeReportParser
         $errorCount = $report['totals']['errors'];
         $diagnostics = [...$this->rectorErrors($report['errors'] ?? []), ...$this->rectorChanges($report['changed_files'] ?? [])];
         if (0 !== $errorCount) {
-            return new AnalysisResult('Rector', 'operational-error', findingCount: $changes, diagnostics: $diagnostics, details: $errorCount . " native processing error(s).\n" . $process->stderr, nativeExit: $process->exitCode);
+            return new AnalysisResult(tool: 'Rector', status: 'operational-error', findingCount: $changes, diagnostics: $diagnostics, details: $errorCount . " native processing error(s).\n" . $process->stderr, nativeExit: $process->exitCode);
         }
-        return new AnalysisResult('Rector', 0 === $changes ? 'clean' : 'findings', findingCount: $changes, diagnostics: $diagnostics, details: "Scope is the explicit native configuration, not the formatter changed-file list.\n" . $process->stderr, nativeExit: $process->exitCode);
+        return new AnalysisResult(tool: 'Rector', status: 0 === $changes ? 'clean' : 'findings', findingCount: $changes, diagnostics: $diagnostics, details: "Scope is the explicit native configuration, not the formatter changed-file list.\n" . $process->stderr, nativeExit: $process->exitCode);
     }
 
     /** Parses without external resolution/substitution, then rejects DTDs; CDATA remains ordinary source text. */

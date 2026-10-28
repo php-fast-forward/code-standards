@@ -53,10 +53,10 @@ final class RectorJsonIntegrationTest extends TestCase
             $process = $this->preview();
             self::assertSame($status, $process->getExitCode(), $process->getErrorOutput());
             $report = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
-            self::assertSame($report, (new RectorJsonReportParser())->parse(new ProcessResult($status, $process->getOutput(), $process->getErrorOutput())));
+            self::assertSame($report, (new RectorJsonReportParser())->parse(new ProcessResult(exitCode: $status, stdout: $process->getOutput(), stderr: $process->getErrorOutput())));
             self::assertSame($changes, $report['totals']['changed_files']);
             self::assertSame(0, $report['totals']['errors']);
-            $classified = (new NativeReportParser(new RectorJsonReportParser()))->rector(new ProcessResult($status, $process->getOutput(), $process->getErrorOutput()));
+            $classified = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->rector(new ProcessResult(exitCode: $status, stdout: $process->getOutput(), stderr: $process->getErrorOutput()));
             self::assertSame(0 === $changes ? 'clean' : 'findings', $classified->status);
             self::assertSame($changes, $classified->findingCount);
             self::assertSame($source, file_get_contents($this->directory . '/source.php'));
@@ -75,11 +75,11 @@ final class RectorJsonIntegrationTest extends TestCase
         $process = $this->preview();
         self::assertSame(1, $process->getExitCode(), $process->getErrorOutput());
         $report = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame($report, (new RectorJsonReportParser())->parse(new ProcessResult(1, $process->getOutput(), $process->getErrorOutput())));
+        self::assertSame($report, (new RectorJsonReportParser())->parse(new ProcessResult(exitCode: 1, stdout: $process->getOutput(), stderr: $process->getErrorOutput())));
         self::assertGreaterThan(0, $report['totals']['errors']);
         self::assertNotEmpty($report['errors']);
         self::assertArrayHasKey('file', $report['errors'][0]);
-        $classified = (new NativeReportParser(new RectorJsonReportParser()))->rector(new ProcessResult(1, $process->getOutput(), $process->getErrorOutput()));
+        $classified = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->rector(new ProcessResult(exitCode: 1, stdout: $process->getOutput(), stderr: $process->getErrorOutput()));
         self::assertSame('operational-error', $classified->status);
         self::assertTrue($classified->blocks('report'));
         self::assertSame($source, file_get_contents($this->directory . '/source.php'));

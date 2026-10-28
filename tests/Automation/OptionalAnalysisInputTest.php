@@ -121,7 +121,7 @@ final class OptionalAnalysisInputTest extends TestCase
     /** The fake installation is deliberately absent: tests which accidentally launch it must fail. */
     private function runner(ProcessRunner $process): OptionalAnalysisRunner
     {
-        return new OptionalAnalysisRunner(new FileSelection($process), new PhpFiles(), new ProjectScopeResolver('/unused', new ProjectDirectoryResolver()), new BoundedProcess(), new NativeReportParser(new RectorJsonReportParser()), '/nonexistent-tool');
+        return new OptionalAnalysisRunner(new FileSelection($process), new PhpFiles(), new ProjectScopeResolver('/unused', new ProjectDirectoryResolver()), new BoundedProcess(), new NativeReportParser(rectorReports: new RectorJsonReportParser()), '/nonexistent-tool');
     }
 
     /** Produces only explicit fixture options; no native analysis executes inside this test class. */
