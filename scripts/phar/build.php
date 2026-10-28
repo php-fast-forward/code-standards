@@ -12,7 +12,7 @@ if ($argc > 2 || file_exists($output)) {
 }
 $runtime = sys_get_temp_dir() . '/standards-build-' . bin2hex(random_bytes(12));
 mkdir($runtime, 0700);
-register_shutdown_function(static fn () => removeTree($runtime));
+register_shutdown_function(static fn() => removeTree($runtime));
 foreach (['src', 'config', 'resources', 'bin', 'LICENSE'] as $path) {
     copyTree($root . '/' . $path, $runtime . '/' . $path);
 }

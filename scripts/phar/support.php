@@ -77,7 +77,7 @@ function runCommand(array $arguments, string $directory, int $expected = 0, arra
     if (null === $home) {
         $home = sys_get_temp_dir() . '/standards-composer-' . bin2hex(random_bytes(12));
         mkdir($home, 0700);
-        register_shutdown_function(static fn () => removeTree($home));
+        register_shutdown_function(static fn() => removeTree($home));
     }
     $isolated = [];
     foreach (array_keys(getenv()) as $name) {

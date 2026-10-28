@@ -11,12 +11,12 @@ if (false === $binary || !is_executable($binary)) {
 }
 $root = sys_get_temp_dir() . '/standards-package-' . bin2hex(random_bytes(12));
 mkdir($root, 0700);
-register_shutdown_function(static fn () => removeTree($root));
+register_shutdown_function(static fn() => removeTree($root));
 $environment = ['COMPOSER_HOME' => $root . '/composer-home', 'COMPOSER_CACHE_DIR' => $root . '/composer-cache',
     'GIT_CONFIG_GLOBAL' => '/dev/null', 'GIT_CONFIG_SYSTEM' => '/dev/null', 'GIT_TERMINAL_PROMPT' => '0'];
 $package = $root . '/package';
 mkdir($package);
-foreach (['composer.json', 'composer.lock', 'LICENSE', 'README.md', 'resources', '.gitattributes'] as $path) {
+foreach (['src', 'config', 'bin', 'docs', 'composer.json', 'composer.lock', 'LICENSE', 'README.md', 'resources', '.gitattributes'] as $path) {
     copyTree($source . '/' . $path, $package . '/' . $path);
 }
 copyTree($binary, $package . '/builds/code-standards');
@@ -24,14 +24,16 @@ chmod($package . '/builds/code-standards', 0755);
 runCommand(['git', 'init', '-q', '-b', 'main'], $package, environment: $environment);
 runCommand(['git', 'add', '-f', '.'], $package, environment: $environment);
 runCommand(['git', '-c', 'user.name=Package Fixture', '-c', 'user.email=fixture@example.invalid', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'Disposable compiled fixture'], $package, environment: $environment);
+$reference = trim(runCommand(['git', 'rev-parse', 'HEAD'], $package, environment: $environment));
 runCommand(['git', 'archive', '--format=zip', '--output=' . $root . '/git.zip', 'HEAD'], $package, environment: $environment);
 runCommand(['composer', 'archive', '--format=zip', '--dir=' . $root, '--file=composer', '--no-plugins', '--no-scripts'], $package, environment: $environment);
 $contents = static function (string $file): array {
     $archive = new PharData($file);
+    $prefix = 'phar://' . $archive->getPath() . '/';
     $files = [];
     foreach (new RecursiveIteratorIterator($archive) as $entry) {
         if ($entry->isFile()) {
-            $files[substr($entry->getPathname(), strlen('phar://' . $file . '/'))] = hash('sha256', $entry->getContent());
+            $files[substr($entry->getPathname(), strlen($prefix))] = hash('sha256', $entry->getContent());
         }
     }
     ksort($files);
@@ -42,6 +44,11 @@ $git = $contents($root . '/git.zip');
 if ($git !== $contents($root . '/composer.zip') || !isset($git['builds/code-standards'])) {
     throw new RuntimeException('Archive routes disagree or omit the compiled executable.');
 }
+foreach (array_keys($git) as $path) {
+    if (preg_match('~^(?:src|config|bin|tests|scripts)/~', $path)) {
+        throw new RuntimeException('Source/development input leaked into the ready archive: ' . $path);
+    }
+}
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source . '/resources', FilesystemIterator::SKIP_DOTS)) as $file) {
     if ($file->isFile() && ($git[substr($file->getPathname(), strlen($source) + 1)] ?? null) !== hash_file('sha256', $file->getPathname())) {
         throw new RuntimeException('An exported resource changed or disappeared.');
@@ -50,9 +57,10 @@ foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source . 
 $metadata = json_decode(file_get_contents($package . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
 $metadata['version'] = 'dev-fixture';
 $metadata['dist'] = ['type' => 'zip', 'url' => $root . '/git.zip'];
+$metadata['source'] = ['type' => 'git', 'url' => $package, 'reference' => $reference];
 $repositories = [['type' => 'package', 'package' => $metadata], ['packagist.org' => false]];
 $results = [];
-foreach (['local', 'global'] as $mode) {
+foreach (['local', 'global', 'source'] as $mode) {
     $consumer = $root . '/' . $mode;
     mkdir($consumer);
     writeJson($consumer . '/composer.json', ['name' => 'fixture/consumer', 'repositories' => $repositories]);
@@ -62,10 +70,10 @@ foreach (['local', 'global'] as $mode) {
         $env['COMPOSER_HOME'] = $consumer;
         $prefix[] = 'global';
     }
-    runCommand([...$prefix, 'require', '--prefer-dist', '--no-scripts', '--no-plugins', '--no-interaction', 'fast-forward/code-standards:dev-fixture'], $consumer, environment: $env);
+    runCommand([...$prefix, 'require', 'source' === $mode ? '--prefer-source' : '--prefer-dist', '--no-scripts', '--no-plugins', '--no-interaction', 'fast-forward/code-standards:dev-fixture'], $consumer, environment: $env);
     runCommand([...$prefix, 'install', '--no-dev', '--no-scripts', '--no-plugins', '--no-interaction'], $consumer, environment: $env);
     $lock = json_decode(file_get_contents($consumer . '/composer.lock'), true, flags: JSON_THROW_ON_ERROR);
-    if (['fast-forward/code-standards'] !== array_column($lock['packages'], 'name') || is_dir($consumer . '/vendor/fast-forward/code-standards/src')) {
+    if (['fast-forward/code-standards'] !== array_column($lock['packages'], 'name') || ('source' === $mode) !== is_dir($consumer . '/vendor/fast-forward/code-standards/src')) {
         throw new RuntimeException('Consumer received source or external runtime libraries.');
     }
     $proxy = $consumer . '/vendor/bin/code-standards';
@@ -88,7 +96,7 @@ CONFIG);
     file_put_contents($consumer . '/composer.lock', '{"fixture":"untouched"}');
     runCommand(['git', 'add', 'source.php'], $consumer, environment: $env);
     $inputs = ['source.php', 'policy.php', 'ecs.php', 'composer.json', 'composer.lock'];
-    $before = array_map(static fn (string $path) => hash_file('sha256', $consumer . '/' . $path), $inputs);
+    $before = array_map(static fn(string $path) => hash_file('sha256', $consumer . '/' . $path), $inputs);
     $check = runCommand([PHP_BINARY, $proxy, 'check', '--all', '--config=ecs.php'], $consumer, 2, $env);
     $probe = json_decode(file_get_contents($consumer . '/probe.json'), true, flags: JSON_THROW_ON_ERROR);
     if (hash_file('sha256', $source . '/composer.lock') !== $probe['identity']['composer_lock_sha256'] || inputHashes($source) !== $probe['identity']['source_files_sha256']) {
@@ -110,7 +118,7 @@ CONFIG);
             throw new RuntimeException('Native XML report did not preserve findings.');
         }
     }
-    $after = array_map(static fn (string $path) => hash_file('sha256', $consumer . '/' . $path), $inputs);
+    $after = array_map(static fn(string $path) => hash_file('sha256', $consumer . '/' . $path), $inputs);
     if (!str_contains($check, 'begin diff') || !str_contains($rector, 'LongArrayToShortArrayRector') || !str_contains($mnd, '42') || $before !== $after) {
         throw new RuntimeException('Native runtime output or source preservation failed.');
     }

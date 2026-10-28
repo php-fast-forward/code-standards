@@ -95,9 +95,6 @@
         "sort-packages": true
     },
     "extra": {
-        "skills": {
-            "source": "resources/skills"
-        },
         "phar": {
             "runtime-packages": [
                 "composer/composer",
@@ -114,9 +111,13 @@
                 "symfony/process",
                 "symplify/easy-coding-standard"
             ]
+        },
+        "skills": {
+            "source": "resources/skills"
         }
     },
     "scripts": {
+        "build": "@php -d phar.readonly=0 scripts/phar/build.php",
         "check": [
             "@composer validate --strict",
             "@composer check-platform-reqs",
@@ -124,7 +125,6 @@
             "@php bin/code-standards check --all"
         ],
         "fix": "@php bin/code-standards fix --all",
-        "test": "phpunit",
-        "build": "@php -d phar.readonly=0 scripts/phar/build.php"
+        "test": "phpunit"
     }
 }
