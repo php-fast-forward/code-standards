@@ -12,3 +12,8 @@ index entry leads to the independent normalization/write/lock-hash contract;
 ordinary source and test directories retain the same maintenance instructions.
 
 No previous instruction tree is migrated. Rollback restores the root contract, its index and this map together through Git; it changes no host configuration.
+
+Release-channel changes retain this single-root hierarchy. The removed PHP
+entrypoint has no companion guide or index entry. The existing automation guide
+owns the release-event action and activation blockers; no child contracts are
+added. Rollback restores related workflow, tests and documentation together.
