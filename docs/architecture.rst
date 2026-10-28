@@ -113,3 +113,10 @@ DevTools #14/#265/#266/#267 remain conditional analysis candidates. Ownership be
 Doctor #142, distribution #197, published refs #238, orchestration #240/#384 and Actions governance #347–349 remain with DevTools. Current bugs and correction PRs remain there. Historical extensibility/options/config/path contracts are criteria, not automatically reopened tasks.
 
 Backlog transfers require a confirmed destination issue with context and links before commenting/closing the DevTools original. Mixed issues retain their DevTools scope. Use the coordinated inventory and existing destinations to avoid duplicates; current DevTools bug PRs stay in that repository.
+
+PHAR distribution follow-up
+---------------------------
+
+See the `PHAR distribution investigation <phar-distribution.rst>`__ for the
+single-repository transport constraint, CPX/Box evidence and pending runtime gates.
+The production Composer/autoload contract above remains in effect.

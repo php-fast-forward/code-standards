@@ -22,9 +22,9 @@ final class ArchiveTest extends TestCase
         $root = dirname(__DIR__, 2);
         $paths = explode("\0", $this->execute(['git', 'ls-files', '-z'], $root));
         $paths[] = '.gitattributes';
-        $skillFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/resources/skills', \FilesystemIterator::SKIP_DOTS));
-        foreach ($skillFiles as $file) {
-            self::assertFalse($file->isLink(), 'Canonical skills must be regular, portable files.');
+        $resourceFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/resources', \FilesystemIterator::SKIP_DOTS));
+        foreach ($resourceFiles as $file) {
+            self::assertFalse($file->isLink(), 'Canonical resources must be regular, portable files.');
             if ($file->isFile()) {
                 $paths[] = substr($file->getPathname(), strlen($root) + 1);
             }
@@ -38,6 +38,7 @@ final class ArchiveTest extends TestCase
             self::assertIsString($content);
             $this->put($path, $content);
         }
+        $this->put('resources/templates/future-devtools/fixture.txt', 'copyable future resource');
         $readme = file_get_contents($this->directory . '/README.md');
         self::assertIsString($readme);
         $this->put('README.md', str_replace("\n", "\r\n", str_replace("\r\n", "\n", $readme)));
@@ -79,6 +80,13 @@ final class ArchiveTest extends TestCase
             'resources/skills/fast-forward-code-standards/SKILL.md',
             'resources/skills/fast-forward-code-standards/LICENSE', 'docs/_static/mascot-banner.png'] as $path) {
             self::assertArrayHasKey($path, $git);
+        }
+        self::assertSame(hash('sha256', 'copyable future resource'), $git['resources/templates/future-devtools/fixture.txt']);
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/resources', \FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file->isFile()) {
+                $path = substr($file->getPathname(), strlen(dirname(__DIR__, 2)) + 1);
+                self::assertSame(hash_file('sha256', $file->getPathname()), $git[$path] ?? null, $path);
+            }
         }
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/LICENSE'), $git['resources/skills/fast-forward-code-standards/LICENSE']);
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/resources/skills/fast-forward-code-standards/SKILL.md'), $git['resources/skills/fast-forward-code-standards/SKILL.md']);

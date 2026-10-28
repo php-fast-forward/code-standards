@@ -35,7 +35,9 @@ CPX can invoke the installed package directly with
 from its installation, including when run outside the package checkout.
 
 The GitHub `v0` workflow channel and the Composer package are separate
-distribution mechanisms.
+distribution mechanisms. The [PHAR distribution investigation](docs/phar-distribution.rst)
+records the experimental packaging path and its remaining runtime gates.
+Copyable workflow callers live in [resources/workflows](resources/workflows/README.md).
 
 Requires PHP 8.3 or later in the 8.x series, Git and Composer runtime API 2.2+
 for installed binary proxies. Composer resolves the tool with the project's

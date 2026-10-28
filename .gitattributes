@@ -12,6 +12,7 @@
 
 # Contributor-only configuration and test infrastructure.
 /tests/ export-ignore
+/scripts/phar/ export-ignore
 /.github/workflows/ export-ignore
 /.github/ReleaseChannelUpdater.php export-ignore
 /.github/update-release-channels.php export-ignore
