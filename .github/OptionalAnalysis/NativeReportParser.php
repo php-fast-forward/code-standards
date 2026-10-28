@@ -58,7 +58,17 @@ final class NativeReportParser
             throw new InvalidArgumentException('PHPMND exit contradicts its complete native report.');
         }
 
-        return new AnalysisResult('Magic Numbers', 0 === $count ? 'clean' : 'findings', count($selectedFiles), $count, $diagnostics, $process->stderr, $process->exitCode);
+        return new AnalysisResult(
+            tool: 'Magic Numbers',
+            status: 0 === $count ? 'clean' : 'findings',
+            selectedCount: count(
+                $selectedFiles,
+            ),
+            findingCount: $count,
+            diagnostics: $diagnostics,
+            details: $process->stderr,
+            nativeExit: $process->exitCode,
+        );
     }
 
     /** Native Rector errors remain blocking even when the same report also proposes changes. */
@@ -70,18 +80,48 @@ final class NativeReportParser
         $report = $this->rectorReports->parse($process);
         $changes = $report['totals']['changed_files'];
         $errorCount = $report['totals']['errors'];
-        $diagnostics = [...$this->rectorErrors($report['errors'] ?? []), ...$this->rectorChanges($report['changed_files'] ?? [])];
+        $diagnostics = [
+            ...$this->rectorErrors($report['errors'] ?? []),
+            ...$this->rectorChanges($report['changed_files'] ?? []),
+        ];
         if (0 !== $errorCount) {
-            return new AnalysisResult(tool: 'Rector', status: 'operational-error', findingCount: $changes, diagnostics: $diagnostics, details: $errorCount . " native processing error(s).\n" . $process->stderr, nativeExit: $process->exitCode);
+            return new AnalysisResult(
+                tool: 'Rector',
+                status: 'operational-error',
+                findingCount: $changes,
+                diagnostics: $diagnostics,
+                details: $errorCount . " native processing error(s).\n" . $process->stderr,
+                nativeExit: $process->exitCode,
+            );
         }
-        return new AnalysisResult(tool: 'Rector', status: 0 === $changes ? 'clean' : 'findings', findingCount: $changes, diagnostics: $diagnostics, details: "Scope is the explicit native configuration, not the formatter changed-file list.\n" . $process->stderr, nativeExit: $process->exitCode);
+        return new AnalysisResult(
+            tool: 'Rector',
+            status: 0 === $changes ? 'clean' : 'findings',
+            findingCount: $changes,
+            diagnostics: $diagnostics,
+            details: "Scope is the explicit native configuration, not the formatter changed-file list.\n" . $process->stderr,
+            nativeExit: $process->exitCode,
+        );
     }
 
     /** Parses without external resolution/substitution, then rejects DTDs; CDATA remains ordinary source text. */
     private function xml(string $output): DOMElement
     {
-        if (strlen($output) > BoundedProcess::REPORT_BYTES || !extension_loaded('dom') || 1 !== preg_match('//u', $output) || str_contains($output, "\0")) {
-            throw new InvalidArgumentException('PHPMND requires UTF-8 native XML without DTD/entity declarations and an available DOM extension.');
+        if (
+            strlen($output) > BoundedProcess::REPORT_BYTES
+            || !extension_loaded('dom')
+            || 1 !== preg_match(
+                '//u',
+                $output,
+            )
+            || str_contains(
+                $output,
+                "\0",
+            )
+        ) {
+            throw new InvalidArgumentException(
+                'PHPMND requires UTF-8 native XML without DTD/entity declarations and an available DOM extension.',
+            );
         }
         $previous = libxml_use_internal_errors(true);
         try {
@@ -89,7 +129,14 @@ final class NativeReportParser
             $document->resolveExternals = false;
             $document->substituteEntities = false;
             $document->validateOnParse = false;
-            if (!$document->loadXML($output, LIBXML_NONET) || null !== $document->doctype || 'phpmnd' !== $document->documentElement?->tagName) {
+            if (
+                !$document->loadXML(
+                    $output,
+                    LIBXML_NONET,
+                )
+                || null !== $document->doctype
+                || 'phpmnd' !== $document->documentElement?->tagName
+            ) {
                 throw new InvalidArgumentException('PHPMND did not return a complete native XML document.');
             }
             if ('' === $document->documentElement->getAttribute('version')) {

@@ -24,19 +24,28 @@ final class OptionalMagicNumbersReportTest extends TestCase
         $directory = realpath(sys_get_temp_dir()) . '/optional-native-mnd-' . bin2hex(random_bytes(8));
         mkdir($directory);
         try {
-            (new Process(['git', 'init', '--quiet'], $directory, timeout: 5))->mustRun();
+            (new Process(command: ['git', 'init', '--quiet'], cwd: $directory, timeout: 5))->mustRun();
             $path = $directory . "/path with spaces\nand newline.php";
             foreach (['<?php if ($value === 1) {}' => 0, '<?php if ($value === 42) {}' => 1] as $source => $expected) {
                 file_put_contents($path, $source);
-                (new Process(['git', 'add', '--all'], $directory, timeout: 5))->mustRun();
-                $process = new Process([
-                    PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', 'magic-numbers',
-                    '--directory=' . $directory, '--all', '--format=xml',
-                ], $directory, timeout: 30);
+                (new Process(command: ['git', 'add', '--all'], cwd: $directory, timeout: 5))->mustRun();
+                $process = new Process(
+                    command: [
+                        PHP_BINARY, dirname(__DIR__, 2) . '/bin/code-standards', 'magic-numbers',
+                        '--directory=' . $directory, '--all', '--format=xml',
+                    ],
+                    cwd: $directory,
+                    timeout: 30,
+                );
                 self::assertSame($expected, $process->run(), $process->getErrorOutput());
-                $classified = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(new ProcessResult(
-                    $expected, $process->getOutput(), $process->getErrorOutput(),
-                ), [$path]);
+                $classified = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(
+                    new ProcessResult(
+                        exitCode: $expected,
+                        stdout: $process->getOutput(),
+                        stderr: $process->getErrorOutput(),
+                    ),
+                    [$path],
+                );
                 self::assertSame(0 === $expected ? 'clean' : 'findings', $classified->status);
                 self::assertSame(1, $classified->selectedCount);
                 self::assertSame($expected, $classified->findingCount);

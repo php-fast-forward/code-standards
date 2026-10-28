@@ -22,7 +22,10 @@ final class RectorJsonReportParser
         try {
             $report = json_decode(json: $process->stdout, associative: true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new InvalidArgumentException(message: 'Rector did not return a complete native JSON document.', previous: $exception);
+            throw new InvalidArgumentException(
+                message: 'Rector did not return a complete native JSON document.',
+                previous: $exception,
+            );
         }
         if (!is_array($report) || !isset($report['totals']) || !is_array($report['totals'])) {
             throw new InvalidArgumentException('Rector JSON totals are unavailable.');
@@ -34,7 +37,14 @@ final class RectorJsonReportParser
             throw new InvalidArgumentException('Rector error total is inconsistent.');
         }
         $files = $this->list($report['changed_files'] ?? []);
-        if (count($files) !== $changes || count(array_filter($files, static fn(mixed $file): bool => is_string($file) && '' !== $file)) !== count($files)) {
+        if (
+            count($files) !== $changes
+            || count(
+                array_filter($files, static fn(mixed $file): bool => is_string($file) && '' !== $file),
+            ) !== count(
+                $files,
+            )
+        ) {
             throw new InvalidArgumentException('Rector changed-file list is inconsistent.');
         }
         $this->validateErrors($errors);
@@ -100,7 +110,18 @@ final class RectorJsonReportParser
     private function validateChanges(array $changes, array $files): void
     {
         foreach ($changes as $change) {
-            if (!is_array($change) || !is_string($change['file'] ?? null) || !in_array($change['file'], $files, true) || !is_string($change['diff'] ?? null)) {
+            if (
+                !is_array($change)
+                || !is_string($change['file'] ?? null)
+                || !in_array(
+                    $change['file'],
+                    $files,
+                    true,
+                )
+                || !is_string(
+                    $change['diff'] ?? null,
+                )
+            ) {
                 throw new InvalidArgumentException('Rector JSON change location is invalid.');
             }
         }

@@ -27,12 +27,26 @@ final class OptionalAnalysisReportTest extends TestCase
             self::markTestSkipped('Native XML classification requires the real DOM extension.');
         }
         $parser = new NativeReportParser(rectorReports: new RectorJsonReportParser());
-        $clean = $parser->magicNumbers(new ProcessResult(0, $this->xml(), ''), ['/consumer/a.php', '/consumer/b.php']);
+        $clean = $parser->magicNumbers(
+            new ProcessResult(exitCode: 0, stdout: $this->xml(), stderr: ''),
+            ['/consumer/a.php', '/consumer/b.php'],
+        );
         self::assertSame('clean', $clean->status);
         self::assertSame(2, $clean->selectedCount);
         self::assertSame(0, $clean->findingCount);
 
-        $found = $parser->magicNumbers(new ProcessResult(1, $this->xml('<file path="/consumer/a.php" errors="1"><entry line="7" start="0" end="2"><snippet><![CDATA[<?php if ($x === 42) echo "<!DOCTYPE html>";]]></snippet><suggestions/></entry></file>', 1, 1), ''), ['/consumer/a.php']);
+        $found = $parser->magicNumbers(
+            new ProcessResult(
+                exitCode: 1,
+                stdout: $this->xml(
+                    '<file path="/consumer/a.php" errors="1"><entry line="7" start="0" end="2"><snippet><![CDATA[<?php if ($x === 42) echo "<!DOCTYPE html>";]]></snippet><suggestions/></entry></file>',
+                    1,
+                    1,
+                ),
+                stderr: '',
+            ),
+            ['/consumer/a.php'],
+        );
         self::assertSame('findings', $found->status);
         self::assertSame(1, $found->findingCount);
         self::assertSame(7, $found->diagnostics[0]['line']);
@@ -46,10 +60,19 @@ final class OptionalAnalysisReportTest extends TestCase
         yield 'not XML' => ['not XML', 1];
         yield 'truncated XML' => ['<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files>', 1];
         yield 'wrong exit' => ['<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files/></phpmnd>', 1];
-        yield 'overflow' => ['<phpmnd version="3.6.1" fileCount="0" errorCount="999999999999999999999999"><files/></phpmnd>', 0];
+        yield 'overflow' => [
+            '<phpmnd version="3.6.1" fileCount="0" errorCount="999999999999999999999999"><files/></phpmnd>',
+            0,
+        ];
         yield 'counts' => ['<phpmnd version="3.6.1" fileCount="0" errorCount="1"><files/></phpmnd>', 1];
-        yield 'unselected path' => ['<phpmnd version="3.6.1" fileCount="1" errorCount="1"><files><file path="/outside/a.php" errors="1"><entry line="1"/></file></files></phpmnd>', 1];
-        yield 'entity declaration' => ['<!DOCTYPE phpmnd [<!ENTITY secret SYSTEM "file:///not-read">]><phpmnd version="3.6.1" fileCount="0" errorCount="0"><files/></phpmnd>', 0];
+        yield 'unselected path' => [
+            '<phpmnd version="3.6.1" fileCount="1" errorCount="1"><files><file path="/outside/a.php" errors="1"><entry line="1"/></file></files></phpmnd>',
+            1,
+        ];
+        yield 'entity declaration' => [
+            '<!DOCTYPE phpmnd [<!ENTITY secret SYSTEM "file:///not-read">]><phpmnd version="3.6.1" fileCount="0" errorCount="0"><files/></phpmnd>',
+            0,
+        ];
     }
 
     /** XML schema/status failures reject the report rather than returning a clean zero. */
@@ -57,7 +80,10 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testInvalidMagicReportIsOperationalFailure(string $report, int $status): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
+        (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(
+            new ProcessResult(exitCode: $status, stdout: $report, stderr: ''),
+            ['/consumer/a.php'],
+        );
     }
 
     /** @return iterable<string, array{string, int}> Unexpected nodes are rejected equally at all traversed structural boundaries. */
@@ -69,9 +95,18 @@ final class OptionalAnalysisReportTest extends TestCase
             'whitespace CDATA' => '<![CDATA[ ]]>',
             'processing instruction' => '<?probe unexpected?>',
         ] as $label => $node) {
-            yield 'root ' . $label => ['<phpmnd version="3.6.1" fileCount="0" errorCount="0">' . $node . '<files/></phpmnd>', 0];
-            yield 'files ' . $label => ['<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files>' . $node . '</files></phpmnd>', 0];
-            yield 'file ' . $label => ['<phpmnd version="3.6.1" fileCount="1" errorCount="1"><files><file path="/consumer/a.php" errors="1">' . $node . '<entry line="7"><snippet><![CDATA[<?php $value = 42;]]></snippet></entry></file></files></phpmnd>', 1];
+            yield 'root ' . $label => [
+                '<phpmnd version="3.6.1" fileCount="0" errorCount="0">' . $node . '<files/></phpmnd>',
+                0,
+            ];
+            yield 'files ' . $label => [
+                '<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files>' . $node . '</files></phpmnd>',
+                0,
+            ];
+            yield 'file ' . $label => [
+                '<phpmnd version="3.6.1" fileCount="1" errorCount="1"><files><file path="/consumer/a.php" errors="1">' . $node . '<entry line="7"><snippet><![CDATA[<?php $value = 42;]]></snippet></entry></file></files></phpmnd>',
+                1,
+            ];
         }
     }
 
@@ -80,7 +115,10 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testUnexpectedStructuralNodesRejectClassification(string $report, int $status): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(new ProcessResult($status, $report, ''), ['/consumer/a.php']);
+        (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(
+            new ProcessResult(exitCode: $status, stdout: $report, stderr: ''),
+            ['/consumer/a.php'],
+        );
     }
 
     /** Structural whitespace/comments are harmless; actual snippet CDATA remains native source payload. */
@@ -91,7 +129,10 @@ final class OptionalAnalysisReportTest extends TestCase
             . '<file path="/consumer/a.php" errors="1">' . "\n<!-- file -->\n"
             . '<entry line="7"><snippet><![CDATA[<?php if ($value === 42) echo "<!DOCTYPE html>";]]></snippet><suggestions/></entry>'
             . "\n</file>\n</files>\n</phpmnd>";
-        $result = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(new ProcessResult(1, $report, ''), ['/consumer/a.php']);
+        $result = (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(
+            new ProcessResult(exitCode: 1, stdout: $report, stderr: ''),
+            ['/consumer/a.php'],
+        );
         self::assertSame('findings', $result->status);
         self::assertSame(1, $result->findingCount);
         self::assertSame(7, $result->diagnostics[0]['line']);
@@ -112,7 +153,10 @@ final class OptionalAnalysisReportTest extends TestCase
             ] as $declaration) {
                 $report = $declaration . '<phpmnd version="3.6.1" fileCount="0" errorCount="0"><files>&source;</files></phpmnd>';
                 try {
-                    (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(new ProcessResult(0, $report, ''), []);
+                    (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->magicNumbers(
+                        new ProcessResult(exitCode: 0, stdout: $report, stderr: ''),
+                        [],
+                    );
                     self::fail('DTD-bearing reports must be rejected.');
                 } catch (InvalidArgumentException) {
                     self::assertSame(0, ExternalEntityProbe::$opens);
@@ -127,18 +171,29 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testRectorNativeChangesAndErrorsHaveSeparateMeaning(): void
     {
         $parser = new NativeReportParser(rectorReports: new RectorJsonReportParser());
-        $clean = $parser->rector(new ProcessResult(0, '{"totals":{"changed_files":0,"errors":0}}', ''));
+        $clean = $parser->rector(
+            new ProcessResult(exitCode: 0, stdout: '{"totals":{"changed_files":0,"errors":0}}', stderr: ''),
+        );
         self::assertSame('clean', $clean->status);
         self::assertNull($clean->selectedCount);
 
         $json = '{"totals":{"changed_files":1,"errors":0},"changed_files":["src/a.php"],"file_diffs":[{"file":"src/a.php","diff":"@@ -1 +9 @@\\n-old\\n+new"}]}';
-        $changes = $parser->rector(new ProcessResult(2, $json, ''));
+        $changes = $parser->rector(new ProcessResult(exitCode: 2, stdout: $json, stderr: ''));
         self::assertSame('findings', $changes->status);
         self::assertSame(1, $changes->findingCount);
-        self::assertNull($changes->diagnostics[0]['line'], 'Do not infer a line from a diff or fabricate AST identity.');
+        self::assertNull(
+            $changes->diagnostics[0]['line'],
+            'Do not infer a line from a diff or fabricate AST identity.',
+        );
         self::assertFalse($changes->blocks('report'));
 
-        $error = $parser->rector(new ProcessResult(1, '{"totals":{"changed_files":0,"errors":1},"errors":[{"file":"src/b.php","line":12,"message":"native failure"}]}', ''));
+        $error = $parser->rector(
+            new ProcessResult(
+                exitCode: 1,
+                stdout: '{"totals":{"changed_files":0,"errors":1},"errors":[{"file":"src/b.php","line":12,"message":"native failure"}]}',
+                stderr: '',
+            ),
+        );
         self::assertSame('operational-error', $error->status);
         self::assertSame(12, $error->diagnostics[0]['line']);
         self::assertTrue($error->blocks('report'));
@@ -162,17 +217,31 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testInvalidRectorReportIsOperationalFailure(string $report, int $status): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->rector(new ProcessResult($status, $report, ''));
+        (new NativeReportParser(rectorReports: new RectorJsonReportParser()))->rector(
+            new ProcessResult(exitCode: $status, stdout: $report, stderr: ''),
+        );
     }
 
     /** Plain preformatted HTML keeps Markdown/commands inert and bounds display without changing native totals. */
     public function testSummaryEscapesAndTruncatesUntrustedDiagnostics(): void
     {
         $malicious = "</pre>\n[link](https://example.invalid) ::error::<script>alert(1)</script>";
-        $diagnostics = array_fill(0, 1000, ['file' => $malicious . str_repeat('x', 5000), 'line' => 7, 'message' => $malicious]);
+        $diagnostics = array_fill(
+            0,
+            1000,
+            ['file' => $malicious . str_repeat('x', 5000), 'line' => 7, 'message' => $malicious],
+        );
         $summary = (new SummaryRenderer())->render([
-            new AnalysisResult('Magic Numbers', 'findings', 1, 1000, $diagnostics, $malicious, 1),
-            new AnalysisResult('Rector', 'disabled'),
+            new AnalysisResult(
+                tool: 'Magic Numbers',
+                status: 'findings',
+                selectedCount: 1,
+                findingCount: 1000,
+                diagnostics: $diagnostics,
+                details: $malicious,
+                nativeExit: 1,
+            ),
+            new AnalysisResult(tool: 'Rector', status: 'disabled'),
         ]);
         self::assertLessThanOrEqual(65536, strlen($summary));
         self::assertStringNotContainsString('<script>', $summary);
@@ -181,16 +250,27 @@ final class OptionalAnalysisReportTest extends TestCase
         self::assertStringContainsString('1000', $summary);
         self::assertStringContainsString('omitted', $summary);
         self::assertStringContainsString('[truncated]', $summary);
-        self::assertStringContainsString('| Rector | disabled |', $summary, 'Every tool state remains visible even when earlier diagnostics fill the display budget.');
+        self::assertStringContainsString(
+            '| Rector | disabled |',
+            $summary,
+            'Every tool state remains visible even when earlier diagnostics fill the display budget.',
+        );
     }
 
     /** Separators stay readable while untrusted Unicode and markup remain visible and inert. */
     public function testSummaryUsesReadableSeparatorsWithoutUnescapingDiagnostics(): void
     {
         $summary = (new SummaryRenderer())->render([
-            new AnalysisResult('Magic Numbers', 'findings', 1, 1, [
-                ['file' => 'src/Example.php', 'line' => 7, 'message' => "Control \u{202E} \u{00E9} <tag>"],
-            ], nativeExit: 1),
+            new AnalysisResult(
+                tool: 'Magic Numbers',
+                status: 'findings',
+                selectedCount: 1,
+                findingCount: 1,
+                diagnostics: [
+                    ['file' => 'src/Example.php', 'line' => 7, 'message' => "Control \u{202E} \u{00E9} <tag>"],
+                ],
+                nativeExit: 1,
+            ),
         ]);
         self::assertStringContainsString('src/Example.php:7 - Control \u202e \u00e9 &lt;tag&gt;', $summary);
         self::assertStringNotContainsString('\u2014', $summary);
@@ -201,11 +281,11 @@ final class OptionalAnalysisReportTest extends TestCase
     public function testStatesAndPolicyDoNotConvertErrorsToAdvisorySuccess(): void
     {
         foreach (['disabled', 'not-executed', 'clean'] as $state) {
-            self::assertFalse((new AnalysisResult('Magic Numbers', $state))->blocks('report'));
+            self::assertFalse((new AnalysisResult(tool: 'Magic Numbers', status: $state))->blocks('report'));
         }
-        self::assertTrue((new AnalysisResult('Magic Numbers', 'operational-error'))->blocks('report'));
+        self::assertTrue((new AnalysisResult(tool: 'Magic Numbers', status: 'operational-error'))->blocks('report'));
         $this->expectException(InvalidArgumentException::class);
-        (new AnalysisResult('Magic Numbers', 'findings'))->blocks('ignore');
+        (new AnalysisResult(tool: 'Magic Numbers', status: 'findings'))->blocks('ignore');
     }
 
     /** Creates only synthetic report text; no analyzer or consumer source is loaded. */
