@@ -33,7 +33,9 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
   Future semantic work requires an explicit consumer target PHP and opt-in.
 - PR checks use `pull_request`, exact head/base, merge-base comparison and Git's
   NUL-delimited protocol. Never run untrusted PHP on privileged target events or
-  self-hosted runners. No secrets are accepted by the checking reusable.
+  self-hosted runners. Custom consumer runners require trusted same-repository PRs;
+  forks are routed to hosted runners before scheduling. No secrets are accepted
+  by the checking reusable.
 - Never copy credentials, change branch protections or make a status required.
 - Use `codex/` branches, independent review and exact-SHA evidence before push.
   Create/deduplicate the initial issues first. Each PR including a version PR
@@ -69,7 +71,9 @@ Repository creation, authentication and distribution are separate from local tes
 `composer validate --strict`, `php bin/code-standards check --all`,
 `actionlint .github/workflows/*.yml`, and `git diff --check`.
 Tests use disposable repositories and synthetic files, never consumers' worktrees.
-No self-hosted CI dispatch. Record actual commands/results and independent review
+Own CI remains hosted. Explicit consumer opt-in may use existing self-hosted
+runners only for trusted same-repository PRs, with pre-scheduling hosted fallback
+for forks and no access changes. Record actual commands/results and independent review
 for the exact local base/head before publication; do not claim remote CI evidence.
 
 ## Child DOX Index

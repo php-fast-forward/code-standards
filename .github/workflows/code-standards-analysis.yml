@@ -2,6 +2,9 @@ name: 'Internal: Optional PHP Analysis'
 on:
   workflow_call:
     inputs:
+      runs-on:
+        default: '["ubuntu-latest"]'
+        type: string
       php-version:
         default: '8.3'
         type: string
@@ -24,12 +27,15 @@ permissions:
   contents: read
 jobs:
   analyze:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && inputs.runs-on || '["ubuntu-latest"]') }}
     timeout-minutes: 15
     steps:
       - name: Reject privileged events and invalid refs
         id: runtime
         env:
+          STANDARDS_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+          STANDARDS_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          STANDARDS_REPOSITORY: ${{ github.repository }}
           STANDARDS_EVENT: ${{ github.event_name }}
           STANDARDS_JOB_JSON: ${{ toJSON(job) }}
           STANDARDS_BASE: ${{ github.event.pull_request.base.sha }}
@@ -37,6 +43,9 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
+          if [[ "$STANDARDS_RUNNER_ENVIRONMENT" == self-hosted ]]; then
+            [[ -n "$STANDARDS_REPOSITORY" && "$STANDARDS_HEAD_REPOSITORY" == "$STANDARDS_REPOSITORY" ]] || exit 1
+          fi
           [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           runtime=$(jq --slurp --raw-output --exit-status '

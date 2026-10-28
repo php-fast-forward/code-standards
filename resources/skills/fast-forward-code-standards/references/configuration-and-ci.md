@@ -80,8 +80,19 @@ not a Composer/CPX constraint. Runtime/helper source stays bound to the actual
 called workflow repository/SHA, never a second moving-ref lookup. Use only inputs
 supported by that ref.
 
-Keep `pull_request`, read-only contents and hosted runners. No secrets/inherit,
-privileged target events, implicit plugin installation or automatic fixes.
+The reusable accepts `normalize-composer: true` to check the consumer root's
+manifest and optional lock without writing, independently of changed PHP files.
+It defaults to `false`; missing or invalid metadata fails when explicitly enabled.
+This project's own metadata gate does not opt other consumers in.
+
+Keep `pull_request` and read-only contents. Hosted Ubuntu remains the default.
+The optional `runs-on` string accepts JSON labels for an existing authorized
+runner only for trusted same-repository PRs; forks always select hosted Ubuntu
+before scheduling. A pre-checkout guard additionally rejects foreign heads on
+self-hosted runners. This is not a sandbox for untrusted code or a runner-access
+change. Check the selected release's inputs and runner requirements before use.
+No secrets/inherit, privileged target events, implicit plugin installation or
+automatic fixes.
 Required-check settings and rollout across consumers are separately authorized.
 
 ## Multiline conditions

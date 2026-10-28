@@ -62,7 +62,9 @@ final class OptionalAnalysisWorkflowTest extends TestCase
         $workflow = file_get_contents($root . '/.github/workflows/code-standards-analysis.yml');
         self::assertStringContainsString("magic-numbers:\n        description:", $public);
         self::assertStringContainsString("rector:\n        description:", $public);
-        self::assertSame(2, substr_count($public, 'default: false'));
+        foreach (['magic-numbers', 'rector'] as $engine) {
+            self::assertMatchesRegularExpression('~      ' . $engine . ':\n        description: [^\n]+\n        default: false\n        type: boolean~', $public);
+        }
         self::assertStringContainsString('if: inputs.magic-numbers || inputs.rector', $workflow);
         self::assertStringContainsString("if: always() && steps.analysis.outputs.summary-written != 'true'", $workflow);
         self::assertStringContainsString("- name: Enforce explicit optional-analysis result\n        if: always()", $workflow);
