@@ -96,11 +96,13 @@ final class BoundedProcess
         if (!is_finite($timeout) || $timeout <= 0 || $timeout > self::TIMEOUT_SECONDS) {
             throw new InvalidArgumentException('Optional analyzer timeout must be positive, finite and at most 300 seconds.');
         }
-        if ('Linux' !== PHP_OS_FAMILY
+        if (
+            'Linux' !== PHP_OS_FAMILY
             || !is_executable('/usr/bin/setsid')
             || !function_exists('posix_getpgid')
             || !function_exists('posix_getsid')
-            || !function_exists('posix_kill')) {
+            || !function_exists('posix_kill')
+        ) {
             throw new RuntimeException('Optional workflow execution requires hosted Linux, setsid and PHP POSIX process-group support.');
         }
     }

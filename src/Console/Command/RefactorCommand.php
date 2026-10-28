@@ -73,8 +73,10 @@ final readonly class RefactorCommand
     {
         $seconds = (int) $timeout;
 
-        if (1 !== preg_match('/^[1-9][0-9]*$/D', $timeout)
-            || (string) $seconds !== $timeout) {
+        if (
+            1 !== preg_match('/^[1-9][0-9]*$/D', $timeout)
+            || (string) $seconds !== $timeout
+        ) {
             throw new InvalidArgumentException('--timeout must be a positive whole number of seconds.');
         }
 

@@ -59,10 +59,12 @@ final readonly class RectorRunner
             throw new InvalidArgumentException('Rector did not return a valid native rule inventory.', previous: $error);
         }
         $rules = is_array($inventory) ? ($inventory['rectors'] ?? null) : null;
-        if (!is_array($rules)
+        if (
+            !is_array($rules)
             || [] === $rules
             || !array_is_list($rules)
-            || count(array_filter($rules, static fn(mixed $rule): bool => is_string($rule) && '' !== $rule)) !== count($rules)) {
+            || count(array_filter($rules, static fn(mixed $rule): bool => is_string($rule) && '' !== $rule)) !== count($rules)
+        ) {
             throw new InvalidArgumentException('Select a native Rector configuration with at least one rule; automatic initialization is disabled.');
         }
     }
