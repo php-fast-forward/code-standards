@@ -30,6 +30,10 @@ composer require --dev fast-forward/code-standards
 vendor/bin/code-standards check --all
 ```
 
+CPX can invoke the installed package directly with
+`cpx fast-forward/code-standards list`. The CLI resolves Composer dependencies
+from its installation, including when run outside the package checkout.
+
 The GitHub `v0` workflow channel and the Composer package are separate
 distribution mechanisms.
 
