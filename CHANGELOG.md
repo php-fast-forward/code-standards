@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-10-27
+
+### Added
+
+- Add explicitly enabled Magic Numbers and Rector workflow analyses with bounded native-report classification, advisory or blocking findings policies, always-visible summaries and failing operational errors. Expose native Rector JSON preview without granting semantic apply authority.
+
+  Declare the project's consumer reusable call in a PR-only workflow while preserving push and manual project-quality testing.
+
+  Keep Magic Numbers file selection independent from Rector's configured whole-project analysis.
+
+  ([#75](https://github.com/php-fast-forward/code-standards/pull/75))
+
+- Add explicit JSON check reports with native ECS findings, syntax results, incomplete-batch accounting and bounded nonstreaming capture; preserve default text and explicit fix behavior. ([#79](https://github.com/php-fast-forward/code-standards/pull/79))
+
+### Changed
+
+- Clarify the portable Code Standards skill with the supported command contract, complete optional-tool routes, native configuration examples and explicit installation ownership. ([#82](https://github.com/php-fast-forward/code-standards/pull/82))
+- Keep the adapted PHPDoc skill's original MIT copyright and permission notice in
+  its LICENSE file, removing the redundant separate NOTICE from the skill payload.
+
+  ([#80](https://github.com/php-fast-forward/code-standards/pull/80))
+
 ## [0.5.0] - 2026-10-27
 
 ### Added
@@ -188,6 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.6.0]: https://github.com/php-fast-forward/code-standards/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/php-fast-forward/code-standards/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/php-fast-forward/code-standards/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/php-fast-forward/code-standards/compare/v0.3.1...v0.3.2
