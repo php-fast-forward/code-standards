@@ -233,7 +233,7 @@ final class RectorTest extends TestCase
         $result = $this->cli(['--timeout=2']);
 
         self::assertSame(1, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
-        self::assertStringContainsString('exceeded the timeout', $result->getErrorOutput());
+        self::assertMatchesRegularExpression('~exceeded\s+the\s+timeout~', $result->getErrorOutput());
         self::assertSame($before, $this->ownedBytes());
         $preflight = file_get_contents($this->directory . '/preflight.path');
         self::assertStringContainsString('/code-standards-rector-', $preflight);

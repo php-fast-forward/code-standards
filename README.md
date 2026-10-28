@@ -19,7 +19,7 @@ type analysis, application tests and coverage belong to their respective tools.
 - Read-only syntax/style checking and explicitly requested local fixes.
 - Exact PR merge-base selection with binary-safe file paths.
 - Invocable Symfony Console commands composed with Fast Forward Container.
-- An unprivileged reusable workflow and a portable consumption skill.
+- An unprivileged reusable workflow with explicit optional analysis summaries and a portable consumption skill.
 
 ## 📦 Installation and requirements
 
@@ -55,6 +55,8 @@ for tool adoption and explicit formatting. Use the dedicated
 concise summaries, semantic contracts, useful tags and inherited documentation.
 Each payload includes its license and relative references; neither activates an
 agent or installs another tool automatically.
+See the [optional skill installation and lifecycle guide](resources/skills/fast-forward-code-standards/references/installation.md)
+for project discovery, trust and update ownership.
 
 For a reviewed source checkout:
 
@@ -70,6 +72,10 @@ composer test
 ## 🛠️ Usage
 
 `check` reports violations with a nonzero status and does not change source.
+Use `check --all --format=json` for an explicit single-document machine report,
+including native ECS findings, failure classification and remaining-work counts.
+See the [structured check contract](docs/structured-check.rst). Text is the
+default; `fix` uses text output.
 The default preset stores its ECS cache beneath the system temporary directory,
 in `fast-forward-code-standards/<SHA-256 of the executing checkout path>/<owned-policy fingerprint>`.
 The fingerprint includes the installed preset and owned checker paths and source
@@ -139,7 +145,7 @@ spaces, tabs or CRLF remain supported as explicit deviations from PSR-12/PER,
 not standards-compliant alternatives.
 Consumers can explicitly skip `FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff`
 through `withSkip()`; that native method replaces the skip list, so preserve any
-other intended preservation skips. See [the resolved preset](docs/resolved-preset.md).
+other intended preservation skips. See [the resolved preset](docs/resolved-preset.rst).
 The separate `MultilineConditionSpacingSniff` adapts the native wrapper to the
 same spacing service. Alternative colon syntax is preserved; the wrapper tests
 do not certify that syntax, or the complete preset, against every PSR/PER rule.
@@ -185,12 +191,23 @@ static analysis remain separate; no DevTools extraction parity is asserted.
 
 ## 🧰 API summary
 
+The reusable keeps optional analyses disabled by default. Enable
+`magic-numbers: true` or `rector: true` explicitly; Rector also requires
+`rector-config`. Each tool's `*-policy` accepts `report` or `fail` for verified
+findings. Operational failures always fail, including invalid/incomplete native
+reports. A visible summary distinguishes disabled, not executed, clean, findings
+and operational error, with native counts and available file/line information.
+See [optional workflow analyses](docs/optional-analysis.rst) for inputs, limits,
+trust boundaries and consumer examples. The selected workflow revision defines
+its input contract independently of Composer package constraints.
+
 | Entry point | Contract |
 | --- | --- |
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
 | `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
 | [`code-standards magic-numbers`](docs/magic-numbers.rst) | Analyze selected source with opt-in PHPMND, independently of check/fix; findings keep a nonzero status. |
+| `code-standards refactor --config=rector.php --format=json` | Emit native JSON for preview only; JSON cannot be combined with `--apply`. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
 | `help check` / `help fix` / `help refactor` / `help magic-numbers` | Show the installed Symfony option definitions. |
 

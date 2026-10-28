@@ -7,11 +7,19 @@ accept ``--directory`` and ``--config``. Symfony Console supports both
 ``--option=value`` and ``--option value``. See ``help check`` and ``help fix``
 for the installed command definitions.
 
+``check`` additionally accepts ``--format=text|json`` with text as the default.
+The explicit `structured check contract <../structured-check.rst>`__ documents
+single-document stdout, native findings, operational failures and partial coverage.
+``fix`` retains text output and does not accept this option.
+
 The separate opt-in ``refactor`` command uses an explicit native Rector
 configuration's source paths rather than this Git changed-file selection.
 See the `semantic refactoring contract <../rector.rst>`__ for required target
 PHP, optional native cache configuration, bounded timeouts and execution limits.
 Use ``help refactor`` for its installed options.
+Native JSON preview is explicit with ``--format=json``; it cannot be combined
+with ``--apply``. Human text remains the default. See the
+`optional workflow analyses <../optional-analysis.rst>`__ for CI policies and summaries.
 
 The opt-in ``magic-numbers`` command uses the same Git selection as ``check`` and
 ``fix``, independently of formatting. It accepts ``--all`` or ``--base``/``--head``

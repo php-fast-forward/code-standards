@@ -163,8 +163,8 @@ and `PER language-version exceptions <https://www.php-fig.org/per/coding-style/#
 Owned multiline boolean policy
 ------------------------------
 
-The normative braced wrapper follows PSR-12 sections 5.1 and 5.3 <https://www.php-fig.org/psr/psr-12/>__
-and PER Coding Style 3.0.0 sections 5.1 and 5.3 <https://github.com/php-fig/per-coding-style/blob/3.0.0/spec.md>__:
+The normative braced wrapper follows `PSR-12 sections 5.1 and 5.3 <https://www.php-fig.org/psr/psr-12/>`__
+and `PER Coding Style 3.0.0 sections 5.1 and 5.3 <https://github.com/php-fig/per-coding-style/blob/3.0.0/spec.md>`__:
 first expression on the next line, closing parenthesis on its own line, followed
 by the opening brace with one space (``) {``), or ``);`` for do-while. PER 3.0 requires
 broken boolean operators at the beginning. The default uses four-space

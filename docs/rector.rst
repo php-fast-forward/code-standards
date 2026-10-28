@@ -34,6 +34,35 @@ Preview passes native ``--dry-run``. Explicit apply performs one write pass and 
 
 ``--timeout`` accepts a positive whole number of seconds and defaults to 300. It bounds each Rector subprocess separately: preflight inventory, processing and post-apply verification receive the same limit. Fractional, negative, zero, nonfinite and overflowing values are rejected; no unlimited mode is exposed. The option changes this refactor invocation, leaving Git's 120-second captured transport default and formatting's 300-second default unchanged. Native Rector process/parallel-worker limits remain native configuration decisions.
 
+Native JSON preview
+-------------------
+
+``--format`` accepts ``text`` (the default) or ``json``. JSON selects Rector's
+native output formatter for preview, preserving its totals, errors,
+``changed_files`` and ``file_diffs`` without scraping or rewriting them.
+JSON and ``--apply`` are rejected together before evaluating configuration or
+starting native work: apply plus verification would otherwise concatenate two
+documents. Text apply and its verification keep the existing behavior.
+
+.. code-block:: console
+
+   php bin/code-standards refactor --config=rector.php --format=json > rector-preview.json
+
+The redirection writes only the explicitly selected report file. Native JSON
+has ``totals.changed_files`` and ``totals.errors``; available processing errors
+carry file/message/line fields. Proposed changes carry files and native diffs,
+not an AST-location field. The reusable does not infer source lines from diff
+text. Clean preview returns 0; native changes return 2; processing errors
+return 1. Controlled invocation errors can also return 2, so automation must
+validate the complete report together with its exit status. An unavailable or
+malformed report is an operational error, never a clean or advisory finding.
+
+This representation adds no inventory or processing invocation. Executable
+configuration and its stdout can still affect execution/report validity; JSON
+preview retains the trust and namespace boundaries below. The
+`optional workflow guide <optional-analysis.rst>`__ describes explicitly enabled
+Rector preview, report/fail policies and bounded summaries.
+
 Executable configuration and initialization boundary
 ----------------------------------------------------
 

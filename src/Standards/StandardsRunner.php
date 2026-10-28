@@ -58,6 +58,6 @@ final class StandardsRunner
      */
     private function formatterCommand(string $config, bool $fix, array $files): array
     {
-        return [PHP_BINARY, $this->worker, $this->autoload, $this->engine, $config, $fix ? '--fix' : '--check', '--', ...$files];
+        return EcsWorkerCommand::build($this->worker, $this->autoload, $this->engine, $config, $fix, $files);
     }
 }

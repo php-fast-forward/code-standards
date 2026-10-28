@@ -40,6 +40,9 @@ final readonly class RefactorCommand
 
         #[Option(description: 'Positive whole seconds per Rector subprocess, including preflight and verification.')]
         string $timeout = '300',
+
+        #[Option(description: 'Native output: text, or json for preview only; json cannot be combined with --apply.')]
+        string $format = 'text',
     ): int {
         try {
             if (null === $config) {
@@ -49,7 +52,7 @@ final readonly class RefactorCommand
             $seconds = $this->timeoutSeconds($timeout);
             $scope = $this->projects->resolve(true, null, null, $directory, $config);
 
-            return $this->rector->run($scope->directory, $scope->config, $apply, $seconds);
+            return $this->rector->run($scope->directory, $scope->config, $apply, $seconds, $format);
         } catch (ProcessFailedException $error) {
             $io->getErrorStyle()->error($error->getMessage());
 

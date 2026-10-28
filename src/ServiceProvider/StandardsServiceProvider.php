@@ -11,6 +11,8 @@ use FastForward\CodeStandards\Project\ProjectDirectoryResolver;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
 use FastForward\CodeStandards\Refactoring\RectorRunner;
 use FastForward\CodeStandards\Standards\StandardsRunner;
+use FastForward\CodeStandards\Standards\StructuredCheckRunner;
+use FastForward\CodeStandards\Standards\EcsJsonReportParser;
 use FastForward\Container\Factory\CallableFactory;
 use FastForward\Container\Factory\FactoryInterface;
 use FastForward\Container\Factory\InvokableFactory;
@@ -73,6 +75,14 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
                 dirname(__DIR__, 2) . '/bin/ecs-worker',
                 $this->vendorDirectory . '/autoload.php',
                 $this->engineDirectory,
+            ),
+            StructuredCheckRunner::class => new InvokableFactory(
+                StructuredCheckRunner::class,
+                ProcessRunner::class,
+                dirname(__DIR__, 2) . '/bin/ecs-worker',
+                $this->vendorDirectory . '/autoload.php',
+                $this->engineDirectory,
+                EcsJsonReportParser::class,
             ),
             RectorRunner::class => new InvokableFactory(
                 RectorRunner::class,
