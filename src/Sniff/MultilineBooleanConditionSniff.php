@@ -52,6 +52,8 @@ final readonly class MultilineBooleanConditionSniff implements Sniff
     }
 
     /**
+     * Finds the bounds of an existing multiline condition.
+     *
      * @param array<int, array<string, mixed>> $tokens Native PHPCS token records.
      * @return array{int, int}|null Validated parentheses, or no eligible condition.
      */
@@ -70,6 +72,8 @@ final readonly class MultilineBooleanConditionSniff implements Sniff
     }
 
     /**
+     * Locates the end of an opaque function or class expression.
+     *
      * @param array<int, array<string, mixed>> $tokens Native scopes, including arrow bodies without braces.
      * @return int|null The declaration's inclusive end; an unknown boundary is a visible failing diagnostic.
      */
@@ -86,6 +90,8 @@ final readonly class MultilineBooleanConditionSniff implements Sniff
     }
 
     /**
+     * Moves an inline boolean operator to its own continuation line.
+     *
      * @param array<int, array<string, mixed>> $tokens Original token positions remain stable within the fix changeset.
      * @param string $indent Existing statement indentation, retained before native continuation spacing.
      * @param int $depth Native parenthesis nesting relative to the condition opener.
@@ -111,7 +117,11 @@ final readonly class MultilineBooleanConditionSniff implements Sniff
         $file->fixer->endChangeset();
     }
 
-    /** @param array<int, array<string, mixed>> $tokens Statement-line whitespace, including literal tabs. */
+    /**
+     * Reads the statement's existing leading indentation.
+     *
+     * @param array<int, array<string, mixed>> $tokens Statement-line whitespace, including literal tabs.
+     */
     private function baseIndent(array $tokens, int $index): string
     {
         $start = $index;
