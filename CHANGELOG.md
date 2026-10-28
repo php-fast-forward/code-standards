@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-10-28
+
+### Added
+
+- Check this repository's root Composer metadata in CI and expose an opt-in `normalize-composer` boolean in the reusable check workflow. Reuse the reviewed installed tool in check mode, independent of changed PHP selection, without applying changes, maintaining locks or installing consumer packages. ([#86](https://github.com/php-fast-forward/code-standards/pull/86))
+- Allow same-repository data-only pull request checks to select existing Linux self-hosted runners through the reusable runs-on JSON input. Retain hosted defaults and route forks, executable ECS config and Rector to hosted Ubuntu before scheduling; validate the actual platform and execution boundary again before checkout. ([#86](https://github.com/php-fast-forward/code-standards/pull/86))
+
 ## [0.8.0] - 2026-10-28
 
 ### Added
@@ -240,6 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.9.0]: https://github.com/php-fast-forward/code-standards/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/php-fast-forward/code-standards/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/php-fast-forward/code-standards/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/php-fast-forward/code-standards/compare/v0.5.0...v0.6.0
