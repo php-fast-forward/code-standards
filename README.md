@@ -1,9 +1,10 @@
 # Fast Forward Code Standards
 
+![Dash, the Fast Forward fox, aligning source cards to illustrate consistent code style.](docs/_static/mascot-banner.png)
 [![PHP](https://img.shields.io/badge/php-%5E8.3-777BB4?logo=php&logoColor=white)](composer.json)
 [![Composer Package](https://img.shields.io/badge/composer-fast--forward%2Fcode--standards-F28D1A?logo=composer&logoColor=white)](https://packagist.org/packages/fast-forward/code-standards)
 [![Tests](https://img.shields.io/github/actions/workflow/status/php-fast-forward/code-standards/repository-ci.yml?branch=main&label=tests)](https://github.com/php-fast-forward/code-standards/actions/workflows/repository-ci.yml)
-[![Docs](https://img.shields.io/badge/docs-source-38BDF8)](docs/architecture.md)
+[![Docs](https://img.shields.io/badge/docs-source-38BDF8)](docs/architecture.rst)
 [![License](https://img.shields.io/github/license/php-fast-forward/code-standards?color=64748B)](LICENSE)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/php-fast-forward?color=EC4899)](https://github.com/sponsors/php-fast-forward)
 
@@ -42,11 +43,18 @@ Workflow guards and their contributor tests additionally require Bash and jq.
 Hosted Ubuntu runners provide both; the Composer library and CLI use the PHP
 dependencies declared in this package.
 
-Composer exposes the portable skill through `extra.skills.source` at
+Composer exposes the portable skills through `extra.skills.source` at
 `resources/skills`. `llm/skills` is an optional consumer integration; installation
 and activation are explicit. The development `check` script validates Composer
 metadata and the actual platform before running this package's tests and style
 check.
+
+Use the [Code Standards skill](resources/skills/fast-forward-code-standards/SKILL.md)
+for tool adoption and explicit formatting. Use the dedicated
+[PHPDoc skill](resources/skills/fast-forward-phpdoc/SKILL.md) to write or review
+concise summaries, semantic contracts, useful tags and inherited documentation.
+Each payload includes its license and relative references; neither activates an
+agent or installs another tool automatically.
 
 For a reviewed source checkout:
 
@@ -164,12 +172,12 @@ of another checkout's dependency graph.
 - Tools run in bounded batches and stop on failure. Syntax checks use `php -n -l`,
   so selected application sources are parsed without executing them.
 
-See [policy and differences](docs/policy.md), [workflow/ref adoption](docs/automation.md)
+Start with the [usage guide](docs/index.rst). See [policy and differences](docs/policy.rst), [workflow/ref adoption](docs/automation.rst)
 and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
-The [architecture decision](docs/architecture.md) defines library/tool dependency
+The [architecture decision](docs/architecture.rst) defines library/tool dependency
 directions and CPX/autoload limits.
 The formatter preserves descriptive PHPDoc and inherited documentation.
-The separate opt-in [`refactor` command](docs/rector.md) previews an explicit
+The separate opt-in [`refactor` command](docs/rector.rst) previews an explicit
 native Rector configuration and requires `--apply` for semantic writes. It is
 never invoked by formatting `check` or `fix`; target PHP and cache remain native
 consumer configuration decisions. Custom PHPDoc transformations and deeper
@@ -182,8 +190,9 @@ static analysis remain separate; no DevTools extraction parity is asserted.
 | `code-standards check` | Parse selected PHP and check style without changing source. |
 | `code-standards fix` | Explicitly format selected source, then verify; failures may leave partial changes. |
 | `code-standards refactor --config=rector.php` | Preview native semantic rules; only `--apply` permits writes, followed by verification. |
+| [`code-standards magic-numbers`](docs/magic-numbers.rst) | Analyze selected source with opt-in PHPMND, independently of check/fix; findings keep a nonzero status. |
 | `ECSConfig::configure(?callable $customize)` | Return the native ECS builder; apply the optional callback last. |
-| `help check` / `help fix` / `help refactor` | Show the installed Symfony option definitions. |
+| `help check` / `help fix` / `help refactor` / `help magic-numbers` | Show the installed Symfony option definitions. |
 
 Internal CLI services are implementation details. Supported configuration uses
 native ECS rule imports, skips and configured rules; there is no second DSL.
@@ -195,6 +204,7 @@ bin/code-standards                       CLI entrypoint
 config/ecs.php                          default native ECS configuration
 src/Config/ECSConfig.php                 reusable preset API
 resources/skills/fast-forward-code-standards/  canonical consumer skill
+resources/skills/fast-forward-phpdoc/     portable PHPDoc authoring skill
 resources/workflows/code-standards.yml   consumer workflow wrapper
 .github/actions/check/                  small check adapter
 docs/                                   architecture, policy and integration guides
@@ -211,6 +221,13 @@ publications and can advance across development minors; it is not a
 Composer package constraint.
 
 ## ❓ FAQ
+
+### Optional magic-number analysis
+
+Run `vendor/bin/code-standards magic-numbers --all` explicitly for PHPMND
+analysis. Add `--format=xml` for its native machine-readable report. The command
+uses the same tracked-file/Git ignore policy and does not run as part of
+`check` or `fix`. See [options, status and adoption guidance](docs/magic-numbers.rst).
 
 **Can I use this as a staged-only pre-commit check?**
 The CLI selects working-tree files from Git, not staged index blobs. Changed
@@ -257,7 +274,7 @@ changes or consumer rollout.
 - [Issues](https://github.com/php-fast-forward/code-standards/issues)
 - [Packagist](https://packagist.org/packages/fast-forward/code-standards)
 - [Composer package metadata](composer.json)
-- [Automation and consumer refs](docs/automation.md)
-- [Policy and differences](docs/policy.md)
+- [Automation and consumer refs](docs/automation.rst)
+- [Policy and differences](docs/policy.rst)
 - [Fast Forward Container](https://github.com/php-fast-forward/container)
 - [Changelog](https://github.com/php-fast-forward/changelog)

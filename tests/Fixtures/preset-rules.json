@@ -470,8 +470,7 @@
                     "arguments",
                     "array_destructuring",
                     "arrays",
-                    "match",
-                    "parameters"
+                    "match"
                 ]
             },
             "risky": false

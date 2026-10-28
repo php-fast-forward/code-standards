@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\ServiceProvider;
 
+use FastForward\CodeStandards\Analysis\MagicNumbersRunner;
 use FastForward\CodeStandards\Process\NativeProcessRunner;
 use FastForward\CodeStandards\Process\ProcessRunner;
+use FastForward\CodeStandards\Project\ProjectDirectoryResolver;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
 use FastForward\CodeStandards\Refactoring\RectorRunner;
 use FastForward\CodeStandards\Standards\StandardsRunner;
@@ -54,7 +56,17 @@ final readonly class StandardsServiceProvider implements ServiceProviderInterfac
         return [
             OutputInterface::class => new ServiceFactory($this->output),
             ProcessRunner::class => new CallableFactory($this->process(...)),
-            ProjectScopeResolver::class => new InvokableFactory(ProjectScopeResolver::class, dirname(__DIR__, 2) . '/config/ecs.php'),
+            ProjectScopeResolver::class => new InvokableFactory(
+                ProjectScopeResolver::class,
+                dirname(__DIR__, 2) . '/config/ecs.php',
+                ProjectDirectoryResolver::class,
+            ),
+            MagicNumbersRunner::class => new InvokableFactory(
+                MagicNumbersRunner::class,
+                ProcessRunner::class,
+                OutputInterface::class,
+                $this->vendorDirectory . '/povils/phpmnd/bin/phpmnd',
+            ),
             StandardsRunner::class => new InvokableFactory(
                 StandardsRunner::class,
                 ProcessRunner::class,

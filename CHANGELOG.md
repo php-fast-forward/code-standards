@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-27
+
+### Added
+
+- Add an explicit `magic-numbers` command backed by published PHPMND, separate from check/fix. Reuse exact Git/PHP selection and consumer ignores, preserve native policy overrides and exit status, and offer deterministic native XML without loading consumer autoload implicitly. Document opt-in adoption, baseline limits and bounded invocation size. ([#66](https://github.com/php-fast-forward/code-standards/pull/66))
+- Ship a dedicated portable PHPDoc authoring skill with concise interface-contract guidance, semantic-preservation checks and independent distribution references. ([#77](https://github.com/php-fast-forward/code-standards/pull/77))
+- Migrate the documentation to a single reStructuredText guide rendered by the existing PHP phpDocumentor tooling covering installation, commands, configuration, workflow trust and troubleshooting. ([#29](https://github.com/php-fast-forward/code-standards/pull/29))
+
+### Fixed
+
+- Document the process interfaces' normative execution, output and failure contracts, explain capture/run/result selection, and preserve descriptive PHPDoc and inheritance markers through qualified native formatting and refactoring. ([#74](https://github.com/php-fast-forward/code-standards/pull/74))
+
+## [0.4.0] - 2026-10-27
+
+### Added
+
+- Add development-only LLM Skills configuration for the bundled Code Standards skill, trusted Fast Forward Composer donors, Changelog and Dash artwork instructions. Keep documentation-authoring skills outside the synchronized sources. Introduce contextual Dash artwork for the repository README.
+
+  Centralize distribution exclusions in Git export-ignore attributes, preserving runtime configuration, the canonical consumer skill and the README artwork.
+
+  ([#33](https://github.com/php-fast-forward/code-standards/pull/33))
+
+- Add a separate opt-in native Rector command with dry-run by default, explicit
+  configuration and apply authority, empty-rule initialization protection and
+  post-apply verification. Require an explicit native consumer PHP target before
+  processing; keep target PHP, rules and caches consumer-owned;
+  formatting check/fix never invoke semantic refactoring.
+  Allow an explicit positive per-subprocess timeout without disabling bounds;
+  execution timeouts fail with status 1, while cache configuration remains optional.
+
+  ([#52](https://github.com/php-fast-forward/code-standards/pull/52))
+
+- Expose optional lossless process capture with exact native exit codes and separate
+  stdout/stderr bytes while preserving existing transport and provider contracts.
+
+  ([#67](https://github.com/php-fast-forward/code-standards/pull/67))
+
+- Add a reproducible, isolated Twig evaluation on the existing PHP matrix. Qualify
+  native Finder/Git intersection, explicit configuration overrides, grammar parsing,
+  deterministic native JSON and check/fix boundaries without adding a consumer CLI
+  profile or changing the package's runtime dependencies.
+
+  ([#68](https://github.com/php-fast-forward/code-standards/pull/68))
+
+### Changed
+
+- Composer(deps): bump symplify/easy-coding-standard from 13.3.8 to 13.3.9 in the composer-production group across 1 directory
+
+  Update dependencies: `symplify/easy-coding-standard`.
+
+  ([#57](https://github.com/php-fast-forward/code-standards/pull/57), @dependabot[bot])
+
+### Fixed
+
+- Avoid introducing PHP 8.0 parameter-list commas from the formatter's host runtime by default; preserve native consumer overrides and existing commas. ([#65](https://github.com/php-fast-forward/code-standards/pull/65))
+- Ship the portable consumer skill with its MIT license and a self-contained
+  check/fix procedure, qualifying optional refactoring against the installed CLI.
+
+  ([#70](https://github.com/php-fast-forward/code-standards/pull/70))
+
 ## [0.3.2] - 2026-10-27
 
 ### Fixed
@@ -128,6 +188,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.5.0]: https://github.com/php-fast-forward/code-standards/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/php-fast-forward/code-standards/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/php-fast-forward/code-standards/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/php-fast-forward/code-standards/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/php-fast-forward/code-standards/compare/v0.2.0...v0.3.0
