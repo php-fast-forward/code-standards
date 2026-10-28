@@ -98,7 +98,6 @@ final class ArchiveTest extends TestCase
             self::assertDoesNotMatchRegularExpression('~^(?:vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
         self::assertArrayNotHasKey('skills.json', $git);
-        self::assertArrayNotHasKey('.github/update-release-channels.md', $git);
         self::assertArrayNotHasKey('archive', json_decode(file_get_contents($this->directory . '/composer.json'), true, flags: JSON_THROW_ON_ERROR));
     }
 

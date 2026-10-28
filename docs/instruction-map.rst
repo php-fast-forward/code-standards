@@ -13,7 +13,7 @@ ordinary source and test directories retain the same maintenance instructions.
 
 No previous instruction tree is migrated. Rollback restores the root contract, its index and this map together through Git; it changes no host configuration.
 
-Release-channel migration retains this single-root hierarchy. The existing root
-index entry and channel guide now describe the release-event action and its
-activation gates; no child contracts are added. Rollback restores the helper,
-workflow, fixtures, guide and index together from Git.
+Release-channel changes retain this single-root hierarchy. The removed PHP
+entrypoint has no companion guide or index entry. The existing automation guide
+owns the release-event action and activation blockers; no child contracts are
+added. Rollback restores related workflow, tests and documentation together.

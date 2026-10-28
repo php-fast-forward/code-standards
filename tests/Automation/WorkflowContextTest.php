@@ -56,16 +56,11 @@ final class WorkflowContextTest extends TestCase
         }
     }
 
-    /** Accepts only full stable tags before invoking the external channel action. */
-    public function testChannelGuardRejectsPartialPrereleaseAndInjectedTags(): void
+    /** Exercises the actual inline release selection without contacting GitHub or mutating refs. */
+    public function testReleaseSelectionPreventsOlderMajorAndGlobalPromotions(): void
     {
-        $script = $this->guard('repository-release-channels.yml', 'Require a full stable release tag');
-        foreach (['v0.1.0', 'v0.99.3', 'v1.0.0'] as $tag) {
-            self::assertSame(0, $this->guardExitCode($script, ['RELEASE_TAG' => $tag]));
-        }
-        foreach (['v0', '0.1.0', 'v0.01.0', 'v1.0.0-rc1', 'v1.0.0+build', "v0.1.0\n", '$(exit 0)'] as $tag) {
-            self::assertNotSame(0, $this->guardExitCode($script, ['RELEASE_TAG' => $tag]));
-        }
+        $process = new Process(['node', '--test', __DIR__ . '/ReleaseChannelGuardTest.cjs'], timeout: 20);
+        self::assertSame(0, $process->run(), $process->getOutput() . $process->getErrorOutput());
     }
 
     /** Rejects malformed or ambiguous native identity protocols before emitting any checkout output. */
