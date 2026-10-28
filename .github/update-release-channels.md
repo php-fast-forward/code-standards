@@ -98,7 +98,9 @@ GitHub may replace a pending run; this is not a durable FIFO. Other writers and
 live tag/release changes can race it. The upstream mutation uses `force: true`
 for moving tags, without an old-OID lease/CAS, ancestry validation or atomic
 verification. These are explicit losses from the removed PHP branch updater,
-not guarantees provided by the action. Name reservation is an activation gate,
+not guarantees provided by the action. Major and latest promotions are separate
+API writes without a transaction; a failure can leave a partial result. Name
+reservation is an activation gate,
 not an action capability. Accept these differences explicitly before merge;
 retaining the old helper is the Git rollback if they are unacceptable.
 
