@@ -119,9 +119,17 @@ No key is installed by YAML.
 
 The common channel template selects ``release-channels`` and mints a revocable
 App token scoped to this repository with Contents/Workflows write. The ambient
-token has Contents read. App identity, installation, permissions and key validity
-in Code Standards are unverified and require separate approval. Changelog's App
-configuration does not authorize its use here.
+token has Contents read. Read-only organization metadata on 2026-10-28 identifies
+App 5513989 (``fast-forward-release-channels``), installation 176263242, with all
+organization repositories selected and Contents/Workflows write, PR read and
+Metadata read. This includes Code Standards; no installation or permission
+expansion is indicated by those metadata. Use in this repository still requires
+separate approval. Code Standards has no ``release-channels`` environment or
+available Actions secrets/variables in the checked metadata. No private key was
+read, and no key's validity or token minting was tested. Creating that environment
+and transmitting a key as ``app-private-key`` remain separately authorized actions;
+GitHub cannot recover an existing secret value for migration. Changelog's approval
+does not authorize that transmission or use here.
 
 The activation plan preserves branches, without branch-to-tag migration:
 
