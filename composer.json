@@ -1,8 +1,8 @@
 {
     "name": "fast-forward/code-standards",
-    "type": "library",
     "description": "Focused PHP style presets, syntax checks and changed-file automation.",
     "license": "MIT",
+    "type": "library",
     "keywords": [
         "code-standards",
         "code-style",
@@ -80,28 +80,28 @@
     "bin": [
         "bin/code-standards"
     ],
+    "config": {
+        "allow-plugins": {
+            "llm/skills": true
+        },
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "skills": {
+            "source": "resources/skills"
+        }
+    },
     "scripts": {
-        "test": "phpunit",
         "check": [
             "@composer validate --strict",
             "@composer check-platform-reqs",
             "@test",
             "@php bin/code-standards check --all"
         ],
-        "fix": "@php bin/code-standards fix --all"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "llm/skills": true
-        },
-        "platform": {
-            "php": "8.3.0"
-        }
-    },
-    "extra": {
-        "skills": {
-            "source": "resources/skills"
-        }
+        "fix": "@php bin/code-standards fix --all",
+        "test": "phpunit"
     }
 }

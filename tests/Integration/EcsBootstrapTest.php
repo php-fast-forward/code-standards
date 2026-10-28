@@ -45,11 +45,12 @@ final class EcsBootstrapTest extends TestCase
     public function testDefaultCheckAndFixDoNotImportConsumerAutoload(bool $tracked): void
     {
         $paths = ['src/a file.php', "src/tab\tline\nfile.php", 'src/-leading.php'];
-        $bad = "<?php\n\ndeclare(strict_types=1);\n\n\$value=1;\n";
+        $bad = "<?php\n\ndeclare(strict_types=1);\n\nfile_put_contents(__DIR__ . '/source-executed', 'unexpected');\n\$value=1;\n";
         foreach ($paths as $path) {
             $this->put($path, $bad);
         }
         $this->put('vendor/autoload.php', '<?php file_put_contents(__DIR__ . "/../executed", "unexpected");' . "\n");
+        $this->put('ecs.php', '<?php file_put_contents(__DIR__ . "/config-executed", "unexpected"); throw new RuntimeException("Implicit config executed");' . "\n");
         $this->git(['add', '--all']);
         if ($tracked) {
             $this->git(['add', '-f', '--', 'vendor/autoload.php']);
@@ -69,6 +70,8 @@ final class EcsBootstrapTest extends TestCase
         self::assertSame(0, $this->cli(['fix', '--all'])->getExitCode());
         self::assertSame($fixed, array_map(fn(string $path): string => file_get_contents($this->directory . '/' . $path), $paths));
         self::assertFileDoesNotExist($this->directory . '/executed');
+        self::assertFileDoesNotExist($this->directory . '/config-executed');
+        self::assertFileDoesNotExist($this->directory . '/src/source-executed');
         self::assertSame($lock, hash_file('sha256', $this->directory . '/composer.lock'));
         self::assertSame($autoload, hash_file('sha256', $this->directory . '/vendor/autoload.php'));
     }

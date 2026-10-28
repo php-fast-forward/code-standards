@@ -56,12 +56,16 @@ final class WorkflowTest extends TestCase
         }
     }
 
-    /** Keeps the checking adapter bound to unprivileged PR events and disposable hosted runners. */
-    public function testPrWorkflowHasNoPrivilegedEventSecretOrSelfHostedRunner(): void
+    /** Keeps forks hosted and permits explicit custom runners only for trusted same-repository PRs. */
+    public function testPrWorkflowHasNoPrivilegedEventSecretOrUntrustedCustomRunner(): void
     {
+        $public = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/code-standards.yml');
+        self::assertSame(2, substr_count($public, 'runs-on: ${{ inputs.runs-on }}'));
+        self::assertStringContainsString("default: '[\"ubuntu-latest\"]'", $public);
         foreach (['code-standards-check.yml', 'code-standards-analysis.yml'] as $file) {
             $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/' . $file);
-            self::assertStringContainsString('runs-on: ubuntu-latest', $workflow);
+            self::assertStringContainsString("default: '[\"ubuntu-latest\"]'", $workflow);
+            self::assertStringContainsString("github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository &&", $workflow);
             self::assertStringContainsString('[[ "$STANDARDS_EVENT" == pull_request ]] || exit 1', $workflow);
             self::assertStringContainsString('github.event.pull_request.head.sha', $workflow);
             self::assertStringContainsString('github.event.pull_request.base.sha', $workflow);
@@ -69,7 +73,16 @@ final class WorkflowTest extends TestCase
             self::assertStringContainsString('--no-dev --no-plugins --no-scripts', $workflow);
             self::assertStringNotContainsString('secrets.', $workflow);
             self::assertStringNotContainsString('contents: write', $workflow);
-            self::assertStringNotContainsString('self-hosted', $workflow);
+            self::assertStringContainsString('[[ -n "$STANDARDS_REPOSITORY" && "$STANDARDS_HEAD_REPOSITORY" == "$STANDARDS_REPOSITORY" ]] || exit 1', $workflow);
+            self::assertStringContainsString("startsWith(toJSON(fromJSON(inputs.runs-on)), '[')", $workflow);
+            self::assertStringContainsString("contains(fromJSON(inputs.runs-on), 'self-hosted')", $workflow);
+            self::assertStringContainsString("contains(fromJSON(inputs.runs-on), 'Linux')", $workflow);
+            self::assertStringContainsString('[[ "$STANDARDS_RUNNER_OS" == Linux ]] || exit 1', $workflow);
+            self::assertStringContainsString("id: runtime\n        shell: bash", $workflow);
+            self::assertStringContainsString(
+                'code-standards-check.yml' === $file ? "inputs.config == ''" : '!inputs.rector',
+                $workflow,
+            );
         }
     }
 }

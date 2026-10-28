@@ -34,7 +34,7 @@ final class MagicNumbersTest extends TestCase
     /** Native XML remains deterministic, round-trips binary-safe names and never executes implicit consumer bootstrap. */
     public function testNativeXmlPreservesPathsAndSourceWithoutConsumerAutoload(): void
     {
-        $source = '<?php if ($value === 42) { echo "found"; }' . "\n";
+        $source = '<?php file_put_contents(__DIR__ . "/source-executed", "unexpected"); if ($value === 42) { echo "found"; }' . "\n";
         $paths = ['src/a file.php', "src/new\nline.php", 'src/café.php'];
         foreach ($paths as $path) {
             $this->put($path, $source);
@@ -63,6 +63,7 @@ final class MagicNumbersTest extends TestCase
         }
         self::assertSame('synthetic lock', file_get_contents($this->directory . '/composer.lock'));
         self::assertFileDoesNotExist($this->directory . '/executed');
+        self::assertFileDoesNotExist($this->directory . '/src/source-executed');
     }
 
     /** Native numeric/context/function overrides remain explicit, with no formatter configuration involved. */

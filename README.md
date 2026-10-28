@@ -189,6 +189,15 @@ never invoked by formatting `check` or `fix`; target PHP and cache remain native
 consumer configuration decisions. Custom PHPDoc transformations and deeper
 static analysis remain separate; no DevTools extraction parity is asserted.
 
+The reusable workflow accepts `normalize-composer: true` to check the consumer's
+root Composer metadata without writes (default: `false`). This project's own CI
+enables the check. See [workflow behavior](docs/composer-normalization.rst).
+
+The optional `runs-on` JSON input selects an existing Linux self-hosted runner for
+same-repository data-only checks. Forks, executable ECS config and Rector use
+hosted Ubuntu. See
+[runner trust and requirements](docs/automation.rst).
+
 ## 🧰 API summary
 
 The reusable keeps optional analyses disabled by default. Enable

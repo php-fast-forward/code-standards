@@ -7,5 +7,6 @@ jobs:
   reusable-check:
     uses: ./.github/workflows/code-standards.yml
     with:
+      normalize-composer: true
       magic-numbers: true
       magic-numbers-policy: report
