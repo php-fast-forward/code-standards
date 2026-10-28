@@ -20,9 +20,11 @@ final readonly class WorkflowInput
         public string $rectorPolicy,
         public string $rectorConfig,
     ) {
-        if (!str_starts_with($directory, '/')
+        if (
+            !str_starts_with($directory, '/')
             || 1 !== preg_match('/\A[a-fA-F0-9]{40}\z/D', $base)
-            || 1 !== preg_match('/\A[a-fA-F0-9]{40}\z/D', $head)) {
+            || 1 !== preg_match('/\A[a-fA-F0-9]{40}\z/D', $head)
+        ) {
             throw new InvalidArgumentException('Optional analyses require an absolute consumer directory and exact base/head SHAs.');
         }
         foreach ([$magicNumbersPolicy, $rectorPolicy] as $policy) {
