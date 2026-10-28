@@ -83,3 +83,20 @@ supported by that ref.
 Keep `pull_request`, read-only contents and hosted runners. No secrets/inherit,
 privileged target events, implicit plugin installation or automatic fixes.
 Required-check settings and rollout across consumers are separately authorized.
+
+## Multiline conditions
+
+The preset uses native PSR-12 wrapper layout for braced multiline `if`, `elseif`,
+`while` and `do-while` conditions, with PER 3.0 leading boolean operators. An owned
+whitespace rule additionally puts each symbolic `&&`/`||` on its own line inside
+those conditions, including grouped expressions, arguments and indexes. Function,
+arrow and anonymous-class declarations remain opaque; single-line conditions
+retain native policy. The operator-per-line requirement is a project extension.
+
+The default uses four spaces/LF. Native `withSpacing()` overrides for two spaces,
+tabs or CRLF remain explicit deviations from PSR/PER. A consumer can select native
+`withSkip()` entries for `MultilineBooleanConditionSniff` and
+`MultilineConditionSpacingSniff`; preserve other intentional skips because that
+method replaces the list. The default temporary cache includes the installed
+preset/checker paths and bytes, so an owned-rule change cannot reuse an older
+passing result. Explicit cache overrides remain authoritative.

@@ -77,8 +77,10 @@ including native ECS findings, failure classification and remaining-work counts.
 See the [structured check contract](docs/structured-check.rst). Text is the
 default; `fix` uses text output.
 The default preset stores its ECS cache beneath the system temporary directory,
-in `fast-forward-code-standards/<SHA-256 of the executing checkout path>`.
-Different checkouts cannot invalidate each other's cache. Native
+in `fast-forward-code-standards/<SHA-256 of the executing checkout path>/<owned-policy fingerprint>`.
+The fingerprint includes the installed preset and owned checker paths and source
+bytes. Different checkouts cannot invalidate each other's cache, and a changed
+owned rule cannot reuse an earlier passing result. Native
 `withCache()` overrides remain supported and apply last; share cache directories
 only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
@@ -127,6 +129,26 @@ preset, does not discover or overwrite consumer configuration, and never runs
 both ECS and a competing PHP-CS-Fixer pass. Standalone ECS users may import the
 same library preset and set their own paths. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
+
+For braced multiline `if`, `elseif`, `while` and `do-while` conditions, the
+native PSR-12 wrapper places the first expression on the next line and the
+closing parenthesis on its own line (`) {`, or `);` for do-while). The native
+leading-operator policy follows PER 3.0. An owned whitespace policy additionally
+puts each symbolic `&&` and `||` on its own line in those multiline conditions.
+The policy includes grouped expressions, call arguments
+and array indexes within that condition; function, arrow and anonymous-class
+declarations remain opaque. Single-line conditions and other expression contexts
+retain their native rules. Splitting every operator, including nested expression
+parts, is a project extension rather than an additional PER requirement.
+The default is four spaces and LF. Native ECS `withSpacing()` overrides for two
+spaces, tabs or CRLF remain supported as explicit deviations from PSR-12/PER,
+not standards-compliant alternatives.
+Consumers can explicitly skip `FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff`
+through `withSkip()`; that native method replaces the skip list, so preserve any
+other intended preservation skips. See [the resolved preset](docs/resolved-preset.rst).
+The separate `MultilineConditionSpacingSniff` adapts the native wrapper to the
+same spacing service. Alternative colon syntax is preserved; the wrapper tests
+do not certify that syntax, or the complete preset, against every PSR/PER rule.
 
 The formatter worker uses ECS's public factory and command APIs with this tool's
 own Composer installation. An isolated tool does not implicitly load the target

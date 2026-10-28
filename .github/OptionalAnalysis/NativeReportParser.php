@@ -135,8 +135,11 @@ final class NativeReportParser
 
                 continue;
             }
-            if (XML_COMMENT_NODE === $child->nodeType
-                || (XML_TEXT_NODE === $child->nodeType && '' === trim($child->textContent))) {
+            if (
+                XML_COMMENT_NODE === $child->nodeType
+                || (XML_TEXT_NODE === $child->nodeType
+                    && '' === trim($child->textContent))
+            ) {
                 continue;
             }
 
@@ -187,10 +190,15 @@ final class NativeReportParser
     {
         $diagnostics = [];
         foreach ($errors as $error) {
-            if (!is_array($error)
-                || (isset($error['file']) && !is_string($error['file']))
+            if (
+                !is_array($error)
+                || (isset($error['file'])
+                    && !is_string($error['file']))
                 || !is_string($error['message'] ?? null)
-                || (isset($error['line']) && (!is_int($error['line']) || $error['line'] < 1))) {
+                || (isset($error['line'])
+                    && (!is_int($error['line'])
+                        || $error['line'] < 1))
+            ) {
                 throw new InvalidArgumentException('Rector JSON error location is invalid.');
             }
             $diagnostics[] = ['file' => $error['file'] ?? '[unavailable]', 'line' => $error['line'] ?? null, 'message' => $error['message']];

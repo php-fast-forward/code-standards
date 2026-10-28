@@ -29,11 +29,16 @@ final readonly class AnalysisResult
         public string $details = '',
         public ?int $nativeExit = null,
     ) {
-        if (!in_array($tool, ['Magic Numbers', 'Rector'], true)
+        if (
+            !in_array($tool, ['Magic Numbers', 'Rector'], true)
             || !in_array($status, ['disabled', 'not-executed', 'clean', 'findings', 'operational-error'], true)
-            || (null !== $selectedCount && $selectedCount < 0)
-            || (null !== $findingCount && $findingCount < 0)
-            || (null !== $nativeExit && $nativeExit < 0)) {
+            || (null !== $selectedCount
+                && $selectedCount < 0)
+            || (null !== $findingCount
+                && $findingCount < 0)
+            || (null !== $nativeExit
+                && $nativeExit < 0)
+        ) {
             throw new InvalidArgumentException('Invalid optional-analysis result.');
         }
     }

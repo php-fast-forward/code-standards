@@ -1,9 +1,9 @@
 Resolved PER preset
 ===================
 
-Snapshot: ECS 13.3.9 from this repository’s Composer lock. The compiled container contains 63 distinct PHP-CS-Fixer rules, all reporting ``isRisky() === false``. This is the actual Code Standards preset, not a resolved DevTools or CoiSA preset.
+Snapshot: ECS 13.3.9 from this repository’s Composer lock. The compiled container contains 63 distinct PHP-CS-Fixer rules, all reporting ``isRisky() === false``, and two allowlisted PHPCS Sniffs: 65 checkers in total. This is the actual Code Standards preset, not a resolved DevTools or CoiSA preset.
 
-The fixture ``tests/Fixtures/preset-rules.json`` records the installed ECS version and exact reference, fully qualified classes, explicit configuration and risky classification after container boot/skip passes. Unspecified options retain the fixer's defaults at that exact version; the table does not expand those defaults. ``tests/Config/PresetTest.php`` rebuilds that configuration and compares it exactly. It reads this installation's Composer metadata and verifies every fixer's source path inside that exact ECS package. This avoids querying the global ``InstalledVersions`` registry after the bundled ECS autoloader has registered its own graph: locally that changed the reported ECS version from ``13.3.8`` to ``dev-main``. Installation separation alone does not isolate that global registry. Dependency updates must review any resulting rule/configuration change before updating the fixture; do not regenerate it merely to silence a failure.
+The fixture ``tests/Fixtures/preset-rules.json`` records the installed ECS version and exact reference, fully qualified classes, explicit configuration and risky classification after container boot/skip passes. Unspecified options retain the fixer's defaults at that exact version; the table does not expand those defaults. ``tests/Config/PresetTest.php`` rebuilds that configuration and compares it exactly. It reads this installation's Composer metadata and verifies every fixer's source path inside that exact ECS package. The two Sniffs have exact class/source allowlists; an unknown default Sniff fails the inventory test. PHPCS has no native ``isRisky()`` contract: the snapshot records ``risky: null``, checker ``type: sniff`` and reviewed classifications ``owned-whitespace-only`` and ``native-psr12-whitespace-adapter``. Fixer entries retain native risk checks. This avoids querying the global ``InstalledVersions`` registry after the bundled ECS autoloader has registered its own graph: locally that changed the reported ECS version from ``13.3.8`` to ``dev-main``. Installation separation alone does not isolate that global registry. Dependency updates must review any resulting rule/configuration change before updating the fixture; do not regenerate it merely to silence a failure.
 
 +---------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Rule                                        | Explicit effective configuration                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -159,6 +159,68 @@ the open compatibility and policy work in issues #2 and #5.
 Sources: `PHP parameter syntax <https://www.php.net/manual/en/functions.arguments.php>`_,
 `native fixer options <https://cs.symfony.com/doc/rules/control_structure/trailing_comma_in_multiline.html>`_,
 and `PER language-version exceptions <https://www.php-fig.org/per/coding-style/#previous-language-versions>`_.
+
+Owned multiline boolean policy
+------------------------------
+
+The normative braced wrapper follows `PSR-12 sections 5.1 and 5.3 <https://www.php-fig.org/psr/psr-12/>`__
+and `PER Coding Style 3.0.0 sections 5.1 and 5.3 <https://github.com/php-fig/per-coding-style/blob/3.0.0/spec.md>`__:
+first expression on the next line, closing parenthesis on its own line, followed
+by the opening brace with one space (``) {``), or ``);`` for do-while. PER 3.0 requires
+broken boolean operators at the beginning. The default uses four-space
+indentation and LF. Two-space/tab/CRLF native overrides are intentional deviations
+from those standards, not alternative compliant defaults.
+
+``MultilineConditionSpacingSniff`` extends PHPCS's public PSR-12
+``ControlStructureSpacingSniff``, restricting registration to if/elseif/while
+(including do-while). It delegates token interpretation and fixes to that native
+implementation, deriving indent width from injected ECS spacing and the public
+PHPCS File tab-width configuration. No structural diagnostic is skipped.
+The normative golden cases use braced forms. Alternative colon syntax remains
+unchanged apart from whitespace; its compatibility fixture does not certify
+PSR/PER compliance or authorize a semantic conversion into braces.
+
+The PHPCS 4.0.4 implementation excludes text/comment/
+heredoc tokens from its indentation loop. ECS processes Sniffs before Fixers:
+after a newly wrapped first literal is left at column one, native
+``StatementIndentationFixer`` can indent that literal and also amplify already
+correct continuation offsets. The adapter's compatibility guard uses only
+public File metadata and Fixer APIs to add padding **before** that first token,
+when it is unindented and the native implementation has not already padded it.
+It neither edits literal/comment contents nor realigns existing continuations.
+The quoted ``refs/`` guard has exact golden output across native spacing options;
+tests also preserve a legitimate stable extra offset. Adapter indentation is
+controlled by ``withSpacing()``, not a second consumer option for its inherited
+managed ``indent`` property.
+
+``FastForward\CodeStandards\Sniff\MultilineBooleanConditionSniff`` participates in
+the existing ECS PHPCS pass. It uses the installed PHPCS public token/scope
+metadata, not another parser, dependency or formatter pass. It changes whitespace
+only and reports a failing diagnostic if a required native expression boundary
+cannot be established. Its source is ``src/Sniff/MultilineBooleanConditionSniff.php``.
+
+An ``if``, ``elseif``, ``while`` or ``do-while`` condition whose opening and closing
+parentheses occupy different lines must put each symbolic ``&&`` and ``||`` on its
+own line. This is a project extension beyond the standards' placement rule and
+includes operators inside grouped expressions, call arguments and
+array indexes. Function/closure/arrow and anonymous-class declarations are
+opaque; separately nested conditional statements are checked independently.
+Single-line conditions, expressions outside those conditions and keyword
+``and``/``or``/``xor`` retain their native policy. This extension does not claim that
+PER requires one boolean part per line.
+
+The native ECS spacing service supplies two/four-space or tab indentation and
+LF/CRLF endings after the consumer callback. Native ``withSkip()`` can disable the
+owned checker explicitly; it replaces the skip list, so callers preserve their
+other intentional skips. The default cache fingerprints all three installed policy
+source paths and bytes (preset plus both Sniffs), in addition to checkout isolation. An explicit
+``withCache()`` override remains authoritative.
+
+CLI regressions cover the reported mixed-line guard, groups/calls/indexes,
+declaration boundaries, comments/PHPDoc/strings, native overrides, no-write check,
+token-content equivalence and second-pass idempotence. A disposable installation
+test changes only its owned checker source and verifies that unchanged consumer
+source is rechecked without deleting another checkout's cache.
 
 Golden fixtures prove formatting, check-without-writes, exact fixed bytes and second-pass idempotence. Preservation covers author/package/typed-parameter/ void-return documentation, property visibility, mutable DateTime construction and the existing copyright/header position/year. No fixture executes source.
 
