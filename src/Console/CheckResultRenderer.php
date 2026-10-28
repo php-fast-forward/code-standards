@@ -19,18 +19,24 @@ final readonly class CheckResultRenderer
         try {
             $json = json_encode($result->toArray(), $flags);
         } catch (JsonException) {
-            $result = new CheckResult('operational-error', 1, false, $result->selected, $result->syntaxChecked, $result->styleSubmitted, errors: [
-                ['phase' => 'encoding', 'message' => 'Check output contains bytes that cannot be represented as JSON.'],
-            ]);
+            $result = new CheckResult(
+                status: 'operational-error',
+                exitCode: 1,
+                complete: false,
+                selected: $result->selected,
+                syntaxChecked: $result->syntaxChecked,
+                styleSubmitted: $result->styleSubmitted,
+                errors: [['phase' => 'encoding', 'message' => 'Check output contains bytes that cannot be represented as JSON.']],
+            );
             $json = json_encode($result->toArray(), $flags);
         }
         if ([] !== $result->errors) {
-            $io->getErrorStyle()->writeln('Code Standards check did not complete successfully.', OutputInterface::OUTPUT_RAW);
+            $io->getErrorStyle()->writeln(messages: 'Code Standards check did not complete successfully.', type: OutputInterface::OUTPUT_RAW);
         }
         if ('' !== $result->stderr) {
-            $io->getErrorStyle()->write($result->stderr, false, OutputInterface::OUTPUT_RAW);
+            $io->getErrorStyle()->write(messages: $result->stderr, newline: false, type: OutputInterface::OUTPUT_RAW);
         }
-        $io->writeln($json, OutputInterface::OUTPUT_RAW);
+        $io->writeln(messages: $json, type: OutputInterface::OUTPUT_RAW);
 
         return $result->exitCode;
     }

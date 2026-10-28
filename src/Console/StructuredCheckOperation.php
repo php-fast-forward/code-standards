@@ -37,11 +37,17 @@ final readonly class StructuredCheckOperation
             $result = $this->standards->run($scope->directory, $files, $scope->config);
         } catch (Throwable $exception) {
             $exitCode = $exception instanceof InvalidArgumentException || $exception instanceof RuntimeException ? 2 : 1;
-            $result = new CheckResult('operational-error', $exitCode, false, 0, 0, 0, errors: [
-                ['phase' => 'selection', 'message' => $exception->getMessage()],
-            ]);
+            $result = new CheckResult(
+                status: 'operational-error',
+                exitCode: $exitCode,
+                complete: false,
+                selected: 0,
+                syntaxChecked: 0,
+                styleSubmitted: 0,
+                errors: [['phase' => 'selection', 'message' => $exception->getMessage()]],
+            );
         }
 
-        return $this->renderer->render($result, $io, $pretty);
+        return $this->renderer->render(result: $result, io: $io, pretty: $pretty);
     }
 }

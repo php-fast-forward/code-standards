@@ -17,9 +17,16 @@ final class CheckResultRendererTest extends TestCase
     /** Both representations retain exact diagnostic data even when console decoration is enabled. */
     public function testRepresentationsPreserveTheContractWithoutAnsiOrConsoleMarkup(): void
     {
-        $result = new CheckResult('syntax-failed', 255, false, 2, 1, 0, errors: [
-            ['phase' => 'syntax', 'file' => "/space and\nnewline.php", 'stdout' => "\033[31m<error>native</error>\033[0m"],
-        ], stderr: 'native stderr');
+        $result = new CheckResult(
+            status: 'syntax-failed',
+            exitCode: 255,
+            complete: false,
+            selected: 2,
+            syntaxChecked: 1,
+            styleSubmitted: 0,
+            errors: [['phase' => 'syntax', 'file' => "/space and\nnewline.php", 'stdout' => "\033[31m<error>native</error>\033[0m"]],
+            stderr: 'native stderr',
+        );
 
         foreach ([false, true] as $pretty) {
             [$status, $output] = $this->render($result, $pretty);
@@ -36,7 +43,7 @@ final class CheckResultRendererTest extends TestCase
     /** Invalid UTF-8 produces the same honest encoding failure in compact and indented form. */
     public function testEncodingFailureRetainsCoverageAndUsesTheSelectedRepresentation(): void
     {
-        $result = new CheckResult('findings', 2, true, 2, 2, 2, stderr: "invalid \xff");
+        $result = new CheckResult(status: 'findings', exitCode: 2, complete: true, selected: 2, syntaxChecked: 2, styleSubmitted: 2, stderr: "invalid \xff");
         foreach ([false, true] as $pretty) {
             [$status, $output] = $this->render($result, $pretty);
             $report = json_decode($output, true, flags: JSON_THROW_ON_ERROR);
@@ -60,7 +67,7 @@ final class CheckResultRendererTest extends TestCase
             ->onlyMethods(['getErrorStyle'])
             ->getMock();
         $io->expects(self::atLeastOnce())->method('getErrorStyle')->willReturn(new SymfonyStyle($input, new BufferedOutput()));
-        $status = (new CheckResultRenderer())->render($result, $io, $pretty);
+        $status = (new CheckResultRenderer())->render(result: $result, io: $io, pretty: $pretty);
 
         return [$status, $output->fetch()];
     }

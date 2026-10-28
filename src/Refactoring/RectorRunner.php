@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Refactoring;
 
+use FastForward\CodeStandards\Output\OutputFormat;
 use FastForward\CodeStandards\Process\ProcessRunner;
 use InvalidArgumentException;
 use JsonException;
@@ -27,18 +28,19 @@ final readonly class RectorRunner
      *
      * @return int Native process status, including 2 when dry-run proposes changes.
      */
-    public function run(string $directory, string $config, bool $apply, float $timeout = 300, string $format = 'text'): int
+    public function run(string $directory, string $config, bool $apply, float $timeout = 300, string $format = OutputFormat::Text->value): int
     {
-        if (!in_array($format, ['text', 'json'], true)) {
+        $outputFormat = OutputFormat::tryFrom($format);
+        if (!in_array(needle: $outputFormat, haystack: [OutputFormat::Text, OutputFormat::Json], strict: true)) {
             throw new InvalidArgumentException('Rector format must be text or json.');
         }
-        if ($apply && 'json' === $format) {
+        if ($apply && OutputFormat::Json === $outputFormat) {
             throw new InvalidArgumentException('JSON output is preview-only; use text output for explicit --apply.');
         }
 
         $this->assertRules($directory, $config, $timeout);
         $check = [PHP_BINARY, $this->rector, 'process', '--config=' . $config, '--no-progress-bar'];
-        if ('json' === $format) {
+        if (OutputFormat::Json === $outputFormat) {
             $check[] = '--output-format=json';
         }
         $status = $this->process->run($apply ? $check : [...$check, '--dry-run'], $directory, $timeout);

@@ -78,6 +78,13 @@ its native Rector preview report and native exit codes; it does not acquire
 ``json-pretty`` or a check schema. Semantic changes still require explicit
 configuration and ``--apply`` with text output.
 
+The backed ``Output\OutputFormat`` enum centralizes the public presentation
+identifiers ``text``, ``json`` and ``json-pretty``. Each command keeps its own
+supported subset and schema. Native inventory formats and worker protocols
+retain their separate meaning. Local ``CheckResult`` construction uses named
+arguments for every supplied field so that coverage counts and completion
+flags remain explicit.
+
 Native transport
 ----------------
 

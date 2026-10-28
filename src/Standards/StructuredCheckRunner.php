@@ -29,7 +29,7 @@ final readonly class StructuredCheckRunner
     public function run(string $directory, array $files, string $config): CheckResult
     {
         if ([] === $files) {
-            return new CheckResult('clean', 0, true, 0, 0, 0);
+            return new CheckResult(status: 'clean', exitCode: 0, complete: true, selected: 0, syntaxChecked: 0, styleSubmitted: 0);
         }
 
         $syntaxChecked = $styleSubmitted = 0;
@@ -46,9 +46,16 @@ final readonly class StructuredCheckRunner
                 $stderr = $this->appendDiagnostic($stderr, $result->stderr);
                 ++$syntaxChecked;
                 if (0 !== $result->exitCode) {
-                    return new CheckResult('syntax-failed', $result->exitCode, false, count($files), $syntaxChecked, 0, errors: [
-                        ['phase' => 'syntax', 'file' => $file, 'stdout' => $result->stdout, 'stderr' => $result->stderr],
-                    ], stderr: $stderr);
+                    return new CheckResult(
+                        status: 'syntax-failed',
+                        exitCode: $result->exitCode,
+                        complete: false,
+                        selected: count($files),
+                        syntaxChecked: $syntaxChecked,
+                        styleSubmitted: 0,
+                        errors: [['phase' => 'syntax', 'file' => $file, 'stdout' => $result->stdout, 'stderr' => $result->stderr]],
+                        stderr: $stderr,
+                    );
                 }
             }
 
@@ -61,15 +68,40 @@ final readonly class StructuredCheckRunner
                 $styleSubmitted += count($batch);
                 $findings += $report['files'];
                 if (0 !== $result->exitCode) {
-                    return new CheckResult('findings', 2, count($files) === $styleSubmitted, count($files), $syntaxChecked, $styleSubmitted, $findings, stderr: $stderr);
+                    return new CheckResult(
+                        status: 'findings',
+                        exitCode: 2,
+                        complete: count($files) === $styleSubmitted,
+                        selected: count($files),
+                        syntaxChecked: $syntaxChecked,
+                        styleSubmitted: $styleSubmitted,
+                        files: $findings,
+                        stderr: $stderr,
+                    );
                 }
             }
 
-            return new CheckResult('clean', 0, true, count($files), $syntaxChecked, $styleSubmitted, stderr: $stderr);
+            return new CheckResult(
+                status: 'clean',
+                exitCode: 0,
+                complete: true,
+                selected: count($files),
+                syntaxChecked: $syntaxChecked,
+                styleSubmitted: $styleSubmitted,
+                stderr: $stderr,
+            );
         } catch (Throwable $exception) {
-            return new CheckResult('operational-error', 1, false, count($files), $syntaxChecked, $styleSubmitted, $findings, [
-                ['phase' => $phase, 'message' => $exception->getMessage()],
-            ], $stderr);
+            return new CheckResult(
+                status: 'operational-error',
+                exitCode: 1,
+                complete: false,
+                selected: count($files),
+                syntaxChecked: $syntaxChecked,
+                styleSubmitted: $styleSubmitted,
+                files: $findings,
+                errors: [['phase' => $phase, 'message' => $exception->getMessage()]],
+                stderr: $stderr,
+            );
         }
     }
 

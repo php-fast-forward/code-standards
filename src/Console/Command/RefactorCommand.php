@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Console\Command;
 
+use FastForward\CodeStandards\Output\OutputFormat;
 use FastForward\CodeStandards\Project\ProjectScopeResolver;
 use FastForward\CodeStandards\Refactoring\RectorRunner;
 use InvalidArgumentException;
@@ -42,7 +43,7 @@ final readonly class RefactorCommand
         string $timeout = '300',
 
         #[Option(description: 'Native output: text, or json for preview only; json cannot be combined with --apply.')]
-        string $format = 'text',
+        string $format = OutputFormat::Text->value,
     ): int {
         try {
             if (null === $config) {

@@ -7,6 +7,7 @@ namespace FastForward\CodeStandards\Console\Command;
 use FastForward\CodeStandards\Console\Input\ScanInput;
 use FastForward\CodeStandards\Console\StandardsOperation;
 use FastForward\CodeStandards\Console\StructuredCheckOperation;
+use FastForward\CodeStandards\Output\OutputFormat;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\MapInput;
 use Symfony\Component\Console\Attribute\Option;
@@ -30,17 +31,18 @@ final readonly class CheckCommand
         ScanInput $settings,
 
         #[Option(description: 'Output format: text, json (compact), or json-pretty (indented). JSON is one nonstreaming check report.')]
-        string $format = 'text',
+        string $format = OutputFormat::Text->value,
     ): int {
-        if (in_array($format, ['json', 'json-pretty'], true)) {
-            return $this->structured->run($settings, $io, 'json-pretty' === $format);
-        }
-        if ('text' !== $format) {
+        $outputFormat = OutputFormat::tryFrom($format);
+        if (null === $outputFormat) {
             $io->getErrorStyle()->error('Check format must be text, json or json-pretty.');
 
             return 2;
         }
+        if (OutputFormat::Text !== $outputFormat) {
+            return $this->structured->run(settings: $settings, io: $io, pretty: OutputFormat::JsonPretty === $outputFormat);
+        }
 
-        return $this->operation->run($settings, $io, false);
+        return $this->operation->run(settings: $settings, io: $io, fix: false);
     }
 }
