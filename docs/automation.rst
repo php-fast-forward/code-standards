@@ -82,9 +82,9 @@ returning actual branch names for branch queries. Alone, it force-downgrades
 after 1.x. Its latest ref is hardcoded as a tag in branch mode.
 
 A short inline ``github-script`` selection step compensates for that behavior.
-It re-reads the release, checks published/non-draft/non-prerelease state, binds
-its full stable tag to the event SHA, paginates tags and compares numeric version
-components. The App token and action run only when that release is the newest
+It parses concrete stable tags, paginates the tag catalog and compares their
+three numeric version components. An incomparable event version fails closed;
+this parsing serves comparison rather than a second publication-format validator. The App token and action run only when that release is the newest
 stable full tag of its major. ``publish_latest_tag`` is true only when it is also
 the newest stable full tag globally. Therefore editing an older 0.x or 1.x release
 performs no writes; a later 0.x release after 1.x can advance v0 while leaving
@@ -98,8 +98,10 @@ such as v0/v1/latest are ignored by the stable-version catalog. An unpublished
 full version tag can conservatively block promotion; this is a tag catalog, not
 a complete published-release catalog. Prerelease lifecycle support is not added.
 
-This is not equivalent to the removed CAS updater. Selection and forced mutation
-are separate operations. Concurrent tag edits/deletions or another writer can
+This is not equivalent to the removed CAS updater. The guard trusts the Changelog-only publication contract and real release event;
+it does not re-read live release state or rebind the event SHA to the tag. Exclusive
+publication and immutable fulltags are activation requirements, not protections
+already installed by this PR. Selection and forced mutation are separate operations. Concurrent tag edits/deletions or another writer can
 race that interval; no old-OID lease, ancestry check or resulting-ref readback is
 provided. The current branch is not classified as a known release; approved initial
 state and native branch protections remain separate requirements. Major/latest
