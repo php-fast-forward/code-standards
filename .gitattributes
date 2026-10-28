@@ -13,9 +13,6 @@
 # Contributor-only configuration and test infrastructure.
 /tests/ export-ignore
 /.github/workflows/ export-ignore
-/.github/ReleaseChannelUpdater.php export-ignore
-/.github/update-release-channels.php export-ignore
-/.github/update-release-channels.md export-ignore
 /AGENTS.md export-ignore
 /skills.json export-ignore
 /phpunit.xml export-ignore

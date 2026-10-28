@@ -33,10 +33,13 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('run: composer check', $quality);
     }
 
-    /** Keeps each external Action on its own verified published major channel. */
+    /** Keeps external Actions on verified published channels or reviewed release commits. */
     public function testExternalActionsUsePublishedMajorChannels(): void
     {
         $references = [
+            'Actions-R-Us/actions-tagger@v2',
+            'actions/create-github-app-token@v3.3.0',
+            'actions/github-script@v8',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
@@ -54,6 +57,33 @@ final class WorkflowTest extends TestCase
                 }
             }
         }
+    }
+
+    /** Reserves promotion for genuine published/edited stable release events with one serialized writer. */
+    public function testReleaseChannelsUseTheMajorActionOnPublishedAndEditedReleases(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $workflow = file_get_contents($root . '/.github/workflows/repository-release-channels.yml');
+        self::assertStringContainsString("  release:\n    types: [published, edited]", $workflow);
+        self::assertStringNotContainsString('workflow_call:', $workflow);
+        self::assertStringNotContainsString('workflow_dispatch:', $workflow);
+        self::assertStringContainsString("github.repository == 'php-fast-forward/code-standards'", $workflow);
+        self::assertStringContainsString('github.event.release.draft == false && github.event.release.prerelease == false', $workflow);
+        self::assertStringContainsString('group: release-channels-${{ github.repository }}', $workflow);
+        self::assertStringContainsString('cancel-in-progress: false', $workflow);
+        self::assertStringContainsString("prefer_branch_releases: 'true'", $workflow);
+        self::assertStringContainsString('publish_latest_tag: ${{ steps.release.outputs.latest }}', $workflow);
+        self::assertSame(2, substr_count($workflow, "if: steps.release.outputs.promote == 'true'"));
+        self::assertStringContainsString('contents: read', $workflow);
+        self::assertStringContainsString('environment: release-channels', $workflow);
+        self::assertStringContainsString('repositories: code-standards', $workflow);
+        self::assertStringContainsString('token: ${{ steps.channel-app.outputs.token }}', $workflow);
+        self::assertStringContainsString('private-key: ${{ secrets.app-private-key }}', $workflow);
+        self::assertStringContainsString('permission-contents: write', $workflow);
+        self::assertStringContainsString('permission-workflows: write', $workflow);
+        self::assertStringContainsString("skip-token-revoke: 'false'", $workflow);
+        self::assertStringNotContainsString('checkout@', $workflow);
+        self::assertStringNotContainsString('  release-channels:', file_get_contents($root . '/.github/workflows/repository-changelog.yml'));
     }
 
     /** Keeps forks hosted and permits explicit custom runners only for trusted same-repository PRs. */

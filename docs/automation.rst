@@ -18,7 +18,7 @@ Following Changelog's separation:
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | ``.github/workflows/repository-changelog.yml``        | Chosen Changelog lifecycle for this project's approved 0.x releases                        |
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
-| ``.github/workflows/repository-release-channels.yml`` | Internal released-only v0 update after successful publication; explicit recovery from main |
+| ``.github/workflows/repository-release-channels.yml`` | Published/edited stable release candidate; branch-mode blockers pending |
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
 | ``resources/workflows/code-standards.yml``            | Copyable consumer wrapper; never executed here                                             |
 +-------------------------------------------------------+--------------------------------------------------------------------------------------------+
@@ -51,7 +51,7 @@ and consumer checkouts retain exact head SHA, full Git history and
 are installed; only locked tool dependencies are installed with plugins/scripts
 disabled. Never call this reusable from a privileged workflow.
 
-The selected consumer interface uses ``@v0`` after a published non-prerelease 0.x release has established that GitHub branch. A reviewed full commit remains available for fixed adoption. The reusable exports the native ``job`` context through the supported ``toJSON(job)`` expression in step environment variables. Before checkout, an inline jq guard validates exactly one JSON object, a string repository equal to ``php-fast-forward/code-standards``, and a string SHA containing exactly 40 lowercase hexadecimal characters. Only that validated identity is emitted as step outputs and used for checkout. Invalid, absent or multiple documents emit no checkout outputs and fail closed. The workflow never resolves the moving branch again. ``github.workflow_sha`` identifies the caller and is not used for this purpose; no caller-supplied runtime ref can silently drift from the workflow. The same protocol protects the channel publisher's trusted implementation. The four native workflow identity properties are GitHub.com features; a host without them, including GitHub Enterprise Server, fails this protocol.
+The selected consumer interface uses ``@v0`` after a published non-prerelease 0.x release has established that GitHub branch. A reviewed full commit remains available for fixed adoption. The reusable exports the native ``job`` context through the supported ``toJSON(job)`` expression in step environment variables. Before checkout, an inline jq guard validates exactly one JSON object, a string repository equal to ``php-fast-forward/code-standards``, and a string SHA containing exactly 40 lowercase hexadecimal characters. Only that validated identity is emitted as step outputs and used for checkout. Invalid, absent or multiple documents emit no checkout outputs and fail closed. The workflow never resolves the moving branch again. ``github.workflow_sha`` identifies the caller and is not used for this purpose; no caller-supplied runtime ref can silently drift from the workflow. The four native workflow identity properties are GitHub.com features; a host without them, including GitHub Enterprise Server, fails this protocol.
 
 This is an explicit runtime JSON boundary. Actionlint still checks the supported context expression and step references; it does not validate fields inside the JSON string. Executable guard regressions own that schema and its failure modes. No dynamic ``fromJSON`` property dereference, ignored linter error or custom validator is used to make an unknown expression property appear supported. The short guard is inline in each bootstrap because no repository helper may run before its source identity has been verified and checked out. jq must be provided by the selected runner; neither workflow downloads an alternate validator. An explicit user-selected config remains executable code; the reusable always routes that job to an unprivileged hosted runner, even for a same-repository PR. GitHub Actions private-repository sharing policies must already permit the caller. This project never broadens organization access.
 
@@ -63,7 +63,99 @@ A technical empty baseline commit permits an initial functional PR when a remote
 
 External Actions use their own published major channels: ``actions/checkout@v7`` and ``shivammathur/setup-php@v2``. These are moving compatibility channels, not immutable pins, and can receive compatible upstream updates without a local reference change. Review upstream release and runtime requirements before a major-channel upgrade; do not assign one major number to unrelated Actions. Both selected JavaScript Actions use Node 24; checkout requires Actions Runner 2.327.1 or newer. Project-owned jobs retain GitHub-hosted ``ubuntu-latest``. Consumers may explicitly select an existing runner with ``runs-on`` for same-repository data-only PR checks; executable config and Rector retain hosted execution. This input does not enable or update runners or repository access. Local reusable calls remain local, and the consumer workflow retains its separately verified released ``v0`` channel.
 
-Successful publication outputs start the internal channel operation directly; the workflow does not depend on another event being generated by GITHUB_TOKEN. It verifies a published 0.x tag and its exact commit before one conditional branch update. Read `the repository helper contract <https://github.com/php-fast-forward/code-standards/blob/main/.github/update-release-channels.md>`__. No channel is precreated at main, and the helper cannot create releases or tags. GitHub ``v0`` may advance across breaking development minors. It is not a Composer ``^0.1`` constraint or a CPX package version; select those versions independently.
+Release channels: major branches and latest tag
+----------------------------------------------
+
+The Actions channels are branches ``v0`` and future ``v1``, plus the action's
+native moving **tag** ``latest``. Concrete ``vMAJOR.MINOR.PATCH`` tags remain
+immutable release inputs for Composer/Packagist. ``latest`` is not a numeric
+stable Composer version: the installed Composer version parser rejects it as a
+version, unlike ``v0`` and ``v0.4.2``. No step exists solely to make latest a branch.
+
+The candidate workflow uses ``Actions-R-Us/actions-tagger@v2`` on real
+``release: published`` and ``release: edited`` events, with
+``prefer_branch_releases: true``. On 2026-10-28, ``@v2`` resolved to
+``330ddfac760021349fef7ff62b372f2f691c20fb`` (v2.0.3). It is a moving major channel,
+not an immutable pin. The distributed bundle was tested against a local API
+returning actual branch names for branch queries. Alone, it force-downgrades
+``v0`` when an older release is edited and can move ``latest`` backwards even
+after 1.x. Its latest ref is hardcoded as a tag in branch mode.
+
+A short inline ``github-script`` selection step compensates for that behavior.
+It parses concrete stable tags, paginates the tag catalog and compares their
+three numeric version components. An incomparable event version fails closed;
+this parsing serves comparison rather than a second publication-format validator. The App token and action run only when that release is the newest
+stable full tag of its major. ``publish_latest_tag`` is true only when it is also
+the newest stable full tag globally. Therefore editing an older 0.x or 1.x release
+performs no writes; a later 0.x release after 1.x can advance v0 while leaving
+latest unchanged. A 1.x publication updates v1/latest without moving v0. No PHP
+updater, checkout, substituted event context or separate latest-ref writer remains.
+
+Tests execute this actual inline selection and the byte-exact distributed bundle
+with local API fixtures. They verify older-release no-ops, late 0.x versus global
+latest, transition to 1.x and preservation of every concrete version tag. Tags
+such as v0/v1/latest are ignored by the stable-version catalog. An unpublished
+full version tag can conservatively block promotion; this is a tag catalog, not
+a complete published-release catalog. Prerelease lifecycle support is not added.
+
+This is not equivalent to the removed CAS updater. The guard trusts the Changelog-only publication contract and real release event;
+it does not re-read live release state or rebind the event SHA to the tag. Exclusive
+publication and immutable fulltags are activation requirements, not protections
+already installed by this PR. Selection and forced mutation are separate operations. Concurrent tag edits/deletions or another writer can
+race that interval; no old-OID lease, ancestry check or resulting-ref readback is
+provided. The current branch is not classified as a known release; approved initial
+state and native branch protections remain separate requirements. Major/latest
+writes are not atomic. The repository concurrency group
+does not cancel the running job, but does not exclude other writers or guarantee
+a durable FIFO queue. Editing an already-current release may repeat its update.
+
+**Activation remains pending.** Publication currently uses GITHUB_TOKEN, which
+cannot trigger this downstream release workflow. It needs a verified published
+Changelog contract for publication-only App authentication, preserving the
+managed PR author. The coordinated optional inputs are ``publish-app-client-id``,
+``publish-environment`` and secret ``publish-app-private-key``; do not pass them
+to an older published revision without verifying its interface. Public Client ID
+must be a repository variable or approved literal. Explicit secret forwarding
+uses ``app-private-key``; the selected nested environment supplies its value.
+No key is installed by YAML.
+
+The common channel template selects ``release-channels`` and mints a revocable
+App token scoped to this repository with Contents/Workflows write. The ambient
+token has Contents read. Read-only organization metadata on 2026-10-28 identifies
+App 5513989 (``fast-forward-release-channels``), installation 176263242, with all
+organization repositories selected and Contents/Workflows write, PR read and
+Metadata read. This includes Code Standards; no installation or permission
+expansion is indicated by those metadata. Use in this repository still requires
+separate approval. Code Standards has no ``release-channels`` environment or
+available Actions secrets/variables in the checked metadata. No private key was
+read, and no key's validity or token minting was tested. Creating that environment
+and transmitting a key as ``app-private-key`` remain separately authorized actions;
+GitHub cannot recover an existing secret value for migration. Changelog's approval
+does not authorize that transmission or use here.
+
+The activation plan preserves branches, without branch-to-tag migration:
+
+* Preserve the existing verified v0 branch; future v1 is a branch. Reserve
+  homonymous tags v0/v1 against shadowing; do not remove foreign refs.
+* Approve major-branch creation/update only for the chosen App. Keep native
+  deletion and non-fast-forward protection without bypass. The action's
+  ``force:true`` request does not itself prove whether a forward update passes
+  those rules; qualify server acceptance only after explicit authorization.
+* Approve tags/latest creation/update only for that App and deletion blocking
+  without bypass. Do not reserve latest against the writer or treat it as a
+  concrete immutable release tag. No heads/latest channel is created.
+* Full version tags: creation only by the publisher App; update/deletion blocked
+  without bypass. No concrete release tags are rewritten for channels.
+* The proposed environment permits main for publication and full tags v*.*.*
+  for release events. Workflow code at those tags can access its key; constrain
+  full-tag creation before claiming a dedicated authority boundary.
+* Verify the published credential contract and approve the exact App/environment
+  changes before activation. No security, secret, environment, channel ref or
+  release is changed as a test.
+
+GitHub v0 can span breaking development minors and is independent of Composer
+constraints and CPX resolution. No channel is precreated at main.
+
 
 Checking can fail the workflow. Making it a required status is a separate GitHub protection decision. ``fix`` has no automatic push workflow and never runs during PR checks. Full tracked scans occur for Composer/ECS/EditorConfig/root or nested ``.gitignore`` changes, including removal and rename. Policy-name invalidation is case-insensitive: a case-folding filesystem can let Git read ``.GiTiGnOrE`` as ``.gitignore``. On a case-sensitive filesystem, this conservative detection can cause an extra full scan; it does not change which ignore rules Git applies. After other policy imports change, run an explicit full check in addition to PR checks.
 

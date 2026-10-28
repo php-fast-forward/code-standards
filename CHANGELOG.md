@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-10-28
+
+### Changed
+
+- Replace the repository PHP channel updater with actions-tagger@v2 on stable published/edited release events in branch mode; select the newest stable tag per major before promoting v0/v1 branches and enable the native latest tag only for the global newest version. Publication credentials and channel protections require separate approval. ([#90](https://github.com/php-fast-forward/code-standards/pull/90))
+
 ## [0.9.1] - 2026-10-28
 
 ### Fixed
@@ -253,6 +259,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.9.2]: https://github.com/php-fast-forward/code-standards/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/php-fast-forward/code-standards/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/php-fast-forward/code-standards/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/php-fast-forward/code-standards/compare/v0.7.0...v0.8.0

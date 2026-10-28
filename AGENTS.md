@@ -55,8 +55,10 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
 - Consumers use the verified released `v0` channel or a reviewed immutable commit.
   Bind runtime/helper checkout to the called job's actual workflow repository/SHA,
   never another moving-ref lookup. Own CI must work before v0 exists. Only
-  confirmed 0.x publications may advance v0, with an exact old-OID lease and no
-  force/regression. GitHub channel refs are not Composer/CPX constraints.
+  confirmed stable publications may promote their matching major channel. The
+  actions-tagger branch/tag integration requires stable-version selection and
+  approved publication/name-reservation setup; its mutation has no CAS.
+  GitHub channel refs are not Composer/CPX constraints.
 
 ## Work Guidance
 
@@ -89,7 +91,6 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 - [Static-analysis evaluation](docs/static-analysis-evaluation.rst): candidate engines, whole-project analysis and unresolved domain ownership.
 - [Architecture decision](docs/architecture.rst): library/tool dependencies, CPX/autoload limits and bootstrap without circular prerequisites.
 - [Automation](docs/automation.rst): trust, ref/bootstrap contracts and consumer adoption.
-- [Released channel helper](.github/update-release-channels.md): repository-only publication verification, CAS update and permission-failure recovery; never creates releases or changes repository settings.
 - [Instruction map](docs/instruction-map.rst): single root scope and skill ownership.
 - [Consumer skill](resources/skills/fast-forward-code-standards/SKILL.md): portable consumption procedure; no automatic installation or rollout.
 - [PHPDoc skill](resources/skills/fast-forward-phpdoc/SKILL.md): concise source documentation and implementation-independent semantic contracts; no global installation required.
