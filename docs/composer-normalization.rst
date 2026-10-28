@@ -60,9 +60,10 @@ This is a conservative metadata profile, rather than the plugin's complete CLI.
 It retains every original dependency constraint string in ``require``,
 ``require-dev``, ``conflict``, ``provide`` and ``replace``; the upstream CLI also
 rewrites those strings. Package keys and schema properties are normalized.
-If upstream would canonicalize a dependency key, the adapter retains the entire
-original section's keys, values and order instead; this preserves extension-name
-aliases/collisions and their effective Composer constraints. Suggested package
+If upstream would canonicalize a dependency key, or the section contains
+case-colliding names, the adapter retains the entire original section's keys,
+values and order instead; this preserves package/extension-name aliases and
+their effective Composer constraints. Suggested package
 keys/descriptions receive the same protection.
 Sniffed indentation, newline style and presence of a final newline are retained.
 The plugin's ``extra.composer-normalize`` indentation overrides and CLI flags

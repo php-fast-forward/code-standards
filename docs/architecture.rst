@@ -44,7 +44,7 @@ with the installed Composer schema and JSON printer. The adapter snapshots and
 restores literal dependency constraints before printing: dependency policy and
 constraint expression ordering are outside metadata formatting authority.
 The adapter also restores first-match plugin/install policies exactly and
-retains original dependency maps whenever upstream would canonicalize their keys.
+retains original dependency maps for case collisions or whenever upstream would canonicalize their keys.
 Native normalization retains priority-sensitive repositories, script lists,
 autoload paths, installer paths and patch ordering.
 

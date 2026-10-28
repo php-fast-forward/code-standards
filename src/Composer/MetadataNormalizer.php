@@ -42,7 +42,9 @@ final readonly class MetadataNormalizer
 
             $packages = (array) $original->{$section};
             $normalizedPackages = (array) ($normalized->{$section} ?? []);
-            if ([] !== array_diff_key($packages, $normalizedPackages) || [] !== array_diff_key($normalizedPackages, $packages)) {
+            $keysChanged = [] !== array_diff_key($packages, $normalizedPackages) || [] !== array_diff_key($normalizedPackages, $packages);
+            $caseCollision = count(array_change_key_case($packages, CASE_LOWER)) !== count($packages);
+            if ($keysChanged || $caseCollision) {
                 $normalized->{$section} = (object) $packages;
 
                 continue;

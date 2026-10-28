@@ -117,15 +117,18 @@ final class NormalizeComposerTest extends TestCase
         }
     }
 
-    /** Canonicalizing extension aliases must never add requirements or reverse Composer's effective collision policy. */
-    public function testExtensionAliasesPreserveKeysValuesAndEffectiveConstraints(): void
+    /** Sorting/canonicalizing package aliases must never add requirements or reverse Composer's collision policy. */
+    public function testPackageAndExtensionAliasesPreserveKeysValuesAndEffectiveConstraints(): void
     {
         $sections = ['require', 'require-dev', 'conflict', 'provide', 'replace', 'suggest'];
         foreach ([
-            ['ext-Foo' => '^2 || ^1'],
-            ['ext-Foo' => '^2 || ^1', 'ext-foo' => '^3'],
-            ['ext-foo' => '^3', 'ext-Foo' => '^2 || ^1'],
-        ] as $requirements) {
+            ['target' => 'ext-foo', 'packages' => ['ext-Foo' => '^2 || ^1']],
+            ['target' => 'ext-foo', 'packages' => ['ext-Foo' => '^2 || ^1', 'ext-foo' => '^3']],
+            ['target' => 'ext-foo', 'packages' => ['ext-foo' => '^3', 'ext-Foo' => '^2 || ^1']],
+            ['target' => 'foo/package', 'packages' => ['Foo/package' => '^2 || ^1', 'foo/package' => '^3']],
+            ['target' => 'foo/package', 'packages' => ['foo/package' => '^3', 'Foo/package' => '^2 || ^1']],
+        ] as $fixture) {
+            $requirements = $fixture['packages'];
             $manifest = ['name' => 'example/fixture'];
             foreach ($sections as $section) {
                 $manifest[$section] = $requirements;
@@ -143,7 +146,7 @@ final class NormalizeComposerTest extends TestCase
                 }
 
                 $actual = $loader->parseLinks('example/fixture', '1.0.0', Link::TYPE_REQUIRE, $normalized[$section]);
-                self::assertSame($expected['ext-foo']->getPrettyConstraint(), $actual['ext-foo']->getPrettyConstraint());
+                self::assertSame($expected[$fixture['target']]->getPrettyConstraint(), $actual[$fixture['target']]->getPrettyConstraint());
             }
             self::assertSame(0, $this->cli([])->getExitCode());
         }
