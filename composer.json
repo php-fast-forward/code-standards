@@ -56,8 +56,7 @@
     "require-dev": {
         "llm/skills": "^1.15",
         "phpunit/phpunit": "^12.5",
-        "symfony/filesystem": "^7.4 || ^8.0",
-        "symfony/http-client": "^7.4 || ^8.0"
+        "symfony/filesystem": "^7.4 || ^8.0"
     },
     "suggest": {
         "ext-dom": "Generate native XML reports for optional magic-number analysis.",
