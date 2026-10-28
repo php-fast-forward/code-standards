@@ -249,13 +249,18 @@ final class StandardsTest extends TestCase
     /** Unsupported formats are rejected before config execution and fix does not acquire a JSON mode. */
     public function testCheckFormatsAreExplicitAndEmptySelectionHasACompleteReport(): void
     {
-        $empty = $this->cli(['check', '--all', '--format=json']);
-        $report = json_decode($empty->getOutput(), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame(0, $empty->getExitCode());
-        self::assertSame('check', $report['command']);
-        self::assertSame('clean', $report['status']);
-        self::assertSame(0, $report['selection']['files']);
-        self::assertTrue($report['complete']);
+        $text = $this->cli(['check', '--all', '--format=text']);
+        self::assertSame(0, $text->getExitCode());
+        self::assertStringContainsString('Selected 0 PHP file(s).', $text->getOutput());
+        foreach (['json', 'json-pretty'] as $format) {
+            $empty = $this->cli(['check', '--all', '--format=' . $format]);
+            $report = json_decode(json: $empty->getOutput(), associative: true, flags: JSON_THROW_ON_ERROR);
+            self::assertSame(0, $empty->getExitCode());
+            self::assertSame('check', $report['command']);
+            self::assertSame('clean', $report['status']);
+            self::assertSame(0, $report['selection']['files']);
+            self::assertTrue($report['complete']);
+        }
 
         $this->put('.build/ecs.php', '<?php file_put_contents(__DIR__ . "/ran", "unexpected"); return null;');
         $invalid = $this->cli(['check', '--all', '--format=xml', '--config=.build/ecs.php']);

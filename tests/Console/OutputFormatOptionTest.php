@@ -19,7 +19,7 @@ use Symfony\Component\Console\Tester\CommandCompletionTester;
 /** Exercises native option completion independently of explicit format validation and process execution. */
 final class OutputFormatOptionTest extends TestCase
 {
-    /** Attribute constants retain enum values, native default and each command's supported subset. */
+    /** Native callable completion retains enum values, defaults and each command's supported subset. */
     public function testCompletionSuggestsTheSupportedEnumValuesWithoutRunningTools(): void
     {
         $application = $this->application();

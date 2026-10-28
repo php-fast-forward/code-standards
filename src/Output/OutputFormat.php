@@ -11,6 +11,9 @@ enum OutputFormat: string
     case Json = 'json';
     case JsonPretty = 'json-pretty';
 
-    /** Public presentation values usable in attribute constant expressions. */
-    public const VALUES = [self::Text->value, self::Json->value, self::JsonPretty->value];
+    /** @return list<string> Public presentation values derived from the declared cases in order. */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
 }

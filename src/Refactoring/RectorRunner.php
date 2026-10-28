@@ -31,7 +31,7 @@ final readonly class RectorRunner
     public function run(string $directory, string $config, bool $apply, float $timeout = 300, string $format = OutputFormat::Text->value): int
     {
         $outputFormat = OutputFormat::tryFrom($format);
-        if (!in_array(needle: $outputFormat, haystack: [OutputFormat::Text, OutputFormat::Json], strict: true)) {
+        if (null === $outputFormat || !self::supportsFormat($outputFormat)) {
             throw new InvalidArgumentException(message: sprintf('Rector format must be %s or %s.', OutputFormat::Text->value, OutputFormat::Json->value));
         }
         if ($apply && OutputFormat::Json === $outputFormat) {
@@ -49,6 +49,15 @@ final readonly class RectorRunner
         }
 
         return $this->process->run([...$check, '--dry-run'], $directory, $timeout);
+    }
+
+    /** Keeps native preview representation selection shared with command completion. */
+    public static function supportsFormat(OutputFormat $format): bool
+    {
+        return match ($format) {
+            OutputFormat::Text, OutputFormat::Json => true,
+            default => false,
+        };
     }
 
     /** Uses Rector's own JSON inventory instead of evaluating or parsing consumer PHP in the parent process. */

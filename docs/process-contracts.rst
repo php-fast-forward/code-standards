@@ -84,7 +84,8 @@ supported subset and schema. Native inventory formats and worker protocols
 retain their separate meaning. Local ``CheckResult`` construction uses named
 arguments for every supplied field so that coverage counts and completion
 flags remain explicit.
-Native shell completion suggests each command's supported enum values. Suggested
+``OutputFormat::values()`` derives values from ``cases()``. Native shell completion
+calls the documented option callbacks to suggest each command's supported values. Suggested
 values assist completion; explicit format validation still rejects unsupported
 values before native work and preserves the established diagnostics and exits.
 

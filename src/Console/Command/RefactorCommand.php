@@ -12,6 +12,7 @@ use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Completion\CompletionInput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -42,7 +43,7 @@ final readonly class RefactorCommand
         #[Option(description: 'Positive whole seconds per Rector subprocess, including preflight and verification.')]
         string $timeout = '300',
 
-        #[Option(description: 'Native output; JSON is preview only and cannot be combined with --apply.', suggestedValues: [OutputFormat::Text->value, OutputFormat::Json->value])]
+        #[Option(description: 'Native output; JSON is preview only and cannot be combined with --apply.', suggestedValues: [self::class, 'suggestFormats'])]
         string $format = OutputFormat::Text->value,
     ): int {
         try {
@@ -67,6 +68,12 @@ final readonly class RefactorCommand
 
             return Command::INVALID;
         }
+    }
+
+    /** @return list<string> Enum-derived suggestions filtered by the same native format policy as execution. */
+    public static function suggestFormats(CompletionInput $input): array
+    {
+        return array_values(array_filter(OutputFormat::values(), static fn(string $format): bool => RectorRunner::supportsFormat(OutputFormat::from($format))));
     }
 
     /** Preserves the literal option contract instead of silently coercing decimal, exponent or overflowing input. */

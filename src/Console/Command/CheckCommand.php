@@ -11,6 +11,7 @@ use FastForward\CodeStandards\Output\OutputFormat;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\MapInput;
 use Symfony\Component\Console\Attribute\Option;
+use Symfony\Component\Console\Completion\CompletionInput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /** Exposes read-only checking as an invocable object adapted by Symfony. */
@@ -30,7 +31,7 @@ final readonly class CheckCommand
         #[MapInput]
         ScanInput $settings,
 
-        #[Option(description: 'Output representation; JSON is one nonstreaming check report.', suggestedValues: OutputFormat::VALUES)]
+        #[Option(description: 'Output representation; JSON is one nonstreaming check report.', suggestedValues: [self::class, 'suggestFormats'])]
         string $format = OutputFormat::Text->value,
     ): int {
         $outputFormat = OutputFormat::tryFrom($format);
@@ -44,5 +45,11 @@ final readonly class CheckCommand
         }
 
         return $this->operation->run(settings: $settings, io: $io, fix: false);
+    }
+
+    /** @return list<string> Native completion values; invocation still validates explicit format input. */
+    public static function suggestFormats(CompletionInput $input): array
+    {
+        return OutputFormat::values();
     }
 }
