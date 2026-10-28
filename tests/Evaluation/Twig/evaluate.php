@@ -77,8 +77,12 @@ try {
     $autoload = realpath($autoload);
     $repository = realpath(dirname(__DIR__, 3));
     $temporary = realpath(getenv('TWIG_EVALUATION_TEMP') ?: sys_get_temp_dir());
-    if (false === $temporary || !is_dir($temporary) || str_starts_with($temporary . '/', $repository . '/')
-        || str_starts_with($autoload, $repository . '/')) {
+    if (
+        false === $temporary
+        || !is_dir($temporary)
+        || str_starts_with($temporary . '/', $repository . '/')
+        || str_starts_with($autoload, $repository . '/')
+    ) {
         throw new InvalidArgumentException('Evaluation runtime and temporary fixtures must be provisioned outside the checkout.');
     }
     require $autoload;
