@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       runs-on:
-        description: JSON runner labels for trusted same-repository PRs; forks always use hosted Ubuntu.
+        description: JSON Linux self-hosted labels for data-only same-repository PR checks; executable config, Rector and forks use hosted Ubuntu.
         default: '["ubuntu-latest"]'
         type: string
       php-version:

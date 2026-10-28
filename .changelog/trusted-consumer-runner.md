@@ -3,4 +3,4 @@ category: added
 type: minor
 ---
 
-Allow trusted same-repository pull requests to explicitly select existing runners through the reusable runs-on JSON input, retaining hosted defaults and forced hosted routing for forks.
+Allow same-repository data-only pull request checks to select existing Linux self-hosted runners through the reusable runs-on JSON input. Retain hosted defaults and route forks, executable ECS config and Rector to hosted Ubuntu before scheduling; validate the actual platform and execution boundary again before checkout.

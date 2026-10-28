@@ -193,8 +193,9 @@ The reusable workflow accepts `normalize-composer: true` to check the consumer's
 root Composer metadata without writes (default: `false`). This project's own CI
 enables the check. See [workflow behavior](docs/composer-normalization.rst).
 
-The optional `runs-on` JSON input selects an existing runner for trusted
-same-repository PRs; defaults and fork routing remain hosted. See
+The optional `runs-on` JSON input selects an existing Linux self-hosted runner for
+same-repository data-only checks. Forks, executable ECS config and Rector use
+hosted Ubuntu. See
 [runner trust and requirements](docs/automation.rst).
 
 ## 🧰 API summary

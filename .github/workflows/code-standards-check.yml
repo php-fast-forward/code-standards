@@ -19,12 +19,15 @@ permissions:
   contents: read
 jobs:
   check:
-    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && inputs.runs-on || '["ubuntu-latest"]') }}
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && inputs.config == '' && startsWith(toJSON(fromJSON(inputs.runs-on)), '[') && contains(fromJSON(inputs.runs-on), 'self-hosted') && contains(fromJSON(inputs.runs-on), 'Linux') && inputs.runs-on || '["ubuntu-latest"]') }}
     timeout-minutes: 15
     steps:
       - name: Reject privileged events and invalid refs
         id: runtime
+        shell: bash
         env:
+          STANDARDS_RUNNER_OS: ${{ runner.os }}
+          STANDARDS_EXECUTABLE_CONFIG: ${{ inputs.config }}
           STANDARDS_RUNNER_ENVIRONMENT: ${{ runner.environment }}
           STANDARDS_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
           STANDARDS_REPOSITORY: ${{ github.repository }}
@@ -35,8 +38,11 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
+          [[ "$STANDARDS_RUNNER_OS" == Linux ]] || exit 1
+          [[ "$STANDARDS_RUNNER_ENVIRONMENT" == github-hosted || "$STANDARDS_RUNNER_ENVIRONMENT" == self-hosted ]] || exit 1
           if [[ "$STANDARDS_RUNNER_ENVIRONMENT" == self-hosted ]]; then
             [[ -n "$STANDARDS_REPOSITORY" && "$STANDARDS_HEAD_REPOSITORY" == "$STANDARDS_REPOSITORY" ]] || exit 1
+            [[ -z "$STANDARDS_EXECUTABLE_CONFIG" ]] || exit 1
           fi
           [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1

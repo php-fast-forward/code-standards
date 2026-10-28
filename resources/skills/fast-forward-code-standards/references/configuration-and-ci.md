@@ -87,9 +87,11 @@ This project's own metadata gate does not opt other consumers in.
 
 Keep `pull_request` and read-only contents. Hosted Ubuntu remains the default.
 The optional `runs-on` string accepts JSON labels for an existing authorized
-runner only for trusted same-repository PRs; forks always select hosted Ubuntu
-before scheduling. A pre-checkout guard additionally rejects foreign heads on
-self-hosted runners. This is not a sandbox for untrusted code or a runner-access
+Linux self-hosted runner for same-repository data-only checks. Labels must be
+a JSON array including `self-hosted` and `Linux`. Forks, non-empty ECS config
+and enabled Rector use hosted Ubuntu before scheduling. The pre-checkout Bash
+guard also rejects non-Linux platforms and executable-config jobs on self-hosted
+runners. Same-repository membership alone does not approve consumer PHP. This is not a sandbox for untrusted code or a runner-access
 change. Check the selected release's inputs and runner requirements before use.
 No secrets/inherit, privileged target events, implicit plugin installation or
 automatic fixes.
