@@ -9,10 +9,10 @@ const body = workflow.split('          script: |\n')[1].split('      - name:')[0
 const run = new (Object.getPrototypeOf(async function(){}).constructor)('github', 'context', 'core', body);
 const sha = 'a'.repeat(40);
 
-async function select(tag, names, overrides = {}) {
+async function select(tag, names, overrides = {}, tagSha = sha) {
   const outputs = {};
   const release = {id: 1, tag_name: tag, draft: false, prerelease: false, published_at: '2026-10-28T00:00:00Z', ...overrides};
-  const tags = names.map(name => ({name, commit: {sha}}));
+  const tags = names.map(name => ({name, commit: {sha: tagSha}}));
   const context = {repo: {owner: 'fixture', repo: 'repo'}, sha, payload: {release: {id: 1, tag_name: tag}}};
   const listTags = Symbol('listTags');
   const github = {
@@ -57,6 +57,7 @@ test('unpublished, non-stable or mismatched live releases fail closed', async ()
     await assert.rejects(select('v0.4.2', ['v0.4.2'], override));
   }
   await assert.rejects(select('v0.4.2', ['v0.4.1']));
+  await assert.rejects(select('v0.4.2', ['v0.4.2'], {}, 'b'.repeat(40)));
   for (const name of ['v0', '0.4.2', 'v0.04.2', 'v0.4.2-rc1', 'v0.4.2+build', 'v0.4.2\n', '$(exit 0)']) {
     await assert.rejects(select(name, [name]));
   }
