@@ -38,6 +38,7 @@ final class WorkflowTest extends TestCase
     {
         $references = [
             'Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb',
+            'actions/create-github-app-token@v3.3.0',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
@@ -71,7 +72,14 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('cancel-in-progress: false', $workflow);
         self::assertStringContainsString("prefer_branch_releases: 'false'", $workflow);
         self::assertStringContainsString("publish_latest_tag: 'true'", $workflow);
-        self::assertStringContainsString('contents: write', $workflow);
+        self::assertStringContainsString('contents: read', $workflow);
+        self::assertStringContainsString('environment: release-channels', $workflow);
+        self::assertStringContainsString('repositories: code-standards', $workflow);
+        self::assertStringContainsString('token: ${{ steps.channel-app.outputs.token }}', $workflow);
+        self::assertStringContainsString('private-key: ${{ secrets.app-private-key }}', $workflow);
+        self::assertStringContainsString('permission-contents: write', $workflow);
+        self::assertStringContainsString('permission-workflows: write', $workflow);
+        self::assertStringContainsString("skip-token-revoke: 'false'", $workflow);
         self::assertStringNotContainsString('checkout@', $workflow);
         self::assertStringNotContainsString('  release-channels:', file_get_contents($root . '/.github/workflows/repository-changelog.yml'));
     }

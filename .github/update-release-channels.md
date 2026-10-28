@@ -56,7 +56,7 @@ existing secret to rename; approval must establish this exact name/scope once,
 without a new permanent alias or a repository-wide private-key secret.
 
 The selected integration uses job-local repository-scoped App authentication only
-for publication, then genuine release-event promotion with the job's GitHub token.
+for publication, then genuine release-event promotion with a separately minted channel App token.
 This is a proposed credential choice, not an App requirement imposed by the action.
 It needs separate approval for the Code Standards publisher App identity,
 installation/repository scope, Contents write and PR read permissions, environment
@@ -65,10 +65,30 @@ to exist here; the Changelog App setup does not authorize reuse in this reposito
 No keys have been read. A static short-lived installation token is insufficient.
 Human publication is not selected because it would lose automatic publication.
 
-The channel job currently uses `github.token` with `contents: write`; compatibility
-with workflow-file changes and the agreed channel protections must be verified
-before activation. If dedicated App authority is selected for channel tags too,
-prepare and approve that additional job-local token/environment delta first.
+The common channel template matches Changelog: stable-tag guard, a job-local
+repository-scoped App token, then the pinned tagger. The Code Standards token is
+limited to `php-fast-forward/code-standards`, requests Contents write and Workflows
+write, and is revoked after the job. The ambient job token has Contents read.
+The channel selects environment `release-channels`, variable
+`RELEASE_CHANNEL_APP_CLIENT_ID` and the same single secret `app-private-key`.
+These references do not provision or authorize their targets.
+
+Activation must approve the Code Standards App identity/installation and these
+channel permissions separately from the publisher's Contents write/PR read.
+The publisher preserves PR authorship and receives the App only in its publish
+job. The two repositories use the same execution shape; only repository scope
+and configured identity differ. No Code Standards installation or permission
+state has been inferred from Changelog.
+
+The proposed environment allows main for publication and full tags `v*.*.*` for
+the channel. A workflow at a permitted tag can read the environment key. Therefore
+restrict full-tag creation to the approved publisher App, and block full-tag
+update/deletion without bypass. Moving tags `v0`, `v1` and `latest` require separate
+App-only creation/update rules and deletion blocking without bypass; reserve
+homonymous branch names after approved migration. These are pending remote
+configuration requirements, not protections installed by this PR. If full-tag
+creation remains open to other writers, explicitly accept the resulting key
+exposure risk instead of claiming workflow-exclusive authority.
 
 Read-only inspection on 2026-10-28 found `refs/heads/v0` at
 `d6f4f14cfc018287ef7a748bead4dd3715c5da95`, matching full tag `v0.8.0`,

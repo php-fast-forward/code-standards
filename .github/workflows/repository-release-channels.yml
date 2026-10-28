@@ -13,8 +13,9 @@ jobs:
       github.event.release.draft == false && github.event.release.prerelease == false
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment: release-channels
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Require a full stable release tag
         env:
@@ -22,8 +23,20 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+      - name: Create the repository-scoped channel token
+        id: channel-app
+        uses: actions/create-github-app-token@v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_CHANNEL_APP_CLIENT_ID }}
+          private-key: ${{ secrets.app-private-key }}
+          owner: php-fast-forward
+          repositories: code-standards
+          permission-contents: write
+          permission-workflows: write
+          skip-token-revoke: 'false'
       - name: Update the released major tag
         uses: Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb # v2.0.3
         with:
+          token: ${{ steps.channel-app.outputs.token }}
           prefer_branch_releases: 'false'
           publish_latest_tag: 'true'
