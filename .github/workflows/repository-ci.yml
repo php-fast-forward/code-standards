@@ -36,6 +36,20 @@ jobs:
         run: |
           php "$STANDARDS_ROOT/bin/code-standards" normalize-composer "--directory=$STANDARDS_DIRECTORY"
       - run: composer check
+      - name: Qualify ready PHAR distribution and native runtime
+        env:
+          COMPOSER_HOME: ${{ runner.temp }}/standards-phar-composer-home
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
+          COMPOSER_ROOT_VERSION: dev-phar-poc
+        run: |
+          PHAR_RUNTIME="$RUNNER_TEMP/standards-phar-runtime"
+          mkdir -p "$PHAR_RUNTIME"
+          cp -R src config bin resources composer.json composer.lock LICENSE "$PHAR_RUNTIME/"
+          composer install --working-dir="$PHAR_RUNTIME" --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
+          python3 scripts/phar/verify.py "$PHAR_RUNTIME" "$RUNNER_TEMP/standards-phar-transport" --gzip
+          python3 scripts/phar/verify-runtime.py "$RUNNER_TEMP/standards-phar-transport" "$RUNNER_TEMP/standards-phar-native" php
+          python3 scripts/phar/verify-vcs-dist.py "$RUNNER_TEMP/standards-phar-transport" "$RUNNER_TEMP/standards-phar-vcs"
+          python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print({"status":d["status"],"versions_and_modules":d["versions_and_modules"]})' "$RUNNER_TEMP/standards-phar-native/result.json"
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:

@@ -23,8 +23,10 @@ root.mkdir(exist_ok=False)
 (root / 'temporary files').mkdir(mode=0o700)
 (root / 'empty-ini').mkdir()
 env = {k: v for k, v in os.environ.items() if not k.startswith(('COMPOSER', 'GIT_'))}
-env.update(XDEBUG_MODE='off', TMPDIR=str(root / 'temporary files'), PHP_INI_SCAN_DIR=str(root / 'empty-ini'), GIT_CONFIG_GLOBAL='/dev/null',
+env.update(XDEBUG_MODE='off', TMPDIR=str(root / 'temporary files'), GIT_CONFIG_GLOBAL='/dev/null',
            GIT_CONFIG_SYSTEM='/dev/null', GIT_CONFIG_NOSYSTEM='1', GIT_TERMINAL_PROMPT='0')
+if sys.platform == 'darwin':
+    env['PHP_INI_SCAN_DIR'] = str(root / 'empty-ini')
 results = []
 
 

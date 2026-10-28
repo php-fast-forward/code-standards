@@ -115,6 +115,8 @@ for mode in ['dist', 'source', 'global']:
          '--no-scripts', '--no-plugins', 'fast-forward/code-standards:dev-poc'], home, environment=local_env)
     lock = json.loads((home / 'composer.lock').read_text())
     assert [item['name'] for item in lock['packages']] == ['fast-forward/code-standards']
+    if mode == 'dist':
+        run(['composer', 'install', '--no-dev', '--no-scripts', '--no-plugins', '--no-interaction'], home)
     root = home / 'vendor/fast-forward/code-standards'
     assert (root / 'src').exists() == (mode == 'source')
     run(['php', home / 'vendor/bin/code-standards', 'list', '--raw'], home, environment=local_env)
