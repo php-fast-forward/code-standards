@@ -117,5 +117,5 @@ PHAR distribution follow-up
 ---------------------------
 
 See the `PHAR distribution investigation <phar-distribution.rst>`__ for the
-single-repository transport constraint and pending publication gates.
-Publishing the compiled artifact remains a separate release gate.
+single-repository transport, committed executable and CI freshness checks.
+The existing Changelog lifecycle publishes the reviewed commit and its compiled artifact.

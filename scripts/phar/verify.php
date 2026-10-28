@@ -102,6 +102,12 @@ CONFIG);
     if (hash_file('sha256', $source . '/composer.lock') !== $probe['identity']['composer_lock_sha256'] || inputHashes($source) !== $probe['identity']['source_files_sha256']) {
         throw new RuntimeException('Compiled payload does not match the current source and lock.');
     }
+    if (buildHashes($source) !== ($probe['identity']['build_recipe_sha256'] ?? null)) {
+        throw new RuntimeException('Compiled payload does not match the current PHP build recipe.');
+    }
+    if (hash_file('sha256', $source . '/composer.json') !== ($probe['identity']['composer_json_sha256'] ?? null)) {
+        throw new RuntimeException('Compiled payload does not match the current Composer build manifest.');
+    }
     if (0700 !== $probe['mode'] || file_exists($probe['runtime']) || 'fast-forward/code-standards' !== $probe['identity']['root']['name']) {
         throw new RuntimeException('Private runtime identity or cleanup failed.');
     }

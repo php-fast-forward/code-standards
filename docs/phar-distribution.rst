@@ -50,35 +50,47 @@ sandbox: executable consumer configurations may load consumer classes explicitly
 CWD, project/config paths and the check command's source-preservation contract
 continue to apply.
 
-Distribution and publication gate
----------------------------------
+Standard Composer distribution
+-------------------------------
 
-No binary is committed or release activated by this draft. The default GitHub
-zipball used by Packagist contains only the tagged Git tree. ``export-ignore``
-removes files; it cannot add a generated artifact. A GitHub release asset alone
-will not be discovered automatically as the Composer dist.
+``builds/code-standards`` is committed in this same repository. Packagist's
+standard GitHub zipball therefore contains the ready executable from the tagged
+tree. ``composer.json`` points directly at it. Neither a consumer build nor
+custom dist metadata nor discovery of release assets is necessary.
 
-The minimal standard Packagist route is to put the ready ``builds/code-standards``
-artifact in the release's tagged tree. GZ keeps the measured artifact below
-GitHub's 100 MiB per-file limit. This requires a deliberate decision to version
-binary bytes in this same repository before publication. Source-only tags are
-not installable with the new binary contract and must not be released.
+The Repository Quality workflow builds and verifies a fresh executable on PHP
+8.3, 8.4 and 8.5. Its PHP 8.3 job uploads that build as an Actions artifact named
+after the exact commit SHA before checking the committed artifact. A stale
+committed binary therefore fails CI while the fresh reviewed build remains
+available to update that PR.
+It uses contents-read permissions, does not write Git or tags, and runs no
+release. Maintainers can obtain the artifact from that reviewed run, restore
+executable mode with ``chmod +x builds/code-standards``, and include it in the
+same PR as source/manifest/lock/build-recipe changes. Alternatively ``composer build``
+replaces the tracked executable locally. CI rejects a missing or stale binary
+by comparing actual runtime identity, source/resource hashes, the original lock
+digest, Composer build manifest and PHP build recipe with the reviewed checkout.
 
-An alternative ready ZIP in this repository's release assets requires explicit
-dist metadata and verified Packagist ingestion before adoption. Composer's
-`dist schema <https://getcomposer.org/doc/04-schema.md#dist>`__ supports a URL,
-including version/reference placeholders, and local VCS tests preserve it.
-That fixture is not proof of live Packagist ingestion. No alternate metadata,
-publication workflow, credentials or release asset transport is activated here.
+This puts the binary in the reviewed commit before Changelog's existing
+version-PR/tag lifecycle operates. Changelog remains the only release/tag owner;
+no release workflow or token permissions are changed here. A future release's
+tag retains the artifact already in its commit. A merge still does not itself
+prove a release has been published or indexed by Packagist.
 
 ``.gitattributes`` exports the compiled file, Composer manifests, license and
 entire ``resources/`` tree, including skills and future templates. Source,
 config, tests and contributor scripts are excluded from archives. Copyable
 workflow callers remain under ``resources/workflows``; executable reusable
-workflows must remain under ``.github/workflows`` for existing ``uses`` calls.
-With a committed binary, ``--prefer-source`` includes source as well; it does
-not honor export-ignore. Without a committed binary, source installs require a
-contributor build and do not satisfy the no-build consumer contract.
+workflows remain under ``.github/workflows`` for existing ``uses`` calls.
+``--prefer-source`` includes source files alongside the ready committed binary;
+it ignores export-ignore but still needs no consumer build. Contributors use
+the separate source entrypoint and dev dependencies when changing the tool.
+
+The binary is about 46.4 MiB with the current lock. This intentionally versions
+compiled library bytes in Git to support the default Packagist distribution.
+Source maintenance remains single, while binary bytes and outer resources are
+not deduplicated. A GitHub release asset alone would not automatically replace
+the tagged-tree zipball; no alternate transport is configured.
 
 Qualification
 -------------
@@ -90,4 +102,4 @@ binary proxy points directly at the compiled file, a single consumer solver
 package, no exported source, no-dev reinstall, native formatter/Rector/MND output
 and source preservation, and bootstrapping despite a poisoned consumer loader.
 The repository CI runs this build and harness on PHP 8.3, 8.4 and 8.5. Those tests
-qualify a synthetic distribution; real publication remains the separate gate above.
+qualify a synthetic distribution; publication remains owned by the existing reviewed Changelog lifecycle.

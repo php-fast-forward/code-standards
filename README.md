@@ -44,7 +44,7 @@ Run `composer standards:check`; apply formatting explicitly with
 
 The GitHub `v0` workflow channel and the Composer package are separate
 publications. See the [PHAR distribution contract](docs/phar-distribution.rst)
-for the pending artifact publication gate; a source merge does not publish a ready package.
+for the committed binary and CI build contract. A merge does not itself publish a Composer release.
 Copyable workflow callers live in [resources/workflows](resources/workflows/README.md).
 
 Requires PHP ^8.3, Git and the PHP extensions declared in `composer.json`,
@@ -167,10 +167,9 @@ The formatter worker uses ECS's public factory and command APIs with this tool's
 own Composer installation. An isolated tool does not implicitly load the target
 checkout's `vendor/autoload.php`. Explicit PHP configuration retains the checkout
 as `getcwd()`, keeps `__DIR__` and relative paths intact, and may deliberately
-require consumer autoloaders or register custom checkers. When the tool is a
-development dependency in the consumer's own Composer graph, that installation's
-normal binary-proxy bootstrap remains intentional; it is not a separate import
-of another checkout's dependency graph.
+require consumer autoloaders or register custom checkers. Composer's proxy
+includes the compiled executable, which boots its own extracted runtime rather
+than loading the consumer autoloader.
 
 ## 🔌 Integration and file scope
 

@@ -20,11 +20,11 @@ Optional Composer scripts may invoke ``code-standards check --all`` and
 Global use installs with ``composer global require fast-forward/code-standards``;
 find its executable directory with ``composer global config bin-dir --absolute``.
 
-Check the actual published artifact before adopting this distribution contract.
+Use an actual published version when adopting this distribution contract.
 A source merge, draft PR or GitHub workflow channel does not prove a ready
 Packagist distribution exists. See `PHAR distribution <../phar-distribution.rst>`__.
-``--prefer-source`` may include source files in addition to a committed artifact;
-source-only checkouts require contributor dependencies and a build.
+``--prefer-source`` includes source files alongside the committed executable;
+both Composer routes execute the ready binary without a consumer build.
 
 Contributors retain the separate source entrypoint:
 

@@ -7,16 +7,20 @@ require __DIR__ . '/support.php';
 
 $root = dirname(__DIR__, 2);
 $output = $argv[1] ?? $root . '/builds/code-standards';
-if ($argc > 2 || file_exists($output)) {
+if ($argc > 2 || ($argc > 1 && file_exists($output))) {
     throw new RuntimeException('Usage: php -d phar.readonly=0 scripts/phar/build.php [NEW_OUTPUT]');
 }
+$recipe = buildHashes($root);
+$stub = file_get_contents(__DIR__ . '/stub.php');
+$recipe['scripts/phar/stub.php'] = hash('sha256', $stub);
 $runtime = sys_get_temp_dir() . '/standards-build-' . bin2hex(random_bytes(12));
 mkdir($runtime, 0700);
 register_shutdown_function(static fn() => removeTree($runtime));
 foreach (['src', 'config', 'resources', 'bin', 'LICENSE'] as $path) {
     copyTree($root . '/' . $path, $runtime . '/' . $path);
 }
-$source = json_decode(file_get_contents($root . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+$sourceContent = file_get_contents($root . '/composer.json');
+$source = json_decode($sourceContent, true, flags: JSON_THROW_ON_ERROR);
 $sourceIdentity = require $root . '/vendor/composer/installed.php';
 $lockContent = file_get_contents($root . '/composer.lock');
 $lock = json_decode($lockContent, true, flags: JSON_THROW_ON_ERROR);
@@ -50,7 +54,9 @@ ksort($inventory);
 writeJson($runtime . '/distribution-manifest.json', [
     'root' => array_intersect_key($identity['root'], array_flip(['name', 'version', 'pretty_version', 'reference'])),
     'composer_lock_sha256' => hash('sha256', $lockContent),
+    'composer_json_sha256' => hash('sha256', $sourceContent),
     'source_files_sha256' => inputHashes($runtime),
+    'build_recipe_sha256' => $recipe,
     'packages' => $inventory,
     'compression' => 'GZ',
 ]);
@@ -66,7 +72,7 @@ register_shutdown_function(static function () use ($temporary): void {
 $archive = new Phar($temporary);
 $archive->startBuffering();
 $archive->buildFromDirectory($runtime);
-$archive->setStub(file_get_contents(__DIR__ . '/stub.php'));
+$archive->setStub($stub);
 $archive->setSignatureAlgorithm(Phar::SHA256);
 $archive->compressFiles(Phar::GZ);
 $archive->stopBuffering();

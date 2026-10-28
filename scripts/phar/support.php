@@ -67,6 +67,18 @@ function inputHashes(string $root): array
     return $hashes;
 }
 
+/** @return array<string, string> The PHP recipe that produced the executable. */
+function buildHashes(string $root): array
+{
+    $hashes = [];
+    foreach (['build.php', 'stub.php', 'support.php'] as $file) {
+        $path = 'scripts/phar/' . $file;
+        $hashes[$path] = hash_file('sha256', $root . '/' . $path);
+    }
+
+    return $hashes;
+}
+
 /**
  * @param list<string> $arguments
  * @param array<string, string|false> $environment Explicit isolated overrides.

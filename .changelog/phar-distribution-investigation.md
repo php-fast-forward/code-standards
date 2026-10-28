@@ -5,4 +5,4 @@ type: minor
 
 Build an executable PHAR with PHP tooling and a direct Composer binary target,
 move bundled libraries to development dependencies, preserve all copyable
-resources, and document the remaining artifact publication gate.
+resources, and ship the ready executable in standard Composer distributions.

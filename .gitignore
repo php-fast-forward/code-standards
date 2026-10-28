@@ -1,5 +1,5 @@
 /vendor/
-/builds/code-standards
+/builds/*.phar
 /.build/
 /.phpunit.cache/
 
