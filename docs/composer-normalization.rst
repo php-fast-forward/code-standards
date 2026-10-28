@@ -60,6 +60,10 @@ This is a conservative metadata profile, rather than the plugin's complete CLI.
 It retains every original dependency constraint string in ``require``,
 ``require-dev``, ``conflict``, ``provide`` and ``replace``; the upstream CLI also
 rewrites those strings. Package keys and schema properties are normalized.
+If upstream would canonicalize a dependency key, the adapter retains the entire
+original section's keys, values and order instead; this preserves extension-name
+aliases/collisions and their effective Composer constraints. Suggested package
+keys/descriptions receive the same protection.
 Sniffed indentation, newline style and presence of a final newline are retained.
 The plugin's ``extra.composer-normalize`` indentation overrides and CLI flags
 are not consumed. There is no automatic formatting policy migration.
@@ -76,9 +80,11 @@ Deliberate differences from the upstream plugin CLI also include:
 * Controlled JSON/schema/input failures use status 2; upstream normalization
   validation generally uses status 1. The statuses in this guide are authoritative.
 
-Upstream normalization retains repository priority (arrays and named objects),
-script command lists, autoload file/path lists, wildcard plugin/install rules,
-installer paths and patch order. Regression fixtures assert these boundaries,
+The adapter restores ``allow-plugins`` and ``preferred-install`` policies exactly,
+including broad-first wildcard rules: upstream sorts some of these maps by
+specificity, which can change Composer's first-match policy. Native normalization
+retains repository priority (arrays and named objects), script command lists,
+autoload file/path lists, installer paths and patch order. Regression fixtures assert these boundaries,
 literal aliases/OR constraints, idempotence and complete file-byte preservation
 in check mode. Review arbitrary extension metadata in the resulting diff.
 

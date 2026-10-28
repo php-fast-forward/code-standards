@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Tests\Integration;
 
 use Composer\Package\Locker;
+use Composer\Package\Link;
+use Composer\Package\Loader\ArrayLoader;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
@@ -94,6 +96,57 @@ final class NormalizeComposerTest extends TestCase
         self::assertSame(0, $this->cli([])->getExitCode());
         self::assertSame(0, $this->cli(['--apply'])->getExitCode());
         self::assertSame($after, $this->snapshot());
+    }
+
+    /** Broad-first policies retain first-match authority; scalar policies remain literal data too. */
+    public function testBroadFirstPluginAndInstallationPoliciesRemainUnchanged(): void
+    {
+        foreach ([
+            ['allow-plugins' => ['*' => false, 'vendor/*' => true, 'vendor/plugin' => false], 'preferred-install' => ['*' => 'source', 'vendor/*' => 'dist']],
+            ['allow-plugins' => false, 'preferred-install' => 'dist'],
+        ] as $config) {
+            file_put_contents($this->directory . '/composer.json', json_encode(['config' => $config, 'name' => 'example/fixture']));
+            $result = $this->cli(['--apply']);
+            self::assertSame(0, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+            $normalized = json_decode(file_get_contents($this->directory . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+            self::assertSame($config, $normalized['config']);
+            $after = $this->snapshot();
+            self::assertSame(0, $this->cli([])->getExitCode());
+            self::assertSame(0, $this->cli(['--apply'])->getExitCode());
+            self::assertSame($after, $this->snapshot());
+        }
+    }
+
+    /** Canonicalizing extension aliases must never add requirements or reverse Composer's effective collision policy. */
+    public function testExtensionAliasesPreserveKeysValuesAndEffectiveConstraints(): void
+    {
+        $sections = ['require', 'require-dev', 'conflict', 'provide', 'replace', 'suggest'];
+        foreach ([
+            ['ext-Foo' => '^2 || ^1'],
+            ['ext-Foo' => '^2 || ^1', 'ext-foo' => '^3'],
+            ['ext-foo' => '^3', 'ext-Foo' => '^2 || ^1'],
+        ] as $requirements) {
+            $manifest = ['name' => 'example/fixture'];
+            foreach ($sections as $section) {
+                $manifest[$section] = $requirements;
+            }
+            file_put_contents($this->directory . '/composer.json', json_encode($manifest));
+            $result = $this->cli(['--apply']);
+            self::assertSame(0, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+            $normalized = json_decode(file_get_contents($this->directory . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+            $loader = new ArrayLoader();
+            $expected = $loader->parseLinks('example/fixture', '1.0.0', Link::TYPE_REQUIRE, $requirements);
+            foreach ($sections as $section) {
+                self::assertSame($requirements, $normalized[$section]);
+                if ('suggest' === $section) {
+                    continue;
+                }
+
+                $actual = $loader->parseLinks('example/fixture', '1.0.0', Link::TYPE_REQUIRE, $normalized[$section]);
+                self::assertSame($expected['ext-foo']->getPrettyConstraint(), $actual['ext-foo']->getPrettyConstraint());
+            }
+            self::assertSame(0, $this->cli([])->getExitCode());
+        }
     }
 
     /** Lock hashes use Composer's own API; apply reports incompatibility without maintaining the lock. */

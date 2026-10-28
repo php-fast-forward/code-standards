@@ -20,24 +20,54 @@ final readonly class MetadataNormalizer
     {
         $original = Json::fromString($source);
         $format = Format::fromJson($original);
-        $constraints = [];
-        foreach (['require', 'require-dev', 'conflict', 'provide', 'replace'] as $section) {
-            if (is_object($original->decoded()) && isset($original->decoded()->{$section})) {
-                $constraints[$section] = (array) $original->decoded()->{$section};
-            }
-        }
-
+        // Upstream mutates decoded objects; isolate policy from its normalization input.
+        $policy = Json::fromString($source)->decoded();
         $normalized = (new ComposerJsonNormalizer('file://' . $this->schema))->normalize($original)->decoded();
-
-        foreach ($constraints as $section => $packages) {
-            foreach ($packages as $package => $constraint) {
-                $normalized->{$section}->{$package} = $constraint;
-            }
-        }
+        $this->restoreDependencies($policy, $normalized);
+        $this->restorePriorities($policy, $normalized);
 
         $encoded = json_encode($normalized, $format->jsonEncodeOptions()->toInt() | JSON_THROW_ON_ERROR);
         $printed = (new Printer())->print($encoded, $format->indent()->toString(), $format->newLine()->toString());
 
         return $printed . ($format->hasFinalNewLine() ? $format->newLine()->toString() : '');
+    }
+
+    /** Retains aliases/collisions in their original order whenever upstream would canonicalize package identities. */
+    private function restoreDependencies(object $original, object $normalized): void
+    {
+        foreach (['require', 'require-dev', 'conflict', 'provide', 'replace', 'suggest'] as $section) {
+            if (!isset($original->{$section})) {
+                continue;
+            }
+
+            $packages = (array) $original->{$section};
+            $normalizedPackages = (array) ($normalized->{$section} ?? []);
+            if ([] !== array_diff_key($packages, $normalizedPackages) || [] !== array_diff_key($normalizedPackages, $packages)) {
+                $normalized->{$section} = (object) $packages;
+
+                continue;
+            }
+
+            foreach ($packages as $package => $value) {
+                $normalized->{$section}->{$package} = $value;
+            }
+        }
+    }
+
+    /** First-match rule maps must retain their original order, including intentionally broad-first deny policies. */
+    private function restorePriorities(object $original, object $normalized): void
+    {
+        if (!isset($original->config)) {
+            return;
+        }
+
+        foreach (['allow-plugins', 'preferred-install'] as $property) {
+            if (!property_exists($original->config, $property)) {
+                continue;
+            }
+
+            $normalized->config ??= new \stdClass();
+            $normalized->config->{$property} = $original->config->{$property};
+        }
     }
 }
