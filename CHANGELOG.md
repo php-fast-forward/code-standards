@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#83](https://github.com/php-fast-forward/code-standards/pull/83))
 
+### Fixed
+
+- Use caret constraints for Container, PHPStan and Rector. Raise the Rector/PHPStan minimums together to the compatible 2.8.2/2.3.3 pair, replacing the historical patch-line restrictions without allowing the known parser failure.
+
+  Keep empty and fully skipped configurations rejected before processing with Rector's native active-rule check. Qualify the new native file-cache behavior without changing consumer-owned source/configuration/lock preservation.
+
+  ([#87](https://github.com/php-fast-forward/code-standards/pull/87))
+
 ## [0.7.0] - 2026-10-28
 
 ### Added
