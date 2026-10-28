@@ -134,9 +134,12 @@ These files load with the tool autoloader even when normalization is not chosen;
 this integration does not claim namespace or runtime isolation. Composer must
 resolve compatibility with a normal consumer installation.
 
-The direct constraints select tested patch lines (``~4.11.0`` normalizer,
-``~2.10.3`` Composer, ``~1.7.0`` JSON and ``~3.9.1`` printer). The lock records the
-exact verified versions; consumers resolve their own graph within those lines.
+The direct constraints use caret ranges (``^4.11.0`` normalizer,
+``^2.10.3`` Composer, ``^1.7.0`` JSON and ``^3.9.1`` printer), allowing compatible
+minor/patch updates up to the next major. The lock records the exact verified
+versions; consumers resolve their own graph within those ranges. The minimum
+versions and current locked graph are tested; this does not claim execution of
+unreleased versions admitted by those ranges.
 Schema content/order therefore belongs to the installed Composer package.
 There is no runtime schema updater, remote-schema fallback, download or global
 installation. Dependency updates require reviewing the schema, autoload files,
