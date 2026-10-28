@@ -3,8 +3,8 @@ Optional Composer metadata normalization
 
 ``normalize-composer`` checks the current project's ``composer.json`` in memory.
 It is opt-in and independent of ``check``, ``fix``, ECS and changed-PHP selection.
-No Git checkout is required. Neither the default Composer scripts nor Actions
-enable it automatically.
+No Git checkout is required. Default Composer scripts do not enable it. This repository checks its own metadata
+in CI; reusable consumers enable it explicitly with ``normalize-composer: true``.
 
 .. code-block:: sh
 
@@ -47,6 +47,40 @@ Exit codes
   application left a stale lock. Read the diagnostic to distinguish these cases.
 * ``2``: invalid options/directory, missing/unreadable/symlink files, invalid
   JSON/schema or controlled filesystem/library failures.
+
+Workflow checks
+---------------
+
+``Repository: Quality`` checks this repository's root metadata on pull requests,
+main pushes and manual runs, after installing the locked tool with plugins/scripts
+disabled. Its existing final diff check remains in place. ``composer validate``
+checks validity and lock consistency; PHP ``check`` handles PHP selection/style.
+Neither substitutes for metadata normalization.
+
+The public reusable ``code-standards.yml`` accepts the boolean input
+``normalize-composer`` (default ``false``). Set it explicitly to check the exact
+consumer head's root manifest and optional lock, independent of changed PHP paths:
+
+.. code-block:: yaml
+
+   with:
+     php-version: '8.3'
+     normalize-composer: true
+
+The internal check job runs the already installed, reviewed tool against the
+sibling consumer checkout. No consumer dependency install or executable consumer
+config is needed for this step. Existing PR event, runner, permissions, exact
+runtime/ref validation and PHP inputs are retained. This repository's PR caller
+enables the input to exercise that consumer path as well as its own quality job.
+Other consumers keep their existing behavior until opting in at a release/ref
+that includes this input; the current published ``v0`` is not changed here.
+
+Both gates invoke check mode only: no ``--apply``, lock update, dependency solver,
+autofix or commit. Exit 1 (normalization needed or stale lock) and exit 2 (invalid
+metadata/path) fail the step; 0 passes. A missing root manifest is an error when
+enabled. Nested manifests are not scanned, and there is no changed-path filter:
+metadata-only PRs receive the check too. Fix locally with explicit authority,
+review the manifest diff and maintain a stale lock separately when necessary.
 
 Normalization and dependency boundary
 -------------------------------------

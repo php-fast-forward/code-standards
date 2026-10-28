@@ -30,6 +30,10 @@ composer require --dev fast-forward/code-standards
 vendor/bin/code-standards check --all
 ```
 
+CPX can invoke the installed package directly with
+`cpx fast-forward/code-standards list`. The CLI resolves Composer dependencies
+from its installation, including when run outside the package checkout.
+
 The GitHub `v0` workflow channel and the Composer package are separate
 distribution mechanisms.
 
@@ -188,6 +192,15 @@ native Rector configuration and requires `--apply` for semantic writes. It is
 never invoked by formatting `check` or `fix`; target PHP and cache remain native
 consumer configuration decisions. Custom PHPDoc transformations and deeper
 static analysis remain separate; no DevTools extraction parity is asserted.
+
+The reusable workflow accepts `normalize-composer: true` to check the consumer's
+root Composer metadata without writes (default: `false`). This project's own CI
+enables the check. See [workflow behavior](docs/composer-normalization.rst).
+
+The optional `runs-on` JSON input selects an existing Linux self-hosted runner for
+same-repository data-only checks. Forks, executable ECS config and Rector use
+hosted Ubuntu. See
+[runner trust and requirements](docs/automation.rst).
 
 ## 🧰 API summary
 

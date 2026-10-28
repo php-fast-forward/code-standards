@@ -2,9 +2,16 @@ name: 'Internal: Check Changed PHP'
 on:
   workflow_call:
     inputs:
+      runs-on:
+        default: '["ubuntu-latest"]'
+        type: string
       php-version:
         default: '8.3'
         type: string
+      normalize-composer:
+        description: Explicitly check root Composer metadata without writing or updating locks.
+        default: false
+        type: boolean
       config:
         default: ''
         type: string
@@ -12,12 +19,18 @@ permissions:
   contents: read
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && inputs.config == '' && startsWith(toJSON(fromJSON(inputs.runs-on)), '[') && contains(fromJSON(inputs.runs-on), 'self-hosted') && contains(fromJSON(inputs.runs-on), 'Linux') && inputs.runs-on || '["ubuntu-latest"]') }}
     timeout-minutes: 15
     steps:
       - name: Reject privileged events and invalid refs
         id: runtime
+        shell: bash
         env:
+          STANDARDS_RUNNER_OS: ${{ runner.os }}
+          STANDARDS_EXECUTABLE_CONFIG: ${{ inputs.config }}
+          STANDARDS_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+          STANDARDS_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          STANDARDS_REPOSITORY: ${{ github.repository }}
           STANDARDS_EVENT: ${{ github.event_name }}
           STANDARDS_JOB_JSON: ${{ toJSON(job) }}
           STANDARDS_BASE: ${{ github.event.pull_request.base.sha }}
@@ -25,6 +38,12 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$STANDARDS_EVENT" == pull_request ]] || exit 1
+          [[ "$STANDARDS_RUNNER_OS" == Linux ]] || exit 1
+          [[ "$STANDARDS_RUNNER_ENVIRONMENT" == github-hosted || "$STANDARDS_RUNNER_ENVIRONMENT" == self-hosted ]] || exit 1
+          if [[ "$STANDARDS_RUNNER_ENVIRONMENT" == self-hosted ]]; then
+            [[ -n "$STANDARDS_REPOSITORY" && "$STANDARDS_HEAD_REPOSITORY" == "$STANDARDS_REPOSITORY" ]] || exit 1
+            [[ -z "$STANDARDS_EXECUTABLE_CONFIG" ]] || exit 1
+          fi
           [[ "$STANDARDS_BASE" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           [[ "$STANDARDS_HEAD" =~ ^[a-fA-F0-9]{40}$ ]] || exit 1
           runtime=$(jq --slurp --raw-output --exit-status '
@@ -75,3 +94,10 @@ jobs:
           base-sha: ${{ github.event.pull_request.base.sha }}
           head-sha: ${{ github.event.pull_request.head.sha }}
           config: ${{ inputs.config }}
+      - name: Check Composer normalization
+        if: inputs.normalize-composer
+        env:
+          STANDARDS_ROOT: ${{ github.workspace }}/tool
+          STANDARDS_DIRECTORY: ${{ github.workspace }}/consumer
+        run: |
+          php "$STANDARDS_ROOT/bin/code-standards" normalize-composer "--directory=$STANDARDS_DIRECTORY"

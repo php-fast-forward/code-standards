@@ -17,6 +17,13 @@ Tools may depend on libraries at runtime. Libraries may consume tools as develop
 
 CPX separates installation and dependency resolution. It does not isolate PHP namespaces when PHPUnit, Rector or executable configuration loads the consumer and tool in the same process. Version conflicts and global state still require explicit compatibility tests or a real process boundary. A separate Composer graph alone must never be described as runtime isolation. Analyzer/autoload fixtures must prove that the code under analysis comes from the consumer checkout, rather than another copy installed inside the tool. Syntax parsing uses ``php -n -l`` without application autoload. The formatter worker loads its own Composer runtime and uses ECS's public container factory and native check command. It does not invoke ECS's CLI bootstrap, which otherwise imports the working directory's vendor autoloader before config selection. The worker preserves consumer cwd, native config cache bookkeeping and absolute selected file arguments; executable user config can explicitly opt into consumer loaders and custom checkers. Engine paths are captured from the tool's installation before that config can change Composer's installed-package metadata.
 
+The CLI follows the same bootstrap order as Changelog: Composer's injected
+``$_composer_autoload_path``, the checkout's ``../vendor/autoload.php``, then
+``../../../autoload.php`` relative to the package binary. The last path supports
+CPX invoking the installed package binary directly without Composer's proxy.
+Resolution never searches the current working directory. Missing dependencies
+produce a diagnostic on stderr and exit code 1.
+
 Ordinary Composer installation inside the consumer intentionally shares that installation's autoloader through its binary proxy. ``composer-runtime-api`` and ``$_composer_autoload_path`` remain part of this contract. Removing an extra import from a different target graph does not remove normal Composer bootstrap. PHPUnit and type-analysis adapters require their own compatibility tests; the formatter's process boundary does not prove their isolation. The separate Rector command's executable configuration and child-autoload limits are documented in the `native refactoring contract <rector.rst>`__.
 
 Bootstrap and compatibility

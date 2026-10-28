@@ -14,6 +14,11 @@ final class WorkflowContextTest extends TestCase
     public function testCheckGuardUsesExecutingWorkflowIdentity(): void
     {
         $environment = [
+            'STANDARDS_RUNNER_OS' => 'Linux',
+            'STANDARDS_EXECUTABLE_CONFIG' => '', 'STANDARDS_RECTOR_ENABLED' => 'false',
+            'STANDARDS_RUNNER_ENVIRONMENT' => 'github-hosted',
+            'STANDARDS_HEAD_REPOSITORY' => 'consumer/cli',
+            'STANDARDS_REPOSITORY' => 'consumer/cli',
             'STANDARDS_EVENT' => 'pull_request',
             'STANDARDS_JOB_JSON' => $this->identity(),
             'STANDARDS_BASE' => str_repeat('2', 40),
@@ -23,6 +28,27 @@ final class WorkflowContextTest extends TestCase
             $script = $this->guard($file, 'Reject privileged events and invalid refs');
             $valid = $this->guardResult($script, $environment);
             self::assertSame(0, $valid['status']);
+            self::assertSame(0, $this->guardExitCode($script, [...$environment, 'STANDARDS_RUNNER_ENVIRONMENT' => 'self-hosted']));
+            self::assertNotSame(0, $this->guardExitCode($script, [...$environment, 'STANDARDS_RUNNER_ENVIRONMENT' => 'self-hosted', 'STANDARDS_HEAD_REPOSITORY' => 'fork/cli']));
+            self::assertNotSame(0, $this->guardExitCode($script, [...$environment, 'STANDARDS_RUNNER_ENVIRONMENT' => 'self-hosted', 'STANDARDS_REPOSITORY' => '', 'STANDARDS_HEAD_REPOSITORY' => '']));
+            self::assertSame(0, $this->guardExitCode($script, [...$environment, 'STANDARDS_HEAD_REPOSITORY' => 'fork/cli']));
+            foreach (['Windows', 'macOS', ''] as $platform) {
+                $invalid = $this->guardResult($script, [...$environment, 'STANDARDS_RUNNER_OS' => $platform]);
+                self::assertNotSame(0, $invalid['status']);
+                self::assertSame('', $invalid['output']);
+            }
+            foreach (['', 'unknown'] as $runnerEnvironment) {
+                $invalid = $this->guardResult($script, [...$environment, 'STANDARDS_RUNNER_ENVIRONMENT' => $runnerEnvironment]);
+                self::assertNotSame(0, $invalid['status']);
+                self::assertSame('', $invalid['output']);
+            }
+            $execution = 'code-standards-check.yml' === $file
+                ? ['STANDARDS_EXECUTABLE_CONFIG' => 'consumer-config.php']
+                : ['STANDARDS_RECTOR_ENABLED' => 'true'];
+            self::assertSame(0, $this->guardExitCode($script, [...$environment, ...$execution]));
+            $blocked = $this->guardResult($script, [...$environment, ...$execution, 'STANDARDS_RUNNER_ENVIRONMENT' => 'self-hosted']);
+            self::assertNotSame(0, $blocked['status']);
+            self::assertSame('', $blocked['output']);
             self::assertSame("repository=php-fast-forward/code-standards\nsha=" . str_repeat('1', 40) . "\n", $valid['output']);
             foreach (['STANDARDS_EVENT' => 'pull_request_target', 'STANDARDS_BASE' => 'main', 'STANDARDS_HEAD' => 'v0'] as $key => $value) {
                 self::assertNotSame(0, $this->guardExitCode($script, [...$environment, $key => $value]), $file);
@@ -63,13 +89,26 @@ final class WorkflowContextTest extends TestCase
 
         foreach ([
             ['code-standards-check.yml', 'Reject privileged events and invalid refs', 'STANDARDS_JOB_JSON', [
+                'STANDARDS_RUNNER_OS' => 'Linux',
+                'STANDARDS_EXECUTABLE_CONFIG' => '', 'STANDARDS_RECTOR_ENABLED' => 'false',
+                'STANDARDS_RUNNER_ENVIRONMENT' => 'github-hosted',
+                'STANDARDS_HEAD_REPOSITORY' => 'consumer/cli', 'STANDARDS_REPOSITORY' => 'consumer/cli',
                 'STANDARDS_EVENT' => 'pull_request', 'STANDARDS_BASE' => str_repeat('2', 40), 'STANDARDS_HEAD' => str_repeat('3', 40),
             ]],
             ['code-standards-analysis.yml', 'Reject privileged events and invalid refs', 'STANDARDS_JOB_JSON', [
+                'STANDARDS_RUNNER_OS' => 'Linux',
+                'STANDARDS_EXECUTABLE_CONFIG' => '', 'STANDARDS_RECTOR_ENABLED' => 'false',
+                'STANDARDS_RUNNER_ENVIRONMENT' => 'github-hosted',
+                'STANDARDS_HEAD_REPOSITORY' => 'consumer/cli', 'STANDARDS_REPOSITORY' => 'consumer/cli',
                 'STANDARDS_EVENT' => 'pull_request', 'STANDARDS_BASE' => str_repeat('2', 40), 'STANDARDS_HEAD' => str_repeat('3', 40),
             ]],
         ] as [$file, $step, $variable, $environment]) {
             $script = $this->guard($file, $step);
+            if ('STANDARDS_JOB_JSON' === $variable) {
+                $valid = $this->guardResult($script, [...$environment, $variable => $this->identity()]);
+                self::assertSame(0, $valid['status'], $file . ': valid control');
+                self::assertStringContainsString('repository=php-fast-forward/code-standards', $valid['output']);
+            }
             foreach ($invalid as $scenario => $json) {
                 $result = $this->guardResult($script, [...$environment, $variable => $json]);
 

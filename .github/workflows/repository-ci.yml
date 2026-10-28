@@ -29,6 +29,12 @@ jobs:
           COMPOSER_HOME: ${{ runner.temp }}/standards-composer-home
           COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
       - run: composer validate --strict
+      - name: Check Composer normalization
+        env:
+          STANDARDS_ROOT: ${{ github.workspace }}
+          STANDARDS_DIRECTORY: ${{ github.workspace }}
+        run: |
+          php "$STANDARDS_ROOT/bin/code-standards" normalize-composer "--directory=$STANDARDS_DIRECTORY"
       - run: composer check
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress

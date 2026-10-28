@@ -2,10 +2,18 @@ name: 'Reusable: Code Standards'
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: JSON Linux self-hosted labels for data-only same-repository PR checks; executable config, Rector and forks use hosted Ubuntu.
+        default: '["ubuntu-latest"]'
+        type: string
       php-version:
         description: Tool runtime PHP, at least 8.3; also used for syntax parsing.
         default: '8.3'
         type: string
+      normalize-composer:
+        description: Explicitly check root Composer metadata without writing or updating locks.
+        default: false
+        type: boolean
       config:
         description: Optional consumer-relative ECS config.
         default: ''
@@ -37,13 +45,16 @@ jobs:
       contents: read
     uses: ./.github/workflows/code-standards-check.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       php-version: ${{ inputs.php-version }}
       config: ${{ inputs.config }}
+      normalize-composer: ${{ inputs.normalize-composer }}
   optional-analysis:
     permissions:
       contents: read
     uses: ./.github/workflows/code-standards-analysis.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       php-version: ${{ inputs.php-version }}
       magic-numbers: ${{ inputs.magic-numbers }}
       magic-numbers-policy: ${{ inputs.magic-numbers-policy }}
