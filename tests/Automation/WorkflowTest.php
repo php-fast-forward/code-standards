@@ -41,6 +41,7 @@ final class WorkflowTest extends TestCase
             'actions/create-github-app-token@v3.3.0',
             'actions/github-script@v8',
             'actions/checkout@v7',
+            'actions/upload-artifact@v7',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
