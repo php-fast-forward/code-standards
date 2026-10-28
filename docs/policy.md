@@ -73,7 +73,7 @@ candidate engines and their analysis scopes without deciding domain ownership.
 
 ## Selected PER evolution
 
-The current preset replaces prepared PSR-12 with ECS 13.3.8's native non-risky
+The current preset replaces prepared PSR-12 with ECS 13.3.9's native non-risky
 PER Coding Style 3.0 set, then applies the owned preservation skips and explicit
 spacing overrides. It does not combine duplicate PSR/PER/common/docblock sets.
 The resolved snapshot records 63 native fixers plus two explicitly classified

@@ -1,6 +1,6 @@
 {
-    "ecs_version": "13.3.8",
-    "ecs_reference": "0564c0b9b807f1740bf0f2cc965ab51551f4dc3b",
+    "ecs_version": "13.3.9",
+    "ecs_reference": "c4c68c81775e8227dd01c064776edd46975d9d86",
     "rules": {
         "FastForward\\CodeStandards\\Sniff\\MultilineBooleanConditionSniff": {
             "type": "sniff",
