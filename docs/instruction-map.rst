@@ -7,4 +7,8 @@ The initial directory was empty and had no repository contracts. The shared host
 
 The opt-in refactoring guide remains under this same root authority. It records the native Rector invocation and executable-config boundary; it introduces no new instruction subtree, automatic semantic profile or consumer installer.
 
+The opt-in Composer metadata guide also remains under root authority. Its root
+index entry leads to the independent normalization/write/lock-hash contract;
+ordinary source and test directories retain the same maintenance instructions.
+
 No previous instruction tree is migrated. Rollback restores the root contract, its index and this map together through Git; it changes no host configuration.

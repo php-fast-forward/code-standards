@@ -35,6 +35,29 @@ The supported configuration extension is the native ECS builder. A small PSR-4 p
 
 No configuration is needed for the default preset. A consumer selects an existing readable PHP file with ``--config``; relative paths resolve from the project root. That file must return the configuration supported by the installed ECS version. Native builder methods define rule imports, skips and overrides. Invalid paths, unsupported options and conflicting scan modes fail with an objective error; empty paths are rejected rather than coerced to the current directory. ECS configuration errors propagate as failures. Standard Symfony flag semantics apply, including idempotent repeated boolean flags and both ``--option=value`` and ``--option value``. Behavioral tests exercise the default preset, real rule overrides, help outside a checkout and invalid invocations.
 
+Optional Composer metadata normalization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``normalize-composer`` is independent of PHP selection and style check/fix.
+It reuses the library behind composer-normalize, ``ergebnis/json-normalizer``,
+with the installed Composer schema and JSON printer. The adapter snapshots and
+restores literal dependency constraints before printing: dependency policy and
+constraint expression ordering are outside metadata formatting authority.
+The adapter also restores first-match plugin/install policies exactly and
+retains original dependency maps for case collisions or whenever upstream would canonicalize their keys.
+Native normalization retains priority-sensitive repositories, script lists,
+autoload paths, installer paths and patch ordering.
+
+``composer/composer`` is a runtime library dependency for its local schema and
+public lock hash API. This adds 23 packages to the verified lock and promotes
+the existing ``psr/log`` and ``symfony/filesystem`` dependencies to runtime;
+existing versions remain unchanged. No Composer application/plugin manager is
+constructed and no plugin is added to ``allow-plugins``. The integration does
+not invoke the upstream plugin's lock-update path. Its explicit ``--apply``
+writes only the manifest and reports stale lock hashes before/after application.
+See the `metadata command contract <composer-normalization.rst>`__ for statuses,
+formatting behavior and side effects. PHP source commands retain their scope.
+
 Optional lossless process capture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -26,6 +26,9 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
 - `check` MUST NOT pass `--fix`, update dependencies, execute application tests,
   publish or change source. Tool caches may live in the system temporary directory.
 - `fix` is explicit, local and potentially partial on failure; inspect its diff.
+- `normalize-composer` is opt-in metadata checking; only `--apply` writes
+  `composer.json`. Never maintain locks, activate plugins or run Composer scripts
+  from normalization. Preserve literal constraints and significant ordering.
 - No implicit risky migration, PHP-version migration or semantic refactor profile.
   Future semantic work requires an explicit consumer target PHP and opt-in.
 - PR checks use `pull_request`, exact head/base, merge-base comparison and Git's
@@ -75,6 +78,7 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 - [Policy comparison](docs/policy.rst): evidence, rule differences and extraction gates.
 - [Explicit Rector](docs/rector.rst): opt-in native semantic preview/application; executable configuration owns target PHP, rules, source paths and caches.
 - [Magic-number analysis](docs/magic-numbers.rst): opt-in native PHPMND selection, policy options, output and exit contracts; separate from check/fix.
+- [Composer normalization](docs/composer-normalization.rst): opt-in metadata check/application, constraint preservation and lock-hash diagnostics; separate from PHP check/fix.
 - [Resolved preset](docs/resolved-preset.rst): compiled rules, golden contracts and dependency-update review.
 - [Legacy fixer comparison](docs/legacy-fixer-comparison.rst): fixed-source inventory, loaded dependencies and remaining profile decisions.
 - [PHPDoc comparison](docs/phpdoc-comparison.rst): actual custom-rule registration, source contracts and remaining golden decisions.

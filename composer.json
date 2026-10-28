@@ -39,7 +39,11 @@
     "require": {
         "php": "^8.3",
         "composer-runtime-api": "^2.2",
+        "composer/composer": "^2.10.3",
         "container-interop/service-provider": "^0.4.1",
+        "ergebnis/json": "^1.7.0",
+        "ergebnis/json-normalizer": "^4.11.0",
+        "ergebnis/json-printer": "^3.9.1",
         "fast-forward/container": "~1.10.1",
         "phpstan/phpstan": "~2.1.51",
         "povils/phpmnd": "^3.6.1",
