@@ -12,3 +12,8 @@ index entry leads to the independent normalization/write/lock-hash contract;
 ordinary source and test directories retain the same maintenance instructions.
 
 No previous instruction tree is migrated. Rollback restores the root contract, its index and this map together through Git; it changes no host configuration.
+
+Release-channel migration retains this single-root hierarchy. The existing root
+index entry and channel guide now describe the release-event action and its
+activation gates; no child contracts are added. Rollback restores the helper,
+workflow, fixtures, guide and index together from Git.

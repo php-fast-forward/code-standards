@@ -24,14 +24,3 @@ jobs:
       source: tags
       prepare-release: true
       publish: true
-  release-channels:
-    needs: changelog
-    if: >-
-      needs.changelog.outputs.published-version != '' &&
-      needs.changelog.outputs.published-sha != ''
-    permissions:
-      contents: write
-    uses: ./.github/workflows/repository-release-channels.yml
-    with:
-      tag: ${{ needs.changelog.outputs.published-tag }}
-      expected-sha: ${{ needs.changelog.outputs.published-sha }}

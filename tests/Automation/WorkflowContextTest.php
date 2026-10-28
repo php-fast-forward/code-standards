@@ -30,27 +30,16 @@ final class WorkflowContextTest extends TestCase
         }
     }
 
-    /** Allows only verified managed merges or deliberate recovery from canonical main. */
-    public function testChannelGuardRefusesForeignUnmergedAndMismatchedEvents(): void
+    /** Accepts only full stable tags before invoking the external channel action. */
+    public function testChannelGuardRejectsPartialPrereleaseAndInjectedTags(): void
     {
-        $environment = [
-            'FF_REPOSITORY' => 'php-fast-forward/code-standards',
-            'FF_JOB_JSON' => $this->identity(),
-            'FF_EVENT' => 'pull_request_target', 'FF_REF' => 'refs/heads/main',
-            'FF_ACTION' => 'closed', 'FF_MERGED' => 'true',
-            'FF_HEAD_REPOSITORY' => 'php-fast-forward/code-standards',
-            'FF_HEAD_BRANCH' => 'changelog/version', 'FF_BASE_BRANCH' => 'main',
-            'FF_MERGE_SHA' => str_repeat('2', 40), 'FF_EXPECTED_SHA' => str_repeat('2', 40),
-        ];
-        $script = $this->guard('repository-release-channels.yml', 'Require a trusted repository workflow');
-        self::assertSame(0, $this->guardExitCode($script, $environment));
-        foreach (['FF_REPOSITORY' => 'foreign/repository', 'FF_EVENT' => 'pull_request', 'FF_ACTION' => 'opened',
-            'FF_MERGED' => 'false', 'FF_HEAD_REPOSITORY' => 'fork/tool',
-            'FF_HEAD_BRANCH' => 'feature', 'FF_BASE_BRANCH' => 'other', 'FF_EXPECTED_SHA' => str_repeat('3', 40)] as $key => $value) {
-            self::assertNotSame(0, $this->guardExitCode($script, [...$environment, $key => $value]), $key);
+        $script = $this->guard('repository-release-channels.yml', 'Require a full stable release tag');
+        foreach (['v0.1.0', 'v0.99.3', 'v1.0.0'] as $tag) {
+            self::assertSame(0, $this->guardExitCode($script, ['RELEASE_TAG' => $tag]));
         }
-        self::assertSame(0, $this->guardExitCode($script, [...$environment, 'FF_EVENT' => 'workflow_dispatch']));
-        self::assertNotSame(0, $this->guardExitCode($script, [...$environment, 'FF_EVENT' => 'workflow_dispatch', 'FF_REF' => 'refs/heads/v0']));
+        foreach (['v0', '0.1.0', 'v0.01.0', 'v1.0.0-rc1', 'v1.0.0+build', "v0.1.0\n", '$(exit 0)'] as $tag) {
+            self::assertNotSame(0, $this->guardExitCode($script, ['RELEASE_TAG' => $tag]));
+        }
     }
 
     /** Rejects malformed or ambiguous native identity protocols before emitting any checkout output. */
@@ -78,9 +67,6 @@ final class WorkflowContextTest extends TestCase
             ]],
             ['code-standards-analysis.yml', 'Reject privileged events and invalid refs', 'STANDARDS_JOB_JSON', [
                 'STANDARDS_EVENT' => 'pull_request', 'STANDARDS_BASE' => str_repeat('2', 40), 'STANDARDS_HEAD' => str_repeat('3', 40),
-            ]],
-            ['repository-release-channels.yml', 'Require a trusted repository workflow', 'FF_JOB_JSON', [
-                'FF_REPOSITORY' => 'php-fast-forward/code-standards', 'FF_EVENT' => 'workflow_dispatch', 'FF_REF' => 'refs/heads/main',
             ]],
         ] as [$file, $step, $variable, $environment]) {
             $script = $this->guard($file, $step);

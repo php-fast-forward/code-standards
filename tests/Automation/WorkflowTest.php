@@ -33,10 +33,11 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('run: composer check', $quality);
     }
 
-    /** Keeps each external Action on its own verified published major channel. */
+    /** Keeps external Actions on verified published channels or reviewed release commits. */
     public function testExternalActionsUsePublishedMajorChannels(): void
     {
         $references = [
+            'Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
@@ -54,6 +55,25 @@ final class WorkflowTest extends TestCase
                 }
             }
         }
+    }
+
+    /** Reserves promotion for genuine published stable release events with one serialized writer. */
+    public function testReleaseChannelsUseThePinnedActionOnPublishedReleases(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $workflow = file_get_contents($root . '/.github/workflows/repository-release-channels.yml');
+        self::assertStringContainsString("  release:\n    types: [published]", $workflow);
+        self::assertStringNotContainsString('workflow_call:', $workflow);
+        self::assertStringNotContainsString('workflow_dispatch:', $workflow);
+        self::assertStringContainsString("github.repository == 'php-fast-forward/code-standards'", $workflow);
+        self::assertStringContainsString('github.event.release.draft == false && github.event.release.prerelease == false', $workflow);
+        self::assertStringContainsString('group: release-channels-${{ github.repository }}', $workflow);
+        self::assertStringContainsString('cancel-in-progress: false', $workflow);
+        self::assertStringContainsString("prefer_branch_releases: 'false'", $workflow);
+        self::assertStringContainsString("publish_latest_tag: 'true'", $workflow);
+        self::assertStringContainsString('contents: write', $workflow);
+        self::assertStringNotContainsString('checkout@', $workflow);
+        self::assertStringNotContainsString('  release-channels:', file_get_contents($root . '/.github/workflows/repository-changelog.yml'));
     }
 
     /** Keeps the checking adapter bound to unprivileged PR events and disposable hosted runners. */
