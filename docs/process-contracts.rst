@@ -84,6 +84,9 @@ supported subset and schema. Native inventory formats and worker protocols
 retain their separate meaning. Local ``CheckResult`` construction uses named
 arguments for every supplied field so that coverage counts and completion
 flags remain explicit.
+Native shell completion suggests each command's supported enum values. Suggested
+values assist completion; explicit format validation still rejects unsupported
+values before native work and preserves the established diagnostics and exits.
 
 Native transport
 ----------------

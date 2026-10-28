@@ -32,7 +32,7 @@ final readonly class RectorRunner
     {
         $outputFormat = OutputFormat::tryFrom($format);
         if (!in_array(needle: $outputFormat, haystack: [OutputFormat::Text, OutputFormat::Json], strict: true)) {
-            throw new InvalidArgumentException('Rector format must be text or json.');
+            throw new InvalidArgumentException(message: sprintf('Rector format must be %s or %s.', OutputFormat::Text->value, OutputFormat::Json->value));
         }
         if ($apply && OutputFormat::Json === $outputFormat) {
             throw new InvalidArgumentException('JSON output is preview-only; use text output for explicit --apply.');

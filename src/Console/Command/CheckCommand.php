@@ -30,12 +30,12 @@ final readonly class CheckCommand
         #[MapInput]
         ScanInput $settings,
 
-        #[Option(description: 'Output format: text, json (compact), or json-pretty (indented). JSON is one nonstreaming check report.')]
+        #[Option(description: 'Output representation; JSON is one nonstreaming check report.', suggestedValues: OutputFormat::VALUES)]
         string $format = OutputFormat::Text->value,
     ): int {
         $outputFormat = OutputFormat::tryFrom($format);
         if (null === $outputFormat) {
-            $io->getErrorStyle()->error('Check format must be text, json or json-pretty.');
+            $io->getErrorStyle()->error(sprintf('Check format must be %s, %s or %s.', OutputFormat::Text->value, OutputFormat::Json->value, OutputFormat::JsonPretty->value));
 
             return 2;
         }

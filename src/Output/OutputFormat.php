@@ -10,4 +10,7 @@ enum OutputFormat: string
     case Text = 'text';
     case Json = 'json';
     case JsonPretty = 'json-pretty';
+
+    /** Public presentation values usable in attribute constant expressions. */
+    public const VALUES = [self::Text->value, self::Json->value, self::JsonPretty->value];
 }

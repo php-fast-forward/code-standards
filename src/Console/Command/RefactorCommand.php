@@ -42,7 +42,7 @@ final readonly class RefactorCommand
         #[Option(description: 'Positive whole seconds per Rector subprocess, including preflight and verification.')]
         string $timeout = '300',
 
-        #[Option(description: 'Native output: text, or json for preview only; json cannot be combined with --apply.')]
+        #[Option(description: 'Native output; JSON is preview only and cannot be combined with --apply.', suggestedValues: [OutputFormat::Text->value, OutputFormat::Json->value])]
         string $format = OutputFormat::Text->value,
     ): int {
         try {
