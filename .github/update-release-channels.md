@@ -41,9 +41,15 @@ published Changelog revision, is:
 with:
   publish-app-client-id: ${{ vars.RELEASE_CHANNEL_APP_CLIENT_ID }}
   publish-environment: release-channels
-secrets:
-  publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}
 ```
+
+The public client ID must be a repository variable (or approved literal), not an
+environment variable read by the caller: that caller has no environment.
+The nested publisher selects `release-channels` and consumes the environment
+secret named `app-private-key` directly under the proposed upstream contract.
+The caller does not forward an environment-only secret. Code Standards has no
+existing secret to rename; approval must establish this exact name/scope once,
+without a new permanent alias or a repository-wide private-key secret.
 
 The selected integration uses job-local repository-scoped App authentication only
 for publication, then genuine release-event promotion with the job's GitHub token.
