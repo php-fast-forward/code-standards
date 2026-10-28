@@ -79,7 +79,7 @@ jobs:
         env:
           COMPOSER_HOME: ${{ runner.temp }}/standards-composer-home
           COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
-        run: composer install --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
+        run: composer install --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
       - name: Check out exact consumer head
         uses: actions/checkout@v7
         with:

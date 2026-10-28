@@ -30,21 +30,27 @@ composer require --dev fast-forward/code-standards
 vendor/bin/code-standards check --all
 ```
 
-CPX can invoke the installed package directly with
-`cpx fast-forward/code-standards list`. The CLI resolves Composer dependencies
-from its installation, including when run outside the package checkout.
+The compiled executable is installed directly through Composer's binary proxy.
+Optional scripts keep checks convenient without building the tool in consumers:
+
+```json
+{"scripts":{"standards:check":"code-standards check --all","standards:fix":"code-standards fix --all"}}
+```
+
+Run `composer standards:check`; apply formatting explicitly with
+`composer standards:fix`. Global installation uses
+`composer global require fast-forward/code-standards`, then the binary in
+`composer global config bin-dir --absolute`.
 
 The GitHub `v0` workflow channel and the Composer package are separate
-distribution mechanisms. The [PHAR distribution investigation](docs/phar-distribution.rst)
-records the experimental packaging path and its remaining runtime gates.
+publications. See the [PHAR distribution contract](docs/phar-distribution.rst)
+for the pending artifact publication gate; a source merge does not publish a ready package.
 Copyable workflow callers live in [resources/workflows](resources/workflows/README.md).
 
-Requires PHP 8.3 or later in the 8.x series, Git and Composer runtime API 2.2+
-for installed binary proxies. Composer resolves the tool with the project's
-dependency constraints; syntax is checked using the executing PHP binary.
-No PHP migration rules are enabled. Review compatibility with the
-application's minimum PHP before adopting a preset.
-
+Requires PHP ^8.3, Git and the PHP extensions declared in `composer.json`,
+including Phar and zlib. Bundled libraries do not enter the consumer's dependency
+graph. Executable configurations may load consumer classes; this is no namespace sandbox.
+Syntax uses the executing PHP binary. No PHP migration rules are enabled.
 Workflow guards and their contributor tests additionally require Bash and jq.
 Hosted Ubuntu runners provide both; the Composer library and CLI use the PHP
 dependencies declared in this package.
@@ -118,8 +124,6 @@ declare(strict_types=1);
 use FastForward\CodeStandards\Config\ECSConfig;
 use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 
-require __DIR__ . '/vendor/autoload.php';
-
 return ECSConfig::configure(static function (ECSConfigBuilder $config): void {
     // Local rule imports/overrides go last; review their semantic risk.
     $config->withConfiguredRule(
@@ -132,8 +136,9 @@ return ECSConfig::configure(static function (ECSConfigBuilder $config): void {
 Select it explicitly with `--config=ecs.php`. PHP configuration is executable
 code and belongs in an unprivileged environment. The CLI defaults to its own
 preset, does not discover or overwrite consumer configuration, and never runs
-both ECS and a competing PHP-CS-Fixer pass. Standalone ECS users may import the
-same library preset and set their own paths. CLI selection uses the scope below;
+both ECS and a competing PHP-CS-Fixer pass. The preset API is available inside
+the compiled tool's selected configuration. The package does not expose these
+classes through the consumer autoloader. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
 
 For braced multiline `if`, `elseif`, `while` and `do-while` conditions, the
@@ -187,7 +192,7 @@ of another checkout's dependency graph.
 Start with the [usage guide](docs/index.rst). See [policy and differences](docs/policy.rst), [workflow/ref adoption](docs/automation.rst)
 and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
 The [architecture decision](docs/architecture.rst) defines library/tool dependency
-directions and CPX/autoload limits.
+directions and executable-configuration limits.
 The formatter preserves descriptive PHPDoc and inherited documentation.
 The separate opt-in [`refactor` command](docs/rector.rst) previews an explicit
 native Rector configuration and requires `--apply` for semantic writes. It is

@@ -2,7 +2,7 @@
 name: fast-forward-code-standards
 description: Use Fast Forward Code Standards to check PHP syntax and formatting, apply an explicitly requested style fix, configure native ECS overrides, preview opt-in Rector changes, analyze magic numbers, or adopt its changed-file PR workflow. Use fast-forward-phpdoc for source-documentation authoring instead.
 license: MIT
-compatibility: Supports fast-forward/code-standards ^0.5.0, PHP ^8.3, Git and Composer runtime API ^2.2. Native XML magic-number reports additionally require ext-dom. Inspect the installed version and help; do not silently upgrade an incompatible consumer.
+compatibility: Supports fast-forward/code-standards ^0.5.0, PHP ^8.3, Git and the PHP extensions declared by the installed package (including Phar and zlib). Native XML magic-number reports additionally require ext-dom. Inspect the installed version and help; do not silently upgrade an incompatible consumer.
 metadata:
   api-baseline: fast-forward/code-standards ^0.5.0
   repository: https://github.com/php-fast-forward/code-standards
@@ -29,6 +29,13 @@ vendor/bin/code-standards help check
 vendor/bin/code-standards check --all
 ```
 
+Composer installs the compiled `builds/code-standards` executable and creates
+`vendor/bin/code-standards`; consumers do not build it or install its internal
+libraries. Adopt only a published version whose distribution contains that artifact.
+A source merge alone is insufficient. Optional Composer scripts can call
+`code-standards check --all` and `code-standards fix --all`; only invoke the latter
+when a fix is explicitly requested. Global use follows `composer global require
+fast-forward/code-standards` and Composer's global bin directory.
 No config file is required for the packaged PER Coding Style 3.0 preset. `--all`
 selects tracked PHP files and PHP entrypoints under `bin/`, excluding matches of
 the consumer's root/nested `.gitignore`, including force-added tracked matches.

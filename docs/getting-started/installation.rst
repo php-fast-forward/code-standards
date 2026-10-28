@@ -1,29 +1,40 @@
 Installation and compatibility
 ==============================
 
-The tool requires PHP 8.3 or later within the supported 8.x range, Git, and
-Composer runtime API 2.2 or later. Contributor builds additionally need Bash, jq and Node.js 24 or later for
-workflow contract tests. The release-channel selection fixtures run through
-``node --test`` as part of ``composer test``. The locked contributor graph is tested on
-PHP 8.3, 8.4 and 8.5.
+Install a verified published Composer version in the consumer Git project:
 
-For a source checkout of a reviewed commit:
+.. code-block:: console
+
+   composer require --dev fast-forward/code-standards
+   vendor/bin/code-standards list
+   vendor/bin/code-standards check --all
+
+Composer's binary proxy targets ``builds/code-standards`` directly. The package
+contains a ready executable; consumers run no build and resolve no internal tool
+libraries. PHP ^8.3, Git, and the extensions declared in ``composer.json`` are
+required, including Phar and zlib. Native XML magic-number reports also need DOM.
+The executing PHP parses selected sources; it does not emulate an older PHP.
+
+Optional Composer scripts may invoke ``code-standards check --all`` and
+``code-standards fix --all``. The latter requires explicit formatting authority.
+Global use installs with ``composer global require fast-forward/code-standards``;
+find its executable directory with ``composer global config bin-dir --absolute``.
+
+Check the actual published artifact before adopting this distribution contract.
+A source merge, draft PR or GitHub workflow channel does not prove a ready
+Packagist distribution exists. See `PHAR distribution <../phar-distribution.rst>`__.
+``--prefer-source`` may include source files in addition to a committed artifact;
+source-only checkouts require contributor dependencies and a build.
+
+Contributors retain the separate source entrypoint:
 
 .. code-block:: console
 
    composer install --no-plugins --no-scripts
    php bin/code-standards help
+   composer build
 
-Use an actual published Composer version when adopting the package as a
-``require-dev`` dependency. Check the repository releases first: documentation
-of current source does not establish that a package version or the GitHub
-``v0`` channel has been published. A local path repository is suitable for an
-isolated trial; do not mistake its development constraint for a release.
-
-The package's runtime dependencies are libraries, including Symfony Console,
-Symfony Process, Fast Forward Container and ECS. The tool's ``require-dev``
-dependencies are not installed transitively for consumers. CPX separates
-installation and resolution, not PHP namespaces loaded into one process.
-
-The executing PHP binary parses selected sources; it is not an emulator for a
-consumer's older PHP minimum. No PHP version migration is enabled.
+Build dependencies live in ``require-dev``. Builds resolve locked runtime roots
+inside a disposable directory; they never consume Code Standards itself. Workflow
+tests additionally need Bash, jq and Node.js 24 or later. The contributor graph
+and compiled executable are tested on PHP 8.3, 8.4 and 8.5.

@@ -3,5 +3,6 @@ category: added
 type: minor
 ---
 
-Protect the complete copyable resources payload in package archives and document
-an isolated PHAR distribution proof of concept and its remaining runtime gates.
+Build an executable PHAR with PHP tooling and a direct Composer binary target,
+move bundled libraries to development dependencies, preserve all copyable
+resources, and document the remaining artifact publication gate.

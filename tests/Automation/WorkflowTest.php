@@ -100,7 +100,7 @@ final class WorkflowTest extends TestCase
             self::assertStringContainsString('github.event.pull_request.head.sha', $workflow);
             self::assertStringContainsString('github.event.pull_request.base.sha', $workflow);
             self::assertSame(2, substr_count($workflow, 'persist-credentials: false'));
-            self::assertStringContainsString('--no-dev --no-plugins --no-scripts', $workflow);
+            self::assertStringContainsString('--no-plugins --no-scripts', $workflow);
             self::assertStringNotContainsString('secrets.', $workflow);
             self::assertStringNotContainsString('contents: write', $workflow);
             self::assertStringContainsString('[[ -n "$STANDARDS_REPOSITORY" && "$STANDARDS_HEAD_REPOSITORY" == "$STANDARDS_REPOSITORY" ]] || exit 1', $workflow);

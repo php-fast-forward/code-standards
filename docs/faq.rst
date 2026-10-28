@@ -44,7 +44,7 @@ Can I assume v0 and 0.1.0 exist?
    No. Verify actual releases and channel refs independently before adopting
    Composer constraints or copying a workflow wrapper.
 
-Does CPX isolate all library namespaces?
+Does the compiled executable isolate all library namespaces?
    No. Separate installation does not isolate classes loaded in one PHP process.
 
 How is the application composed?

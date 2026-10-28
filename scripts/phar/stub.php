@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 // Materialize an exclusive runtime for filesystem-only tool entrypoints and workers.
 // No shared cache, dependency resolution, consumer autoload discovery or source build.
+Phar::mapPhar();
 $runtime = sys_get_temp_dir() . '/code-standards-phar-' . bin2hex(random_bytes(16));
 if (!mkdir($runtime, 0700)) {
     fwrite(STDERR, "Could not create the PHAR runtime directory.\n");

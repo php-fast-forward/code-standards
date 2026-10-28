@@ -1,6 +1,7 @@
 * text=auto
 *.php text eol=lf
 /bin/code-standards text eol=lf
+/builds/code-standards binary
 
 # Local state and synchronized copies never belong to package distributions.
 /.git export-ignore
@@ -22,4 +23,7 @@
 /.gitattributes export-ignore
 /.changelog/ export-ignore
 
-# Keep src/, bin/, config/, resources/, composer.lock, README and its Dash image.
+# Ready distributions retain the PHAR, manifests, complete resources and documentation.
+/src/ export-ignore
+/config/ export-ignore
+/bin/ export-ignore
