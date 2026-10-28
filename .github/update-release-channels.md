@@ -41,13 +41,17 @@ published Changelog revision, is:
 with:
   publish-app-client-id: ${{ vars.RELEASE_CHANNEL_APP_CLIENT_ID }}
   publish-environment: release-channels
+secrets:
+  publish-app-private-key: ${{ secrets.app-private-key }}
 ```
 
 The public client ID must be a repository variable (or approved literal), not an
 environment variable read by the caller: that caller has no environment.
 The nested publisher selects `release-channels` and consumes the environment
 secret named `app-private-key` directly under the proposed upstream contract.
-The caller does not forward an environment-only secret. Code Standards has no
+The caller explicitly passes the secret name through the nested workflow chain;
+GitHub supplies the environment-scoped value at the job selecting that environment.
+[GitHub requires this declaration even for environment-only secrets](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow). Code Standards has no
 existing secret to rename; approval must establish this exact name/scope once,
 without a new permanent alias or a repository-wide private-key secret.
 
