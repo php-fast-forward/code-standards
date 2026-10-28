@@ -40,8 +40,8 @@ final class RectorTest extends TestCase
         $preview = $this->cli(environment: ['CI' => 'true', 'GITHUB_ACTIONS' => 'true']);
         self::assertSame(2, $preview->getExitCode(), $preview->getOutput() . $preview->getErrorOutput());
         self::assertSame($before, $this->ownedBytes());
-        // Native Rector chooses memory storage in CI even with a configured cache directory.
-        self::assertDirectoryDoesNotExist($this->directory . '/.cache');
+        // Rector 2.8 uses its configured file cache in CI; owned source/config/lock bytes stay intact.
+        self::assertDirectoryExists($this->directory . '/.cache');
         self::assertSame(0, $this->cli(['--apply'])->getExitCode());
         self::assertStringContainsString('[1, 2]', file_get_contents($this->directory . '/source.php'));
         $after = $this->ownedBytes();
@@ -75,18 +75,78 @@ final class RectorTest extends TestCase
         self::assertSame($after, $this->ownedBytes());
     }
 
+    /** Exercises PHPStan's rich parser on modern source before preview, apply and verification. */
+    public function testRichParserCompatibilityWithModernConsumerSource(): void
+    {
+        $fixtures = dirname(__DIR__) . '/Fixtures/';
+        $source = file_get_contents($fixtures . 'rector-rich-parser.before.php.inc');
+        $expected = file_get_contents($fixtures . 'rector-rich-parser.after.php.inc');
+        file_put_contents($this->directory . '/source.php', $source);
+        $this->configuration('\\Rector\\Php54\\Rector\\Array_\\LongArrayToShortArrayRector', 80300);
+        $before = $this->ownedBytes();
+
+        $preview = $this->cli();
+        self::assertSame(2, $preview->getExitCode(), $preview->getOutput() . $preview->getErrorOutput());
+        self::assertSame($before, $this->ownedBytes());
+        $apply = $this->cli(['--apply']);
+        self::assertSame(0, $apply->getExitCode(), $apply->getOutput() . $apply->getErrorOutput());
+        self::assertSame($expected, file_get_contents($this->directory . '/source.php'));
+        $verify = $this->cli();
+        self::assertSame(0, $verify->getExitCode(), $verify->getOutput() . $verify->getErrorOutput());
+    }
+
     /** Empty native custom config is rejected before Rector's successful-but-writing initializer. */
-    public function testEmptyConfigDoesNotGenerateRectorFile(): void
+    #[DataProvider('executionModes')]
+    public function testEmptyConfigDoesNotGenerateRectorFile(array $options): void
     {
         file_put_contents($this->directory . '/source.php', '<?php return array(1);');
         file_put_contents($this->directory . '/policy.php', '<?php return \\Rector\\Config\\RectorConfig::configure()->withPhpVersion(70400);');
         $before = $this->ownedBytes();
-        $result = $this->cli();
+        $result = $this->cli($options);
 
         self::assertSame(2, $result->getExitCode());
         self::assertStringContainsString('at least one rule', $result->getErrorOutput());
         self::assertFileDoesNotExist($this->directory . '/rector.php');
         self::assertSame($before, $this->ownedBytes());
+    }
+
+    /** Native skips must leave an effective rule before either execution mode can proceed. */
+    #[DataProvider('executionModes')]
+    public function testFullySkippedRulesFailWithoutWriting(array $options): void
+    {
+        file_put_contents($this->directory . '/source.php', '<?php return array(1);');
+        $rule = '\\Rector\\Php54\\Rector\\Array_\\LongArrayToShortArrayRector';
+        $config = $this->configuration($rule, 70400);
+        file_put_contents($this->directory . '/policy.php', str_replace('->withRules(', '->withSkip([' . $rule . '::class])->withRules(', $config));
+        $before = $this->ownedBytes();
+        $result = $this->cli($options);
+
+        self::assertSame(2, $result->getExitCode(), $result->getOutput() . $result->getErrorOutput());
+        self::assertStringContainsString('at least one rule', $result->getErrorOutput());
+        self::assertFileDoesNotExist($this->directory . '/rector.php');
+        self::assertSame($before, $this->ownedBytes());
+    }
+
+    /** An explicitly configured renaming rule remains valid despite appearing as an unconfigured native helper. */
+    public function testExplicitConfiguredRenameRuleCountsAsSelectedRule(): void
+    {
+        $source = '<?php function create(): \\DateTime { return new \\DateTime(); }';
+        file_put_contents($this->directory . '/source.php', $source);
+        $rule = '\\Rector\\Renaming\\Rector\\Name\\RenameClassRector';
+        $config = $this->configuration($rule, 70400);
+        $config = str_replace('->withRules([' . $rule . '::class])',
+            '->withConfiguredRule(' . $rule . '::class, [\\DateTime::class => \\DateTimeImmutable::class])', $config);
+        file_put_contents($this->directory . '/policy.php', $config);
+        $before = $this->ownedBytes();
+        $preview = $this->cli();
+        self::assertSame(2, $preview->getExitCode(), $preview->getOutput() . $preview->getErrorOutput());
+        self::assertSame($before, $this->ownedBytes());
+        $apply = $this->cli(['--apply']);
+        self::assertSame(0, $apply->getExitCode(), $apply->getOutput() . $apply->getErrorOutput());
+        self::assertStringContainsString('DateTimeImmutable', file_get_contents($this->directory . '/source.php'));
+        $verify = $this->cli();
+        self::assertSame(0, $verify->getExitCode(), $verify->getOutput() . $verify->getErrorOutput());
+        self::assertSame($config, file_get_contents($this->directory . '/policy.php'));
     }
 
     /** @return iterable<string, array{list<string>}> Both preview and application require a declared target. */
