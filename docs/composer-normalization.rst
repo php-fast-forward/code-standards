@@ -89,15 +89,19 @@ autoload file/path lists, installer paths and patch order. Regression fixtures a
 literal aliases/OR constraints, idempotence and complete file-byte preservation
 in check mode. Review arbitrary extension metadata in the resulting diff.
 
-Only data APIs are used. The command never constructs a Composer application,
-plugin manager or installer, starts Composer, loads consumer autoload/config,
-executes scripts or fetches a remote schema. Ordinary installation still loads
-the tool's Composer autoloader through its binary proxy, as documented in the
+After CLI bootstrap, normalization uses only data APIs. It never constructs a
+Composer application, plugin manager or installer, starts Composer, discovers an
+additional target-project autoload/config, executes Composer script commands or
+fetches a remote schema. In an ordinary consumer Composer installation, the
+binary proxy intentionally loads the shared consumer/tool autoloader: registered
+autoload files can execute during that existing bootstrap. A separate tool
+installation does not import the target project's vendor/autoload.php; the
+poison-autoload fixture verifies that separate-installation case. See the
 `architecture contract <architecture.rst>`__. This is not a filesystem sandbox
 and does not support concurrent edits to the same metadata.
 
 Dependency cost and alternatives
--------------------------------
+--------------------------------
 
 The verified graph adds eight packages for ``ergebnis/json-normalizer`` and
 its Composer constraint-parser support. This is the official standalone
