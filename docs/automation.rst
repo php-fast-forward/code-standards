@@ -109,15 +109,46 @@ writes are not atomic. The repository concurrency group
 does not cancel the running job, but does not exclude other writers or guarantee
 a durable FIFO queue. Editing an already-current release may repeat its update.
 
-**Activation remains pending.** Publication currently uses GITHUB_TOKEN, which
-cannot trigger this downstream release workflow. It needs a verified published
-Changelog contract for publication-only App authentication, preserving the
-managed PR author. The coordinated optional inputs are ``publish-app-client-id``,
-``publish-environment`` and secret ``publish-app-private-key``; do not pass them
-to an older published revision without verifying its interface. Public Client ID
-must be a repository variable or approved literal. Explicit secret forwarding
-uses ``app-private-key``; the selected nested environment supplies its value.
-No key is installed by YAML.
+Publication-only App integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
+Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
+separate release workflow. The caller now selects immutable candidate
+``e8216f7d0df1e278f6da6a72936e2c7a5e1a2258`` from Changelog PR76, whose actual
+workflow API declares ``publish-app-client-id``, ``publish-environment`` and
+``publish-app-private-key``. The existing published v0 revision
+``203db95e68fc974e95ba1a921f08d01f88851be1`` does not declare them.
+
+The public Client ID is a non-empty literal, so an absent repository variable
+cannot silently select the job-token fallback. Only publication receives that
+App selection and ``release-channels`` environment. The caller explicitly
+forwards ``secrets.app-private-key`` under the publication-only secret name;
+the nested publication job uses its environment's ``app-private-key`` value.
+With a non-empty App ID and missing key, upstream authentication fails before
+publication. Managed PR authorship remains ``github-actions[bot]``; the publisher
+App is not required to be that PR's author. No global App credential input or
+``secrets: inherit`` is added, and the release-channel workflow is unchanged.
+
+**This is a blocked draft integration, not an activated release path.** The SHA
+is an inspectable PR candidate, not a published Changelog version. The compatible
+adoption order is:
+
+#. Review and qualify Changelog PR76's publication-only API, then let the owner
+   merge/publish a compatible release. Verify that released revision actually
+   contains the three inputs and nested publication/authentication routing.
+#. Replace this candidate pin with that verified published revision before stable
+   adoption, or obtain explicit acceptance of using the reviewed unreleased SHA.
+   Never send the new inputs to the old v0 and assume compatibility.
+#. Obtain the separate approvals for this repository's environment, sensitive key
+   transmission and protection rules, then apply them through supported access.
+   This caller patch does not create or configure those resources.
+#. Only after those gates, let the owner merge the caller and the next approved
+   version PR. Observe that real publication/channel run separately; no rerun,
+   edited release, manual release or ref mutation is used to manufacture evidence.
+
+Missing deployment configuration is not repaired by falling back to GITHUB_TOKEN.
+This patch neither republishes v0.9.2 nor backfills its channel event.
 
 The common channel template selects ``release-channels`` and mints a revocable
 App token scoped to this repository with Contents/Workflows write. The ambient

@@ -43,7 +43,7 @@ final class WorkflowTest extends TestCase
             'actions/checkout@v7',
             'actions/upload-artifact@v7',
             'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@e8216f7d0df1e278f6da6a72936e2c7a5e1a2258',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
         ];
         $files = [
@@ -58,6 +58,20 @@ final class WorkflowTest extends TestCase
                 }
             }
         }
+    }
+
+    /** Prevents silent GITHUB_TOKEN publication by keeping the App identity explicit and publication-only. */
+    public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
+        self::assertStringContainsString('changelog.yml@e8216f7d0df1e278f6da6a72936e2c7a5e1a2258', $workflow);
+        self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
+        self::assertStringContainsString('publish-environment: release-channels', $workflow);
+        self::assertStringContainsString('publish-app-private-key: ${{ secrets.app-private-key }}', $workflow);
+        self::assertDoesNotMatchRegularExpression('/^\s+app-client-id:/m', $workflow);
+        self::assertDoesNotMatchRegularExpression('/^\s+app-private-key:/m', $workflow);
+        self::assertStringNotContainsString('secrets: inherit', $workflow);
+        self::assertStringNotContainsString('automation-actor:', $workflow);
     }
 
     /** Reserves promotion for genuine published/edited stable release events with one serialized writer. */
