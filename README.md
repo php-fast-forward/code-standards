@@ -34,7 +34,12 @@ The compiled executable is installed directly through Composer's binary proxy.
 Optional scripts keep checks convenient without building the tool in consumers:
 
 ```json
-{"scripts":{"standards:check":"code-standards check --all","standards:fix":"code-standards fix --all"}}
+{
+    "scripts": {
+        "standards:check": "code-standards check --all",
+        "standards:fix": "code-standards fix --all"
+    }
+}
 ```
 
 Run `composer standards:check`; apply formatting explicitly with
@@ -90,12 +95,15 @@ See the [structured check contract](docs/structured-check.rst). Text is the
 default; `fix` uses text output.
 Use `--format=json-pretty` for the same report with indentation; see
 [result presentation](docs/process-contracts.rst#structured-check-presentation).
-The default preset stores its ECS cache beneath the system temporary directory,
+Source installations store the default ECS cache beneath the system temporary directory,
 in `fast-forward-code-standards/<SHA-256 of the executing checkout path>/<owned-policy fingerprint>`.
 The fingerprint includes the installed preset and owned checker paths and source
 bytes. Different checkouts cannot invalidate each other's cache, and a changed
-owned rule cannot reuse an earlier passing result. Native
-`withCache()` overrides remain supported and apply last; share cache directories
+owned rule cannot reuse an earlier passing result. The compiled executable keeps
+its default cache inside the extracted runtime and removes it at normal shutdown;
+separate invocations do not reuse it or accumulate persistent policy directories.
+See the [cache lifetime contract](docs/phar-distribution.rst#filesystem-runtime).
+Native `withCache()` overrides remain supported and apply last; share cache directories
 only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
 After each successful formatter batch, a read-only check verifies the result.
