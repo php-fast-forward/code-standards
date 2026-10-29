@@ -60,6 +60,40 @@ accumulate persistent per-invocation policy directories in system temporary stor
 Source installations retain their stable checkout/policy cache identity; explicit
 native ``withCache()`` overrides remain authoritative and outside this cleanup.
 
+Consumer ECS configuration
+--------------------------
+
+The tool's default preset does not require the consumer's Composer loader or
+discover ``ecs.php`` automatically. Select the project configuration explicitly
+with ``vendor/bin/code-standards check --all --config=ecs.php``. To use project
+classes or development rule packages, that configuration opts into its own loader:
+
+.. code-block:: php
+
+    <?php
+
+    require __DIR__ . '/vendor/autoload.php';
+
+    return FastForward\CodeStandards\Config\ECSConfig::configure()->withRules([
+        Project\CodingStandard\ProjectFixer::class,
+        Vendor\CodingStandard\PackageFixer::class,
+    ]);
+
+Install those rule packages in the project's ``require-dev``. Composer generates
+project ``autoload`` and ``autoload-dev`` mappings during development installation;
+``composer install --no-dev`` intentionally omits development packages/mappings.
+Rules must implement APIs compatible with the bundled ECS/PHP-CS-Fixer/PHPCS
+versions. Loading the project autoloader is explicit execution inside the worker,
+not namespace isolation or a guarantee that conflicting engine versions coexist.
+
+The distribution harness installs a local synthetic rule package through real
+Composer ``require-dev`` and registers separate project ``autoload`` and
+``autoload-dev`` fixers. It verifies all three rules report their own marker,
+``check`` preserves source, ``fix`` changes every marker, and rechecking succeeds
+without changing Composer metadata or configuration. Existing source integration
+tests also exercise explicit loader opt-in; their synthetic loader alone was not
+proof of Composer-generated development autoloading in the PHAR.
+
 Standard Composer distribution
 -------------------------------
 

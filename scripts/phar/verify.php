@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/support.php';
+require __DIR__ . '/consumer-config.php';
 
 $source = dirname(__DIR__, 2);
 $binary = realpath($argv[1] ?? $source . '/builds/code-standards');
@@ -155,6 +156,7 @@ CONFIG);
         'repeated_cache_operations' => ['fix', 'check', 'fix', 'check'],
         'default_cache_residue' => false,
         'explicit_cache_preserved' => true,
+        'consumer_rules' => verifyConsumerRules($proxy, $env),
     ];
 }
 fwrite(STDOUT, json_encode(['php' => PHP_VERSION, 'bytes' => filesize($binary), 'sha256' => hash_file('sha256', $binary), 'results' => $results], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . PHP_EOL);

@@ -151,6 +151,13 @@ the compiled tool's selected configuration. The package does not expose these
 classes through the consumer autoloader. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
 
+To use project rules or rule packages installed in `require-dev`, explicitly load
+the project's `vendor/autoload.php` inside the selected configuration before
+registering those rules. Composer includes project `autoload` and `autoload-dev`
+classes in a development installation. See the
+[consumer configuration contract](docs/phar-distribution.rst#consumer-ecs-configuration)
+for an example and compatibility limits.
+
 For braced multiline `if`, `elseif`, `while` and `do-while` conditions, the
 native PSR-12 wrapper places the first expression on the next line and the
 closing parenthesis on its own line (`) {`, or `);` for do-while). The native
