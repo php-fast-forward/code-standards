@@ -34,15 +34,15 @@ final class WorkflowTest extends TestCase
     }
 
     /** Keeps external Actions on verified published channels or reviewed release commits. */
-    public function testExternalActionsUsePublishedMajorChannels(): void
+    public function testExternalActionsUseVerifiedPublishedReferences(): void
     {
         $references = [
-            'Actions-R-Us/actions-tagger@v2',
+            'Actions-R-Us/actions-tagger@v2.0.3',
             'actions/create-github-app-token@v3.3.0',
             'actions/github-script@v8',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@7892d45fef7ef3453172387692f9f72b9d28b6fb',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@9cac29abac1f9ea77ae4f80c91de662743c7728c',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
         ];
         $files = [
@@ -63,9 +63,10 @@ final class WorkflowTest extends TestCase
     public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
-        self::assertStringContainsString('changelog.yml@7892d45fef7ef3453172387692f9f72b9d28b6fb', $workflow);
+        self::assertStringContainsString('changelog.yml@9cac29abac1f9ea77ae4f80c91de662743c7728c', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
+        self::assertStringContainsString('managed-branch: changelog/version-recovery-98', $workflow);
         self::assertStringContainsString('publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-client-id:/m', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-private-key:/m', $workflow);
@@ -86,7 +87,7 @@ final class WorkflowTest extends TestCase
     }
 
     /** Reserves promotion for genuine published/edited stable release events with one serialized writer. */
-    public function testReleaseChannelsUseTheMajorActionOnPublishedAndEditedReleases(): void
+    public function testReleaseChannelsUseTheFullVersionActionOnPublishedAndEditedReleases(): void
     {
         $root = dirname(__DIR__, 2);
         $workflow = file_get_contents($root . '/.github/workflows/repository-release-channels.yml');

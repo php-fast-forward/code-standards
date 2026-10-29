@@ -17,11 +17,12 @@ jobs:
       pull-requests: write
       issues: read
       statuses: write
-    # Candidate API from Changelog PR76; adopt a verified compatible release before stable rollout.
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@7892d45fef7ef3453172387692f9f72b9d28b6fb
+    # Reviewed integration candidate combines publication API and original-PR provenance fixes.
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@9cac29abac1f9ea77ae4f80c91de662743c7728c
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main
+      managed-branch: changelog/version-recovery-98
       source: tags
       prepare-release: true
       publish: true
