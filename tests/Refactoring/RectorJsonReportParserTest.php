@@ -102,6 +102,11 @@ final class RectorJsonReportParserTest extends TestCase
             1,
             'Rector preview exit contradicts its native totals.',
         ];
+        yield 'changes with clean exit' => [
+            '{"totals":{"changed_files":1,"errors":0},"changed_files":["a.php"]}',
+            0,
+            'Rector preview exit contradicts its native totals.',
+        ];
     }
 
     /** Rejected reports keep the established exception class and diagnostic text. */
