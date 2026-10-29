@@ -118,7 +118,7 @@ Publication-only App integration
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
 separate release workflow. The caller now selects immutable candidate
-``41020df0dcd4cb9a2b990f54077553deefbd7608`` combining Changelog PR76 and PR77
+``42bc58fbab55596ee03d480ebf71d2a3dfc48fb4`` combining Changelog PR76 and PR77
 in the review-only integration PR78. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
 ``publish-app-private-key``. The existing published v0 revision
@@ -130,8 +130,9 @@ App selection and ``release-channels`` environment. The caller explicitly
 forwards ``secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY`` under the logical
 ``publish-app-private-key`` workflow-call name. The nested publication job declares
 ``RELEASE_CHANNEL_APP_PRIVATE_KEY`` so its environment supplies that same-named
-secret. Authentication selects a key only with an App Client ID and prefers the
-explicit logical key before the environment key. Token mode ignores the staged
+secret. Authentication preserves an explicit logical key so incomplete App credentials
+are rejected. It considers the environment key only with a selected App Client
+ID and no explicit key. Token mode ignores the staged
 environment key; a missing publication key never borrows the legacy App key.
 With a non-empty App ID and missing key, upstream authentication fails before
 publication. Managed PR authorship remains ``github-actions[bot]``; the publisher
