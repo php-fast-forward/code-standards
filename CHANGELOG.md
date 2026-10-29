@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-10-29
+
+### Added
+
+- Add explicit `check --format=json-pretty` presentation with the same versioned result and exits as compact JSON, using a dedicated check result renderer.
+
+  Centralize public output-format identifiers in a backed enum and make check-result construction explicit with named arguments, preserving each command's supported formats and native schemas.
+
+  Offer enum-derived shell-completion suggestions while retaining explicit format validation and existing invalid-input diagnostics.
+
+  ([#94](https://github.com/php-fast-forward/code-standards/pull/94))
+
+### Changed
+
+- Reuse native Rector preview report validation from the source library while preserving CLI output, native exits and optional-workflow classification and policy. ([#95](https://github.com/php-fast-forward/code-standards/pull/95))
+
+### Fixed
+
+- Connect repository publication to Changelog's publication-only App inputs using an immutable API-compatible candidate revision, so missing publication credentials fail closed instead of silently publishing with GITHUB_TOKEN. Stable adoption still requires the compatible upstream release and approved environment/key configuration. ([#100](https://github.com/php-fast-forward/code-standards/pull/100))
+- Refreshes version preparation with authenticated, verified original implementation PR objects
+  and a new exclusive managed branch, preserving the human-merged PR98 head and
+  strict signed Bot ownership. Selects the verified
+  immutable actions-tagger commit verified for v2.0.3 for channel updates.
+
+  ([#102](https://github.com/php-fast-forward/code-standards/pull/102))
+
+- Use the valid RELEASE_CHANNEL_APP_PRIVATE_KEY environment secret name for repository publication and release-channel authentication through a compatible Changelog workflow revision, while preserving publication-only App routing and channel selection. ([#102](https://github.com/php-fast-forward/code-standards/pull/102))
+
 ## [0.9.2] - 2026-10-28
 
 ### Changed
@@ -259,6 +287,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.10.0]: https://github.com/php-fast-forward/code-standards/compare/v0.9.2...v0.10.0
 [0.9.2]: https://github.com/php-fast-forward/code-standards/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/php-fast-forward/code-standards/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/php-fast-forward/code-standards/compare/v0.8.0...v0.9.0

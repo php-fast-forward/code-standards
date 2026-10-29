@@ -17,15 +17,16 @@ jobs:
       pull-requests: write
       issues: read
       statuses: write
-    # Candidate API from Changelog PR76; adopt a verified compatible release before stable rollout.
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@e8216f7d0df1e278f6da6a72936e2c7a5e1a2258
+    # Reviewed integration candidate combines publication API and original-PR provenance fixes.
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@42bc58fbab55596ee03d480ebf71d2a3dfc48fb4
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main
+      managed-branch: changelog/version-recovery-98
       source: tags
       prepare-release: true
       publish: true
       publish-app-client-id: 'Iv23liHqRng02H747IYa'
       publish-environment: release-channels
     secrets:
-      publish-app-private-key: ${{ secrets.app-private-key }}
+      publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}

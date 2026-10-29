@@ -47,7 +47,7 @@ jobs:
         uses: actions/create-github-app-token@v3.3.0
         with:
           client-id: ${{ vars.RELEASE_CHANNEL_APP_CLIENT_ID }}
-          private-key: ${{ secrets.app-private-key }}
+          private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}
           owner: php-fast-forward
           repositories: code-standards
           permission-contents: write
@@ -55,7 +55,7 @@ jobs:
           skip-token-revoke: 'false'
       - name: Update the released major branch
         if: steps.release.outputs.promote == 'true'
-        uses: Actions-R-Us/actions-tagger@v2
+        uses: Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb # v2.0.3
         with:
           token: ${{ steps.channel-app.outputs.token }}
           prefer_branch_releases: 'true'
