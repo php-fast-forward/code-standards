@@ -52,7 +52,7 @@ final class ECSConfig
         return $config;
     }
 
-    /** Keeps each checkout and owned policy revision in its own temporary cache; native overrides still run last. */
+    /** Source installations reuse temporary caches; extracted distributions keep caches within their exclusive lifetime. */
     private static function cacheDirectory(): string
     {
         $directory = getcwd();
@@ -60,7 +60,12 @@ final class ECSConfig
             throw new RuntimeException('Cannot determine the checkout directory for the ECS cache.');
         }
 
-        return sys_get_temp_dir() . '/fast-forward-code-standards/' . hash('sha256', $directory) . '/' . self::policyFingerprint();
+        $installation = dirname(__DIR__, 2);
+        $cacheRoot = is_file($installation . '/distribution-manifest.json')
+            ? $installation . '/.cache/ecs'
+            : sys_get_temp_dir() . '/fast-forward-code-standards';
+
+        return $cacheRoot . '/' . hash('sha256', $directory) . '/' . self::policyFingerprint();
     }
 
     /** Includes both source bytes and installation paths so an unchanged consumer cannot retain an older owned rule result. */

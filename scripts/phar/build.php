@@ -21,7 +21,6 @@ foreach (['src', 'config', 'resources', 'bin', 'LICENSE'] as $path) {
 }
 $sourceContent = file_get_contents($root . '/composer.json');
 $source = json_decode($sourceContent, true, flags: JSON_THROW_ON_ERROR);
-$sourceIdentity = require $root . '/vendor/composer/installed.php';
 $lockContent = file_get_contents($root . '/composer.lock');
 $lock = json_decode($lockContent, true, flags: JSON_THROW_ON_ERROR);
 $packages = array_merge($lock['packages'], $lock['packages-dev']);
@@ -33,7 +32,7 @@ foreach ($source['extra']['phar']['runtime-packages'] as $name) {
 $manifest = [
     'name' => $source['name'],
     'license' => $source['license'],
-    'version' => getenv('COMPOSER_ROOT_VERSION') ?: $sourceIdentity['root']['pretty_version'],
+    'version' => $source['version'] ?? 'dev-main',
     'require' => $require,
     'autoload' => ['psr-4' => ['FastForward\\CodeStandards\\' => 'src/']],
     'repositories' => [['type' => 'package', 'package' => $packages], ['packagist.org' => false]],

@@ -25,6 +25,9 @@ and asks Composer to resolve that graph using only locked package metadata.
 Contributor/test packages are excluded by resolution, rather than stripping
 files from dependencies. Generated proxies, resources and licenses are retained.
 The source manifests, lock and installed vendor are never rewritten by the build.
+The payload's root version comes from the tracked Composer manifest, defaulting
+to ``dev-main`` when absent; ambient Composer root-version guesses do not change
+its executable contents.
 This is the same necessary dependency promotion as
 `CPX's builder <https://github.com/laravel/cpx/blob/124b3ad19cb98ef0cf6114e56ab9f580c8376ceb/scripts/build.sh>`__;
 simply moving requires to require-dev would omit the runtime from a no-dev build.
@@ -50,6 +53,13 @@ sandbox: executable consumer configurations may load consumer classes explicitly
 CWD, project/config paths and the check command's source-preservation contract
 continue to apply.
 
+The default ECS cache lives inside that extracted runtime and is removed with it.
+Native cache metadata contains installation paths, so independently extracted
+invocations deliberately do not reuse it. Repeated compiled checks/fixes do not
+accumulate persistent per-invocation policy directories in system temporary storage.
+Source installations retain their stable checkout/policy cache identity; explicit
+native ``withCache()`` overrides remain authoritative and outside this cleanup.
+
 Standard Composer distribution
 -------------------------------
 
@@ -63,6 +73,11 @@ The Repository Quality workflow builds and verifies a fresh executable on PHP
 after the exact commit SHA before checking the committed artifact. A stale
 committed binary therefore fails CI while the fresh reviewed build remains
 available to update that PR.
+Before executing the committed candidate, CI opens it only as archive data and
+compares the entire stub and sorted path/content hashes with that fresh build.
+Extra/missing/changed entries, links and serialized metadata are rejected.
+Self-reported manifest digests are diagnostic bindings, not a trust anchor for
+the executable. Container timestamps/compression are not executable content.
 It uses contents-read permissions, does not write Git or tags, and runs no
 release. Maintainers can obtain the artifact from that reviewed run, restore
 executable mode with ``chmod +x builds/code-standards``, and include it in the

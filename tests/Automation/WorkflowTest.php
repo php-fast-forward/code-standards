@@ -60,6 +60,17 @@ final class WorkflowTest extends TestCase
         }
     }
 
+    /** A candidate's self-reported manifest must not authorize its first execution. */
+    public function testCommittedPharComparisonPrecedesRuntimeQualification(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        $comparison = strpos($workflow, 'php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards');
+        $execution = strpos($workflow, 'php scripts/phar/verify.php builds/code-standards');
+        self::assertNotFalse($comparison);
+        self::assertNotFalse($execution);
+        self::assertLessThan($execution, $comparison);
+    }
+
     /** Prevents silent GITHUB_TOKEN publication by keeping the App identity explicit and publication-only. */
     public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
     {

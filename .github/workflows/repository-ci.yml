@@ -52,7 +52,9 @@ jobs:
           compression-level: 0
           if-no-files-found: error
       - name: Qualify the committed Composer distribution
-        run: php scripts/phar/verify.php builds/code-standards
+        run: |
+          php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards
+          php scripts/phar/verify.php builds/code-standards
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:

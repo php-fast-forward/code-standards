@@ -11,9 +11,10 @@ if (false === $binary || !is_executable($binary)) {
 }
 $root = sys_get_temp_dir() . '/standards-package-' . bin2hex(random_bytes(12));
 mkdir($root, 0700);
+mkdir($root . '/temporary', 0700);
 register_shutdown_function(static fn() => removeTree($root));
 $environment = ['COMPOSER_HOME' => $root . '/composer-home', 'COMPOSER_CACHE_DIR' => $root . '/composer-cache',
-    'GIT_CONFIG_GLOBAL' => '/dev/null', 'GIT_CONFIG_SYSTEM' => '/dev/null', 'GIT_TERMINAL_PROMPT' => '0'];
+    'GIT_CONFIG_GLOBAL' => '/dev/null', 'GIT_CONFIG_SYSTEM' => '/dev/null', 'GIT_TERMINAL_PROMPT' => '0', 'TMPDIR' => $root . '/temporary'];
 $package = $root . '/package';
 mkdir($package);
 foreach (['src', 'config', 'bin', 'docs', 'composer.json', 'composer.lock', 'LICENSE', 'README.md', 'resources', '.gitattributes'] as $path) {
@@ -128,8 +129,32 @@ CONFIG);
     if (!str_contains($check, 'begin diff') || !str_contains($rector, 'LongArrayToShortArrayRector') || !str_contains($mnd, '42') || $before !== $after) {
         throw new RuntimeException('Native runtime output or source preservation failed.');
     }
+    $fixedSource = null;
+    foreach (['fix', 'check', 'fix', 'check'] as $operation) {
+        runCommand([PHP_BINARY, $proxy, $operation, '--all', '--config=ecs.php'], $consumer, environment: $env);
+        $sourceHash = hash_file('sha256', $consumer . '/source.php');
+        if (null !== $fixedSource && $sourceHash !== $fixedSource) {
+            throw new RuntimeException('Repeated clean check/fix changed formatted source.');
+        }
+        $fixedSource = $sourceHash;
+        $repeatProbe = json_decode(file_get_contents($consumer . '/probe.json'), true, flags: JSON_THROW_ON_ERROR);
+        if (file_exists($repeatProbe['runtime']) || is_dir($root . '/temporary/fast-forward-code-standards')) {
+            throw new RuntimeException('Repeated compiled operations leaked a runtime or persistent default ECS cache.');
+        }
+    }
+    file_put_contents($consumer . '/override.php', '<?php return FastForward\\CodeStandards\\Config\\ECSConfig::configure()->withCache(__DIR__ . "/explicit-cache");');
+    runCommand([PHP_BINARY, $proxy, 'check', '--all', '--config=override.php'], $consumer, environment: $env);
+    if (!is_dir($consumer . '/explicit-cache')) {
+        throw new RuntimeException('Explicit consumer cache override was removed with the extracted runtime.');
+    }
     file_put_contents($consumer . '/vendor/autoload.php', '<?php throw new RuntimeException("Unexpected consumer loader");');
     runCommand([PHP_BINARY, $proxy, 'list', '--raw'], $consumer, environment: $env);
-    $results[$mode] = ['packages' => array_column($lock['packages'], 'name'), 'native_exits' => ['check' => 2, 'refactor' => 2, 'magic-numbers' => 1]];
+    $results[$mode] = [
+        'packages' => array_column($lock['packages'], 'name'),
+        'native_exits' => ['check' => 2, 'refactor' => 2, 'magic-numbers' => 1],
+        'repeated_cache_operations' => ['fix', 'check', 'fix', 'check'],
+        'default_cache_residue' => false,
+        'explicit_cache_preserved' => true,
+    ];
 }
 fwrite(STDOUT, json_encode(['php' => PHP_VERSION, 'bytes' => filesize($binary), 'sha256' => hash_file('sha256', $binary), 'results' => $results], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . PHP_EOL);
