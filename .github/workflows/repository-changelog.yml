@@ -18,7 +18,7 @@ jobs:
       issues: read
       statuses: write
     # Candidate API from Changelog PR76; adopt a verified compatible release before stable rollout.
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@e8216f7d0df1e278f6da6a72936e2c7a5e1a2258
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@7892d45fef7ef3453172387692f9f72b9d28b6fb
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main
@@ -28,4 +28,4 @@ jobs:
       publish-app-client-id: 'Iv23liHqRng02H747IYa'
       publish-environment: release-channels
     secrets:
-      publish-app-private-key: ${{ secrets.app-private-key }}
+      publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}

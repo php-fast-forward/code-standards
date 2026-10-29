@@ -42,7 +42,7 @@ final class WorkflowTest extends TestCase
             'actions/github-script@v8',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@e8216f7d0df1e278f6da6a72936e2c7a5e1a2258',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@7892d45fef7ef3453172387692f9f72b9d28b6fb',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
         ];
         $files = [
@@ -63,14 +63,26 @@ final class WorkflowTest extends TestCase
     public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
-        self::assertStringContainsString('changelog.yml@e8216f7d0df1e278f6da6a72936e2c7a5e1a2258', $workflow);
+        self::assertStringContainsString('changelog.yml@7892d45fef7ef3453172387692f9f72b9d28b6fb', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
-        self::assertStringContainsString('publish-app-private-key: ${{ secrets.app-private-key }}', $workflow);
+        self::assertStringContainsString('publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-client-id:/m', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-private-key:/m', $workflow);
         self::assertStringNotContainsString('secrets: inherit', $workflow);
         self::assertStringNotContainsString('automation-actor:', $workflow);
+    }
+
+    /** Uses one deployable environment secret identifier rather than a logical workflow-only input name. */
+    public function testReleaseAppEnvironmentSecretNameIsValidAndShared(): void
+    {
+        $root = dirname(__DIR__, 2) . '/.github/workflows/';
+        foreach (['repository-changelog.yml', 'repository-release-channels.yml'] as $file) {
+            $workflow = file_get_contents($root . $file);
+            self::assertStringContainsString('secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY', $workflow);
+            self::assertStringNotContainsString('secrets.app-private-key', $workflow);
+        }
+        self::assertMatchesRegularExpression('/^[A-Z_][A-Z0-9_]*$/', 'RELEASE_CHANNEL_APP_PRIVATE_KEY');
     }
 
     /** Reserves promotion for genuine published/edited stable release events with one serialized writer. */
@@ -92,7 +104,7 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('environment: release-channels', $workflow);
         self::assertStringContainsString('repositories: code-standards', $workflow);
         self::assertStringContainsString('token: ${{ steps.channel-app.outputs.token }}', $workflow);
-        self::assertStringContainsString('private-key: ${{ secrets.app-private-key }}', $workflow);
+        self::assertStringContainsString('private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}', $workflow);
         self::assertStringContainsString('permission-contents: write', $workflow);
         self::assertStringContainsString('permission-workflows: write', $workflow);
         self::assertStringContainsString("skip-token-revoke: 'false'", $workflow);
