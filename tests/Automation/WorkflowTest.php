@@ -37,12 +37,12 @@ final class WorkflowTest extends TestCase
     public function testExternalActionsUseVerifiedPublishedReferences(): void
     {
         $references = [
-            'Actions-R-Us/actions-tagger@v2.0.3',
+            'Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb',
             'actions/create-github-app-token@v3.3.0',
             'actions/github-script@v8',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@4fe3cb26a252b7c41758c50ffcfe5391bf93a60a',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@41020df0dcd4cb9a2b990f54077553deefbd7608',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
         ];
         $files = [
@@ -63,7 +63,7 @@ final class WorkflowTest extends TestCase
     public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
-        self::assertStringContainsString('changelog.yml@4fe3cb26a252b7c41758c50ffcfe5391bf93a60a', $workflow);
+        self::assertStringContainsString('changelog.yml@41020df0dcd4cb9a2b990f54077553deefbd7608', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
         self::assertStringContainsString('managed-branch: changelog/version-recovery-98', $workflow);

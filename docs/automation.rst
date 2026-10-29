@@ -72,12 +72,13 @@ immutable release inputs for Composer/Packagist. ``latest`` is not a numeric
 stable Composer version: the installed Composer version parser rejects it as a
 version, unlike ``v0`` and ``v0.4.2``. No step exists solely to make latest a branch.
 
-The candidate workflow uses the published full tag
-``Actions-R-Us/actions-tagger@v2.0.3`` on real ``release: published`` and
-``release: edited`` events, with ``prefer_branch_releases: true``. On 2026-10-29,
-the published, non-draft, stable v2.0.3 release and its tag were verified; the tag
-resolved to ``330ddfac760021349fef7ff62b372f2f691c20fb``. The workflow deliberately
-selects that full version tag; an upstream tag rewrite can still replace its code.
+The candidate workflow pins ``Actions-R-Us/actions-tagger`` to immutable commit
+``330ddfac760021349fef7ff62b372f2f691c20fb`` with ``v2.0.3`` as its version comment.
+The maintainer selected this pin after reviewing the moving-tag security finding.
+The published, non-draft, stable v2.0.3 release and its tag were verified on
+2026-10-29; the tag resolved to that exact commit. The workflow runs on real
+``release: published`` and ``release: edited`` events with
+``prefer_branch_releases: true``.
 The distributed bundle was tested against a local API
 returning actual branch names for branch queries. Alone, it force-downgrades
 ``v0`` when an older release is edited and can move ``latest`` backwards even
@@ -117,7 +118,7 @@ Publication-only App integration
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
 separate release workflow. The caller now selects immutable candidate
-``4fe3cb26a252b7c41758c50ffcfe5391bf93a60a`` combining Changelog PR76 and PR77
+``41020df0dcd4cb9a2b990f54077553deefbd7608`` combining Changelog PR76 and PR77
 in the review-only integration PR78. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
 ``publish-app-private-key``. The existing published v0 revision
