@@ -18,7 +18,7 @@ jobs:
       issues: read
       statuses: write
     # Reviewed integration candidate combines publication API and original-PR provenance fixes.
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@9cac29abac1f9ea77ae4f80c91de662743c7728c
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@3e51ef2b53c7c176353ba4ff4c7467caf24f0c59
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main

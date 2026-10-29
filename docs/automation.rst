@@ -117,7 +117,7 @@ Publication-only App integration
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
 separate release workflow. The caller now selects immutable candidate
-``9cac29abac1f9ea77ae4f80c91de662743c7728c`` combining Changelog PR76 and PR77
+``3e51ef2b53c7c176353ba4ff4c7467caf24f0c59`` combining Changelog PR76 and PR77
 in the review-only integration PR78. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
 ``publish-app-private-key``. The existing published v0 revision
@@ -273,5 +273,7 @@ A version PR on the recovery branch still requires successful current-head
 checks, ownership proof and review before an approved merge/publication. This
 configuration change prepares recovery; it does not create that PR or publish a
 release. A missing original squash PR object is repaired through exact verified
-object acquisition, never by accepting an unproved association or fetching every
+object acquisition. The HTTP boundary authenticates the pack request; local Git
+receives only credential-free pack bytes and never a token, credential helper
+or network-fetch command. Never accept an unproved association or fetch every
 PR ref.
