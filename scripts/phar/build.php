@@ -39,7 +39,7 @@ $manifest = [
     'config' => ['platform' => $source['config']['platform'], 'allow-plugins' => false],
 ];
 writeJson($runtime . '/composer.json', $manifest);
-runCommand(['composer', 'update', '--no-dev', '--no-plugins', '--no-scripts', '--no-interaction', '--prefer-dist', '--no-progress', '--no-audit'], $runtime);
+runCommand([PHP_BINARY, $root . '/vendor/composer/composer/bin/composer', 'update', '--no-dev', '--no-plugins', '--no-scripts', '--no-interaction', '--prefer-dist', '--no-progress', '--no-audit'], $runtime);
 $installed = json_decode(file_get_contents($runtime . '/vendor/composer/installed.json'), true, flags: JSON_THROW_ON_ERROR);
 if (false !== $installed['dev']) {
     throw new RuntimeException('Build unexpectedly contains development packages.');

@@ -22,6 +22,8 @@ Build
 The builder uses an exclusive temporary tree, promotes the explicit runtime
 roots listed in ``extra.phar.runtime-packages`` to their exact locked versions,
 and asks Composer to resolve that graph using only locked package metadata.
+It invokes the Composer executable from the installed locked ``composer/composer``
+package, so an unrelated global Composer update cannot change generated lock metadata.
 Contributor/test packages are excluded by resolution, rather than stripping
 files from dependencies. Generated proxies, resources and licenses are retained.
 The source manifests, lock and installed vendor are never rewritten by the build.
