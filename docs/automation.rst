@@ -72,11 +72,14 @@ immutable release inputs for Composer/Packagist. ``latest`` is not a numeric
 stable Composer version: the installed Composer version parser rejects it as a
 version, unlike ``v0`` and ``v0.4.2``. No step exists solely to make latest a branch.
 
-The candidate workflow uses ``Actions-R-Us/actions-tagger@v2`` on real
-``release: published`` and ``release: edited`` events, with
-``prefer_branch_releases: true``. On 2026-10-28, ``@v2`` resolved to
-``330ddfac760021349fef7ff62b372f2f691c20fb`` (v2.0.3). It is a moving major channel,
-not an immutable pin. The distributed bundle was tested against a local API
+The candidate workflow pins ``Actions-R-Us/actions-tagger`` to immutable commit
+``330ddfac760021349fef7ff62b372f2f691c20fb`` with ``v2.0.3`` as its version comment.
+The maintainer selected this pin after reviewing the moving-tag security finding.
+The published, non-draft, stable v2.0.3 release and its tag were verified on
+2026-10-29; the tag resolved to that exact commit. The workflow runs on real
+``release: published`` and ``release: edited`` events with
+``prefer_branch_releases: true``.
+The distributed bundle was tested against a local API
 returning actual branch names for branch queries. Alone, it force-downgrades
 ``v0`` when an older release is edited and can move ``latest`` backwards even
 after 1.x. Its latest ref is hardcoded as a tag in branch mode.
@@ -115,7 +118,8 @@ Publication-only App integration
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
 separate release workflow. The caller now selects immutable candidate
-``e8216f7d0df1e278f6da6a72936e2c7a5e1a2258`` from Changelog PR76, whose actual
+``42bc58fbab55596ee03d480ebf71d2a3dfc48fb4`` combining Changelog PR76 and PR77
+in the review-only integration PR78. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
 ``publish-app-private-key``. The existing published v0 revision
 ``203db95e68fc974e95ba1a921f08d01f88851be1`` does not declare them.
@@ -123,26 +127,32 @@ workflow API declares ``publish-app-client-id``, ``publish-environment`` and
 The public Client ID is a non-empty literal, so an absent repository variable
 cannot silently select the job-token fallback. Only publication receives that
 App selection and ``release-channels`` environment. The caller explicitly
-forwards ``secrets.app-private-key`` under the publication-only secret name;
-the nested publication job uses its environment's ``app-private-key`` value.
+forwards ``secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY`` under the logical
+``publish-app-private-key`` workflow-call name. The nested publication job declares
+``RELEASE_CHANNEL_APP_PRIVATE_KEY`` so its environment supplies that same-named
+secret. Authentication preserves an explicit logical key so incomplete App credentials
+are rejected. It considers the environment key only with a selected App Client
+ID and no explicit key. Token mode ignores the staged
+environment key; a missing publication key never borrows the legacy App key.
 With a non-empty App ID and missing key, upstream authentication fails before
 publication. Managed PR authorship remains ``github-actions[bot]``; the publisher
 App is not required to be that PR's author. No global App credential input or
-``secrets: inherit`` is added, and the release-channel workflow is unchanged.
+``secrets: inherit`` is added, and the release-channel selector remains unchanged.
 
 **This is a blocked draft integration, not an activated release path.** The SHA
 is an inspectable PR candidate, not a published Changelog version. The compatible
 adoption order is:
 
-#. Review and qualify Changelog PR76's publication-only API, then let the owner
-   merge/publish a compatible release. Verify that released revision actually
+#. Review and qualify both upstream changes and the integrated candidate.
+   Let the owner merge/publish a compatible release. Verify that released revision actually
    contains the three inputs and nested publication/authentication routing.
 #. Replace this candidate pin with that verified published revision before stable
    adoption, or obtain explicit acceptance of using the reviewed unreleased SHA.
    Never send the new inputs to the old v0 and assume compatibility.
-#. Obtain the separate approvals for this repository's environment, sensitive key
-   transmission and protection rules, then apply them through supported access.
-   This caller patch does not create or configure those resources.
+#. Verify the separately authorized configuration owner's staged environment,
+   valid secret name and protection rules through metadata; key validity and
+   actual publication remain separate evidence. This caller patch does not
+   create or configure those resources.
 #. Only after those gates, let the owner merge the caller and the next approved
    version PR. Observe that real publication/channel run separately; no rerun,
    edited release, manual release or ref mutation is used to manufacture evidence.
@@ -156,13 +166,12 @@ token has Contents read. Read-only organization metadata on 2026-10-28 identifie
 App 5513989 (``fast-forward-release-channels``), installation 176263242, with all
 organization repositories selected and Contents/Workflows write, PR read and
 Metadata read. This includes Code Standards; no installation or permission
-expansion is indicated by those metadata. Use in this repository still requires
-separate approval. Code Standards has no ``release-channels`` environment or
-available Actions secrets/variables in the checked metadata. No private key was
-read, and no key's validity or token minting was tested. Creating that environment
-and transmitting a key as ``app-private-key`` remain separately authorized actions;
-GitHub cannot recover an existing secret value for migration. Changelog's approval
-does not authorize that transmission or use here.
+expansion is indicated by those metadata. The configuration owner subsequently staged the authorized environment separately.
+Read-only metadata on 2026-10-29 confirms ``release-channels`` and the valid
+``RELEASE_CHANNEL_APP_PRIVATE_KEY`` secret name. This code task did not read the
+value, mint a token or modify settings; name metadata does not establish key
+validity or end-to-end event delivery. GitHub cannot recover an existing secret
+value for migration.
 
 The activation plan preserves branches, without branch-to-tag migration:
 
@@ -224,3 +233,49 @@ and `runner access from reusable workflows
 <https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations#how-reusable-workflows-use-runners>`__.
 The fork fallback is this reusable's stricter policy, not a claim that custom
 runner labels themselves establish trust or isolation.
+
+Environment secret identifier correction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GitHub rejected ``app-private-key`` as a repository/environment secret name with
+HTTP 422: those identifiers accept alphanumeric characters and underscores.
+Hyphens remain valid in logical reusable-workflow inputs; these are separate
+contracts. The compatible candidate adds the valid nested environment-secret
+declaration ``RELEASE_CHANNEL_APP_PRIVATE_KEY`` while preserving the public
+``publish-app-private-key`` logical input. The channel and caller now read the
+valid environment identifier. This code change does not create or read any key.
+
+This defect is independent of the version-PR preparation failure on 2026-10-29.
+The latter was reproduced before writes: provenance resolution tried to read
+the original squash-merged PR94 head, absent from the main-only Git checkout.
+Fetching that exact object into an isolated fixture changed the same planner
+from refused to dry-run. Its provider correction and managed PR98 recovery are
+separate; changing a secret identifier does not repair or retry that transaction.
+
+Version preparation recovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The original ``changelog/version`` branch of PR98 ends at the human merge
+``48119d8d4bf3b77d488eba12b1f0515453b3f371``. Its content is the exact automatic
+merge of the signed Bot head and the then-current main: the remaining managed
+patch is byte-identical to the Bot patch, and the human delta is byte-identical
+to the integrated main delta. This preserves the human work but does not grant
+the human commit signed Bot ownership. No trailers are forged or waived.
+
+The caller reserves ``changelog/version-recovery-98`` for fresh automation. After
+this reviewed caller and a compatible corrected runtime are integrated, the next
+trusted main event plans from the fresh main and creates a new signed Bot commit
+and version PR on that exclusive branch. The old branch, commit, PR body and
+review history remain available. Do not reset, force-update or delete PR98's
+branch. If either the fresh main or the reserved recovery branch changes during
+preparation, fail closed and re-inspect before proceeding. Close the superseded
+PR only after separate authorization and verification of the replacement.
+
+A version PR on the recovery branch still requires successful current-head
+checks, ownership proof and review before an approved merge/publication. This
+configuration change prepares recovery; it does not create that PR or publish a
+release. A missing original squash PR object is repaired through exact verified
+object acquisition. The HTTP boundary authenticates the pack request; local Git
+receives only credential-free pack bytes and never a token, credential helper
+or network-fetch command. Never accept an unproved association or fetch every
+PR ref.

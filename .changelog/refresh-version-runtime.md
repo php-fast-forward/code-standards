@@ -1,0 +1,9 @@
+---
+category: fixed
+type: patch
+---
+
+Refreshes version preparation with authenticated, verified original implementation PR objects
+and a new exclusive managed branch, preserving the human-merged PR98 head and
+strict signed Bot ownership. Selects the verified
+immutable actions-tagger commit verified for v2.0.3 for channel updates.
