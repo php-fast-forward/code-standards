@@ -128,11 +128,10 @@ in check mode. Review arbitrary extension metadata in the resulting diff.
 After CLI bootstrap, normalization uses only data APIs. It never constructs a
 Composer application, plugin manager or installer, starts Composer, discovers an
 additional target-project autoload/config, executes Composer script commands or
-fetches a remote schema. In an ordinary consumer Composer installation, the
-binary proxy intentionally loads the shared consumer/tool autoloader: registered
-autoload files can execute during that existing bootstrap. A separate tool
-installation does not import the target project's vendor/autoload.php; the
-poison-autoload fixture verifies that separate-installation case. See the
+fetches a remote schema. The compiled binary loads its extracted tool autoloader
+and schema, including through Composer's binary proxy. It does not import the
+consumer autoloader; the PHAR qualification includes a poisoned consumer loader.
+Executable ECS/Rector configuration remains a separate opt-in boundary. See the
 `architecture contract <architecture.rst>`__. This is not a filesystem sandbox
 and does not support concurrent edits to the same metadata.
 
@@ -156,10 +155,9 @@ The smaller alternative is the standalone normalizer plus ``composer/semver``
 and a copied official schema. It would still need a separate lock-hash
 implementation or weaker lock validation: neither is provided by the reviewed
 standalone normalizer API. The Composer plugin would require consumer plugin
-policy changes; invoking it manually would defeat that boundary. A PHAR could
-isolate its package graph but would introduce artifact verification, packaging
-and a second runtime/distribution lifecycle. This increment selects the native
-library/hash APIs rather than those additional contracts.
+policy changes; invoking it manually would defeat that boundary. The PHAR bundles
+these native library/hash APIs and schema; the consumer does not resolve this
+internal graph. See the `distribution contract <phar-distribution.rst>`__.
 
 Library autoloading is still executable code. The newly added graph includes
 React Promise's conditional function include and Symfony's PHP polyfill
@@ -167,13 +165,13 @@ bootstraps. These were inspected in the resolved releases; they define helper
 functions/constants, with version-gated polyfill setup, and do not install or
 activate Composer plugins. No newly added package has ``composer-plugin`` type.
 These files load with the tool autoloader even when normalization is not chosen;
-this integration does not claim namespace or runtime isolation. Composer must
-resolve compatibility with a normal consumer installation.
+this integration does not claim a security or namespace sandbox. These packages
+belong to the build graph, independently of the consumer Composer solver.
 
 The direct constraints use caret ranges (``^4.11.0`` normalizer,
 ``^2.10.3`` Composer, ``^1.7.0`` JSON and ``^3.9.1`` printer), allowing compatible
 minor/patch updates up to the next major. The lock records the exact verified
-versions; consumers resolve their own graph within those ranges. The minimum
+versions used to build the ready artifact. Contributors resolve these ranges. The minimum
 versions and current locked graph are tested; this does not claim execution of
 unreleased versions admitted by those ranges.
 Schema content/order therefore belongs to the installed Composer package.

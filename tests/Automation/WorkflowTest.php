@@ -41,6 +41,7 @@ final class WorkflowTest extends TestCase
             'actions/create-github-app-token@v3.3.0',
             'actions/github-script@v8',
             'actions/checkout@v7',
+            'actions/upload-artifact@v7',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@42bc58fbab55596ee03d480ebf71d2a3dfc48fb4',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
@@ -57,6 +58,17 @@ final class WorkflowTest extends TestCase
                 }
             }
         }
+    }
+
+    /** A candidate's self-reported manifest must not authorize its first execution. */
+    public function testCommittedPharComparisonPrecedesRuntimeQualification(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        $comparison = strpos($workflow, 'php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards');
+        $execution = strpos($workflow, 'php scripts/phar/verify.php builds/code-standards');
+        self::assertNotFalse($comparison);
+        self::assertNotFalse($execution);
+        self::assertLessThan($execution, $comparison);
     }
 
     /** Prevents silent GITHUB_TOKEN publication by keeping the App identity explicit and publication-only. */
@@ -127,7 +139,7 @@ final class WorkflowTest extends TestCase
             self::assertStringContainsString('github.event.pull_request.head.sha', $workflow);
             self::assertStringContainsString('github.event.pull_request.base.sha', $workflow);
             self::assertSame(2, substr_count($workflow, 'persist-credentials: false'));
-            self::assertStringContainsString('--no-dev --no-plugins --no-scripts', $workflow);
+            self::assertStringContainsString('--no-plugins --no-scripts', $workflow);
             self::assertStringNotContainsString('secrets.', $workflow);
             self::assertStringNotContainsString('contents: write', $workflow);
             self::assertStringContainsString('[[ -n "$STANDARDS_REPOSITORY" && "$STANDARDS_HEAD_REPOSITORY" == "$STANDARDS_REPOSITORY" ]] || exit 1', $workflow);

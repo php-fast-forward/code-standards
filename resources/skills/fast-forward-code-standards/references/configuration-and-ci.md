@@ -76,7 +76,7 @@ jobs:
 
 Use `v0` only when it points to a confirmed published 0.x release; a reviewed
 immutable workflow commit is another explicit policy. This GitHub channel is
-not a Composer/CPX constraint. Runtime/helper source stays bound to the actual
+not a Composer constraint. Runtime/helper source stays bound to the actual
 called workflow repository/SHA, never a second moving-ref lookup. Use only inputs
 supported by that ref.
 

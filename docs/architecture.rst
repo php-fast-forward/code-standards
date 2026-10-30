@@ -13,19 +13,18 @@ Decision
 
 Libraries expose reusable runtime behavior: Reflection, Console, Iterators and Enum are examples of library responsibilities. Tools own executable development workflows: Changelog, Code Standards and Testing are tool responsibilities. These are dependency roles, not a request to create Reflection or Console now.
 
-Tools may depend on libraries at runtime. Libraries may consume tools as development dependencies. A library must not require a development tool for its normal runtime behavior. Tools must not depend on DevTools in production or create a circular tool/bootstrap prerequisite. Code Standards provides its focused preset as a library API for tool consumers while remaining a development tool; that API does not make application tests/reports part of its domain. ``require-dev`` dependencies are not transitively installed for library consumers: an application explicitly selects the development tools it actually uses.
+Tools may bundle libraries at runtime. Libraries may consume tools as development dependencies. A library must not require a development tool for its normal runtime behavior. Tools must not depend on DevTools in production or create a circular tool/bootstrap prerequisite. Code Standards supplies its preset API inside its compiled CLI for explicit configuration; it is not exported as a consumer-autoloaded library. Application tests/reports remain outside its domain. Bundled libraries are development dependencies of the build and do not enter the consumer dependency graph.
 
-CPX separates installation and dependency resolution. It does not isolate PHP namespaces when PHPUnit, Rector or executable configuration loads the consumer and tool in the same process. Version conflicts and global state still require explicit compatibility tests or a real process boundary. A separate Composer graph alone must never be described as runtime isolation. Analyzer/autoload fixtures must prove that the code under analysis comes from the consumer checkout, rather than another copy installed inside the tool. Syntax parsing uses ``php -n -l`` without application autoload. The formatter worker loads its own Composer runtime and uses ECS's public container factory and native check command. It does not invoke ECS's CLI bootstrap, which otherwise imports the working directory's vendor autoloader before config selection. The worker preserves consumer cwd, native config cache bookkeeping and absolute selected file arguments; executable user config can explicitly opt into consumer loaders and custom checkers. Engine paths are captured from the tool's installation before that config can change Composer's installed-package metadata.
+The PHAR separates installation and dependency resolution. It does not isolate PHP namespaces when PHPUnit, Rector or executable configuration loads the consumer and tool in the same process. Version conflicts and global state still require explicit compatibility tests or a real process boundary. A separate Composer graph alone must never be described as runtime isolation. Analyzer/autoload fixtures must prove that the code under analysis comes from the consumer checkout, rather than another copy installed inside the tool. Syntax parsing uses ``php -n -l`` without application autoload. The formatter worker loads its own Composer runtime and uses ECS's public container factory and native check command. It does not invoke ECS's CLI bootstrap, which otherwise imports the working directory's vendor autoloader before config selection. The worker preserves consumer cwd, native config cache bookkeeping and absolute selected file arguments; executable user config can explicitly opt into consumer loaders and custom checkers. Engine paths are captured from the tool's installation before that config can change Composer's installed-package metadata.
 
-The CLI follows the same bootstrap order as Changelog: Composer's injected
-``$_composer_autoload_path``, the checkout's ``../vendor/autoload.php``, then
-``../../../autoload.php`` relative to the package binary. The last path supports
-CPX invoking the installed package binary directly without Composer's proxy.
-Resolution never searches the current working directory. Missing dependencies
-produce a diagnostic on stderr and exit code 1.
-
-Ordinary Composer installation inside the consumer intentionally shares that installation's autoloader through its binary proxy. ``composer-runtime-api`` and ``$_composer_autoload_path`` remain part of this contract. Removing an extra import from a different target graph does not remove normal Composer bootstrap. PHPUnit and type-analysis adapters require their own compatibility tests; the formatter's process boundary does not prove their isolation. The separate Rector command's executable configuration and child-autoload limits are documented in the `native refactoring contract <rector.rst>`__.
-
+Composer points directly at ``builds/code-standards``. The compiled executable
+materializes a private temporary runtime before loading its own source entrypoint,
+autoloader, schema and subprocess tools. It preserves the consumer cwd and cleans
+its runtime at normal shutdown. The source entrypoint ``bin/code-standards`` remains
+for contributor checks and reusable workflow checkouts. The consumer Composer
+autoloader is not a bootstrap dependency of the compiled binary. Executable ECS
+and Rector configurations may explicitly import consumer classes; see the
+`native refactoring contract <rector.rst>`__.
 Bootstrap and compatibility
 ---------------------------
 
@@ -96,7 +95,7 @@ This increment consumes ``fast-forward/container`` 1.10.1 (release commit ``a75d
 
 Use the published ``ContainerFactory::create()`` for composition. Consumers needing explicit bindings may pass one native ``AggregateServiceProvider`` containing the module provider first and their ``ArrayServiceProvider`` last. Later factories replace earlier factories before services are resolved. Keep replacements typed to the declared interface and apply them before first lookup. Tests exercise lazy construction, shared application identity, nested transport/output overrides, native command binding and exact failure status with the published adapter. No module-specific container, provider registry or override DSL exists.
 
-The default provider defines no extensions. This tool does not claim additional cross-provider decoration or alias guarantees beyond the published adapter. CPX installation isolation does not alter these in-process runtime/autoload boundaries. Command configuration does not double as dependency injection: check/fix are separate invocable entrypoints and transport authority is explicit.
+The default provider defines no extensions. This tool does not claim additional cross-provider decoration or alias guarantees beyond the published adapter. PHAR installation isolation does not alter these in-process runtime/autoload boundaries. Command configuration does not double as dependency injection: check/fix are separate invocable entrypoints and transport authority is explicit.
 
 Consequences and next gates
 ---------------------------
@@ -113,3 +112,10 @@ DevTools #14/#265/#266/#267 remain conditional analysis candidates. Ownership be
 Doctor #142, distribution #197, published refs #238, orchestration #240/#384 and Actions governance #347–349 remain with DevTools. Current bugs and correction PRs remain there. Historical extensibility/options/config/path contracts are criteria, not automatically reopened tasks.
 
 Backlog transfers require a confirmed destination issue with context and links before commenting/closing the DevTools original. Mixed issues retain their DevTools scope. Use the coordinated inventory and existing destinations to avoid duplicates; current DevTools bug PRs stay in that repository.
+
+PHAR distribution follow-up
+---------------------------
+
+See the `PHAR distribution investigation <phar-distribution.rst>`__ for the
+single-repository transport, committed executable and CI freshness checks.
+The existing Changelog lifecycle publishes the reviewed commit and its compiled artifact.

@@ -1,3 +1,5 @@
+# Copy this caller into the consumer's .github/workflows/code-standards.yml.
+# The executable reusable remains in the called repository's .github/workflows/.
 name: PHP standards
 on:
   pull_request:

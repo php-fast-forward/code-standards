@@ -30,19 +30,32 @@ composer require --dev fast-forward/code-standards
 vendor/bin/code-standards check --all
 ```
 
-CPX can invoke the installed package directly with
-`cpx fast-forward/code-standards list`. The CLI resolves Composer dependencies
-from its installation, including when run outside the package checkout.
+The compiled executable is installed directly through Composer's binary proxy.
+Optional scripts keep checks convenient without building the tool in consumers:
+
+```json
+{
+    "scripts": {
+        "standards:check": "code-standards check --all",
+        "standards:fix": "code-standards fix --all"
+    }
+}
+```
+
+Run `composer standards:check`; apply formatting explicitly with
+`composer standards:fix`. Global installation uses
+`composer global require fast-forward/code-standards`, then the binary in
+`composer global config bin-dir --absolute`.
 
 The GitHub `v0` workflow channel and the Composer package are separate
-distribution mechanisms.
+publications. See the [PHAR distribution contract](docs/phar-distribution.rst)
+for the committed binary and CI build contract. A merge does not itself publish a Composer release.
+Copyable workflow callers live in [resources/workflows](resources/workflows/README.md).
 
-Requires PHP 8.3 or later in the 8.x series, Git and Composer runtime API 2.2+
-for installed binary proxies. Composer resolves the tool with the project's
-dependency constraints; syntax is checked using the executing PHP binary.
-No PHP migration rules are enabled. Review compatibility with the
-application's minimum PHP before adopting a preset.
-
+Requires PHP ^8.3, Git and the PHP extensions declared in `composer.json`,
+including Phar and zlib. Bundled libraries do not enter the consumer's dependency
+graph. Executable configurations may load consumer classes; this is no namespace sandbox.
+Syntax uses the executing PHP binary. No PHP migration rules are enabled.
 Workflow guards and their contributor tests additionally require Bash and jq.
 Hosted Ubuntu runners provide both; the Composer library and CLI use the PHP
 dependencies declared in this package.
@@ -82,12 +95,15 @@ See the [structured check contract](docs/structured-check.rst). Text is the
 default; `fix` uses text output.
 Use `--format=json-pretty` for the same report with indentation; see
 [result presentation](docs/process-contracts.rst#structured-check-presentation).
-The default preset stores its ECS cache beneath the system temporary directory,
+Source installations store the default ECS cache beneath the system temporary directory,
 in `fast-forward-code-standards/<SHA-256 of the executing checkout path>/<owned-policy fingerprint>`.
 The fingerprint includes the installed preset and owned checker paths and source
 bytes. Different checkouts cannot invalidate each other's cache, and a changed
-owned rule cannot reuse an earlier passing result. Native
-`withCache()` overrides remain supported and apply last; share cache directories
+owned rule cannot reuse an earlier passing result. The compiled executable keeps
+its default cache inside the extracted runtime and removes it at normal shutdown;
+separate invocations do not reuse it or accumulate persistent policy directories.
+See the [cache lifetime contract](docs/phar-distribution.rst#filesystem-runtime).
+Native `withCache()` overrides remain supported and apply last; share cache directories
 only when their invalidation and concurrent use are intentionally coordinated.
 `fix` explicitly applies ECS fixes. It does not commit, push or update dependencies.
 After each successful formatter batch, a read-only check verifies the result.
@@ -118,8 +134,6 @@ declare(strict_types=1);
 use FastForward\CodeStandards\Config\ECSConfig;
 use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 
-require __DIR__ . '/vendor/autoload.php';
-
 return ECSConfig::configure(static function (ECSConfigBuilder $config): void {
     // Local rule imports/overrides go last; review their semantic risk.
     $config->withConfiguredRule(
@@ -132,9 +146,17 @@ return ECSConfig::configure(static function (ECSConfigBuilder $config): void {
 Select it explicitly with `--config=ecs.php`. PHP configuration is executable
 code and belongs in an unprivileged environment. The CLI defaults to its own
 preset, does not discover or overwrite consumer configuration, and never runs
-both ECS and a competing PHP-CS-Fixer pass. Standalone ECS users may import the
-same library preset and set their own paths. CLI selection uses the scope below;
+both ECS and a competing PHP-CS-Fixer pass. The preset API is available inside
+the compiled tool's selected configuration. The package does not expose these
+classes through the consumer autoloader. CLI selection uses the scope below;
 ECS's configured paths do not expand the CLI's explicit selected file list.
+
+To use project rules or rule packages installed in `require-dev`, explicitly load
+the project's `vendor/autoload.php` inside the selected configuration before
+registering those rules. Composer includes project `autoload` and `autoload-dev`
+classes in a development installation. See the
+[consumer configuration contract](docs/phar-distribution.rst#consumer-ecs-configuration)
+for an example and compatibility limits.
 
 For braced multiline `if`, `elseif`, `while` and `do-while` conditions, the
 native PSR-12 wrapper places the first expression on the next line and the
@@ -160,10 +182,9 @@ The formatter worker uses ECS's public factory and command APIs with this tool's
 own Composer installation. An isolated tool does not implicitly load the target
 checkout's `vendor/autoload.php`. Explicit PHP configuration retains the checkout
 as `getcwd()`, keeps `__DIR__` and relative paths intact, and may deliberately
-require consumer autoloaders or register custom checkers. When the tool is a
-development dependency in the consumer's own Composer graph, that installation's
-normal binary-proxy bootstrap remains intentional; it is not a separate import
-of another checkout's dependency graph.
+require consumer autoloaders or register custom checkers. Composer's proxy
+includes the compiled executable, which boots its own extracted runtime rather
+than loading the consumer autoloader.
 
 ## 🔌 Integration and file scope
 
@@ -187,7 +208,7 @@ of another checkout's dependency graph.
 Start with the [usage guide](docs/index.rst). See [policy and differences](docs/policy.rst), [workflow/ref adoption](docs/automation.rst)
 and the [consumer skill](resources/skills/fast-forward-code-standards/SKILL.md).
 The [architecture decision](docs/architecture.rst) defines library/tool dependency
-directions and CPX/autoload limits.
+directions and executable-configuration limits.
 The formatter preserves descriptive PHPDoc and inherited documentation.
 The separate opt-in [`refactor` command](docs/rector.rst) previews an explicit
 native Rector configuration and requires `--apply` for semantic writes. It is
