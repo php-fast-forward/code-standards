@@ -21,7 +21,7 @@ jobs:
         id: release
         env:
           FF_RELEASE_TAG: ${{ github.event.release.tag_name }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const tag = process.env.FF_RELEASE_TAG;
