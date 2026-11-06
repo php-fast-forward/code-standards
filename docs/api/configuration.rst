@@ -21,8 +21,6 @@ configuration trust and execution contracts are documented in the
    use PhpCsFixer\Fixer\Phpdoc\PhpdocAlignFixer;
    use Symplify\EasyCodingStandard\Configuration\ECSConfigBuilder;
 
-   require __DIR__ . '/vendor/autoload.php';
-
    return ECSConfig::configure(static function (ECSConfigBuilder $config): void {
        $config->withConfiguredRule(PhpdocAlignFixer::class, ['align' => 'left']);
    });
@@ -31,6 +29,8 @@ Save the example as ``ecs.php`` in a disposable consumer, then select it with
 ``--config=ecs.php``. A configuration file is executable PHP and must be trusted
 at the privilege level of its process. Invalid paths are rejected before ECS
 runs; native configuration errors propagate from ECS.
+The compiled CLI supplies these classes to selected configuration; installing
+the PHAR does not export them through the consumer Composer autoloader.
 
 Internal services
 -----------------

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FastForward\CodeStandards\Tests\Integration;
 
-use PharData;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
@@ -136,23 +135,16 @@ final class EcsBootstrapTest extends TestCase
         self::assertSame(2, $this->cli(['check', '--all', '--config=missing.php'])->getExitCode());
     }
 
-    /** The actual Composer archive contains an executable worker that needs only its own supplied runtime. */
-    public function testComposerArchiveIncludesTheWorker(): void
+    /** The source worker needs only its supplied runtime; the PHAR harness tests archive execution. */
+    public function testSourceWorkerUsesOnlyItsSuppliedRuntime(): void
     {
         $root = dirname(__DIR__, 2);
         $this->put('source.php', "<?php\n\ndeclare(strict_types=1);\n\necho 'ready';\n");
         $this->put('vendor/autoload.php', '<?php file_put_contents(__DIR__ . "/../executed", "unexpected");');
         $this->git(['add', '--all']);
-        mkdir($this->directory . '/.build');
-        $archive = new Process(['composer', 'archive', '--format=zip', '--dir=' . $this->directory . '/.build', '--file=package', '--no-plugins', '--no-scripts', '--no-interaction'], $root, timeout: 60);
-        self::assertSame(0, $archive->run(), $archive->getOutput() . $archive->getErrorOutput());
-        $package = new PharData($this->directory . '/.build/package.zip');
-        self::assertTrue(isset($package['bin/ecs-worker']));
-        self::assertSame(file_get_contents($root . '/bin/ecs-worker'), $package['bin/ecs-worker']->getContent());
-        $package->extractTo($this->directory . '/.build/package');
         $worker = $this->worker([
-            $this->directory . '/.build/package/config/ecs.php', '--check', '--', $this->directory . '/source.php',
-        ], $this->directory . '/.build/package/bin/ecs-worker');
+            $root . '/config/ecs.php', '--check', '--', $this->directory . '/source.php',
+        ]);
         self::assertSame(0, $worker->getExitCode(), $worker->getOutput() . $worker->getErrorOutput());
         self::assertFileDoesNotExist($this->directory . '/executed');
     }

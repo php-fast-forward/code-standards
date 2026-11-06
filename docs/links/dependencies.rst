@@ -27,6 +27,7 @@ The explicit semantic command uses Rector with PHPStan as an engine dependency;
 the `native refactoring guide <../rector.rst>`__ records the qualified dependency
 versions and shared-graph compatibility restriction. No type-analysis command
 is implied by that dependency.
-Composer's runtime API supplies the installed binary proxy's autoload location.
+Libraries are bundled inside the PHAR. The consumer dependency graph contains
+only the tool package and declared PHP/platform requirements.
 The lock file records transitive versions; this documentation does not replace
 that graph with a handwritten dependency catalog.

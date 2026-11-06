@@ -36,6 +36,25 @@ jobs:
         run: |
           php "$STANDARDS_ROOT/bin/code-standards" normalize-composer "--directory=$STANDARDS_DIRECTORY"
       - run: composer check
+      - name: Qualify ready PHAR distribution and native runtime
+        env:
+          COMPOSER_HOME: ${{ runner.temp }}/standards-phar-composer-home
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
+        run: |
+          php -d phar.readonly=0 scripts/phar/build.php "$RUNNER_TEMP/code-standards"
+          php scripts/phar/verify.php "$RUNNER_TEMP/code-standards"
+      - name: Retain the reviewed PHP 8.3 build
+        if: matrix.php == '8.3'
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-standards-${{ github.sha }}
+          path: ${{ runner.temp }}/code-standards
+          compression-level: 0
+          if-no-files-found: error
+      - name: Qualify the committed Composer distribution
+        run: |
+          php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards
+          php scripts/phar/verify.php builds/code-standards
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:
