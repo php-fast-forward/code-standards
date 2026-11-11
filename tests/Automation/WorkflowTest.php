@@ -39,7 +39,7 @@ final class WorkflowTest extends TestCase
         $references = [
             'Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb',
             'actions/create-github-app-token@v3.3.0',
-            'actions/github-script@v8',
+            'actions/github-script@v9',
             'actions/checkout@v7',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@42bc58fbab55596ee03d480ebf71d2a3dfc48fb4',
