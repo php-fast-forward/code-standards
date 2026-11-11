@@ -43,7 +43,7 @@ final class WorkflowTest extends TestCase
             'actions/checkout@v7',
             'actions/upload-artifact@v7',
             'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@42bc58fbab55596ee03d480ebf71d2a3dfc48fb4',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@5e093cd2080165ed2a3d9a18ae12899b7be94b46',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
         ];
         $files = [
@@ -75,7 +75,7 @@ final class WorkflowTest extends TestCase
     public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
-        self::assertStringContainsString('changelog.yml@42bc58fbab55596ee03d480ebf71d2a3dfc48fb4', $workflow);
+        self::assertStringContainsString('changelog.yml@5e093cd2080165ed2a3d9a18ae12899b7be94b46', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
         self::assertStringContainsString('managed-branch: changelog/version-recovery-98', $workflow);

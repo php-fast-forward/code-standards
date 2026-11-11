@@ -17,8 +17,8 @@ jobs:
       pull-requests: write
       issues: read
       statuses: write
-    # Reviewed integration candidate combines publication API and original-PR provenance fixes.
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@42bc58fbab55596ee03d480ebf71d2a3dfc48fb4
+    # Verified published Changelog v0.5.0 includes the publication-only App API.
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@5e093cd2080165ed2a3d9a18ae12899b7be94b46
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main

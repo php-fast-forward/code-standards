@@ -117,11 +117,10 @@ Publication-only App integration
 
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
-separate release workflow. The caller now selects immutable candidate
-``42bc58fbab55596ee03d480ebf71d2a3dfc48fb4`` combining Changelog PR76 and PR77
-in the review-only integration PR78. Its actual
+separate release workflow. The caller selects published Changelog v0.5.0 at
+immutable commit ``5e093cd2080165ed2a3d9a18ae12899b7be94b46``. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
-``publish-app-private-key``. The existing published v0 revision
+``publish-app-private-key``. The older published v0.4.1 revision
 ``203db95e68fc974e95ba1a921f08d01f88851be1`` does not declare them.
 
 The public Client ID is a non-empty literal, so an absent repository variable
@@ -139,16 +138,12 @@ publication. Managed PR authorship remains ``github-actions[bot]``; the publishe
 App is not required to be that PR's author. No global App credential input or
 ``secrets: inherit`` is added, and the release-channel selector remains unchanged.
 
-**This is a blocked draft integration, not an activated release path.** The SHA
-is an inspectable PR candidate, not a published Changelog version. The compatible
-adoption order is:
+The published revision replaces the previous integration-candidate pin. Its
+workflow declares the three inputs and routes publication credentials to the
+nested publication job. This reference correction does not prove deployment
+configuration or end-to-end publication. The remaining adoption gates are:
 
-#. Review and qualify both upstream changes and the integrated candidate.
-   Let the owner merge/publish a compatible release. Verify that released revision actually
-   contains the three inputs and nested publication/authentication routing.
-#. Replace this candidate pin with that verified published revision before stable
-   adoption, or obtain explicit acceptance of using the reviewed unreleased SHA.
-   Never send the new inputs to the old v0 and assume compatibility.
+#. Qualify checks on the caller's actual HEAD using the published revision.
 #. Verify the separately authorized configuration owner's staged environment,
    valid secret name and protection rules through metadata; key validity and
    actual publication remain separate evidence. This caller patch does not
