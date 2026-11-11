@@ -70,11 +70,12 @@ final class ArchiveTest extends TestCase
     {
         mkdir($this->directory . '/.build/archives', recursive: true);
         $this->execute(['git', 'archive', '--format=zip', '--output=.build/archives/git.zip', 'HEAD']);
+        $this->put('composer.lock', '{"packages":[]}' . "\n");
         $this->execute(['composer', 'archive', '--format=zip', '--dir=.build/archives', '--file=composer', '--no-plugins', '--no-scripts', '--no-interaction']);
         $git = $this->contents($this->directory . '/.build/archives/git.zip');
         $composer = $this->contents($this->directory . '/.build/archives/composer.zip');
         self::assertSame($git, $composer);
-        foreach (['bin/code-standards', 'config/ecs.php', 'composer.lock', 'README.md', 'CHANGELOG.md', 'LICENSE',
+        foreach (['bin/code-standards', 'config/ecs.php', 'README.md', 'CHANGELOG.md', 'LICENSE',
             '.github/actions/check/action.yml', 'resources/workflows/code-standards.yml',
             'resources/skills/fast-forward-code-standards/SKILL.md',
             'resources/skills/fast-forward-code-standards/LICENSE', 'docs/_static/mascot-banner.png'] as $path) {
@@ -98,6 +99,7 @@ final class ArchiveTest extends TestCase
             self::assertDoesNotMatchRegularExpression('~^(?:vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
         self::assertArrayNotHasKey('skills.json', $git);
+        self::assertArrayNotHasKey('composer.lock', $composer);
         self::assertArrayNotHasKey('archive', json_decode(file_get_contents($this->directory . '/composer.json'), true, flags: JSON_THROW_ON_ERROR));
     }
 

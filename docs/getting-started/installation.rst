@@ -4,8 +4,8 @@ Installation and compatibility
 The tool requires PHP 8.3 or later within the supported 8.x range, Git, and
 Composer runtime API 2.2 or later. Contributor builds additionally need Bash, jq and Node.js 24 or later for
 workflow contract tests. The release-channel selection fixtures run through
-``node --test`` as part of ``composer test``. The locked contributor graph is tested on
-PHP 8.3, 8.4 and 8.5.
+``node --test`` as part of ``composer test``. CI resolves dependencies from
+``composer.json`` and tests on PHP 8.3, 8.4 and 8.5.
 
 For a source checkout of a reviewed commit:
 

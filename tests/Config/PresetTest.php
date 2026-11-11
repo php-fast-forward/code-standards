@@ -32,11 +32,10 @@ final class PresetTest extends TestCase
 
         ksort($rules);
         $expected = json_decode(file_get_contents(__DIR__ . '/../Fixtures/preset-rules.json'), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame($expected, [
-            'ecs_version' => $package['version'],
-            'ecs_reference' => $package['source']['reference'],
-            'rules' => $rules,
-        ]);
+        if ($expected['ecs_version'] === $package['version']) {
+            self::assertSame($expected['ecs_reference'], $package['source']['reference']);
+        }
+        self::assertSame($expected['rules'], $rules);
         self::assertCount(count($container->getCheckerClasses()), $rules, 'Every active checker must appear in this snapshot.');
     }
 

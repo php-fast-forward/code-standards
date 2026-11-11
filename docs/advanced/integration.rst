@@ -12,7 +12,8 @@ constraints are different selections.
 The consumer wrapper triggers the reusable through ``workflow_call`` on
 ``pull_request`` events. The reusable runs on ephemeral hosted Ubuntu runners
 with read-only contents access. It checks out the exact consumer head and
-installs only the tool's locked dependencies with plugins/scripts disabled.
+resolves the tool's dependencies from its Composer manifest with plugins and
+scripts disabled.
 It never runs the formatter in fix mode and accepts no consumer secrets.
 Never move this check into a privileged pull_request_target job.
 

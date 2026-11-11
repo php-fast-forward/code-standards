@@ -47,9 +47,10 @@ secrets. This is not a general sandbox: labels do not establish isolation or gra
 runner-group access. Use only existing authorized runners with reviewed tool
 runtime. No runner is created, reconfigured or registered. Separate sibling tool
 and consumer checkouts retain exact head SHA, full Git history and
-``persist-credentials: false``. No application dependencies, plugins or scripts
-are installed; only locked tool dependencies are installed with plugins/scripts
-disabled. Never call this reusable from a privileged workflow.
+``persist-credentials: false``. The reusable resolves tool dependencies from
+the tool's Composer manifest with plugins and scripts disabled. It leaves
+application dependencies untouched. Never call this reusable from a privileged
+workflow.
 
 The selected consumer interface uses ``@v0`` after a published non-prerelease 0.x release has established that GitHub branch. A reviewed full commit remains available for fixed adoption. The reusable exports the native ``job`` context through the supported ``toJSON(job)`` expression in step environment variables. Before checkout, an inline jq guard validates exactly one JSON object, a string repository equal to ``php-fast-forward/code-standards``, and a string SHA containing exactly 40 lowercase hexadecimal characters. Only that validated identity is emitted as step outputs and used for checkout. Invalid, absent or multiple documents emit no checkout outputs and fail closed. The workflow never resolves the moving branch again. ``github.workflow_sha`` identifies the caller and is not used for this purpose; no caller-supplied runtime ref can silently drift from the workflow. The four native workflow identity properties are GitHub.com features; a host without them, including GitHub Enterprise Server, fails this protocol.
 

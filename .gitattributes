@@ -5,6 +5,7 @@
 # Local state and synchronized copies never belong to package distributions.
 /.git export-ignore
 /vendor/ export-ignore
+/composer.lock export-ignore
 /.agents/ export-ignore
 /.build/ export-ignore
 /.phpunit.cache/ export-ignore
@@ -21,4 +22,4 @@
 /.gitattributes export-ignore
 /.changelog/ export-ignore
 
-# Keep src/, bin/, config/, resources/, composer.lock, README and its Dash image.
+# Keep src/, bin/, config/, resources/, README and its Dash image.

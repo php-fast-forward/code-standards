@@ -28,5 +28,5 @@ the `native refactoring guide <../rector.rst>`__ records the qualified dependenc
 versions and shared-graph compatibility restriction. No type-analysis command
 is implied by that dependency.
 Composer's runtime API supplies the installed binary proxy's autoload location.
-The lock file records transitive versions; this documentation does not replace
-that graph with a handwritten dependency catalog.
+Composer records resolved transitive versions in the generated local lock file.
+This documentation does not replace that graph with a handwritten dependency catalog.
