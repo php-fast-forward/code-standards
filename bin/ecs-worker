@@ -43,22 +43,18 @@ try {
     $container = (new EasyCodingStandardContainerFactory())->createFromArgv(['ecs', 'check', '--config=' . $config]);
     $command = $container->make(CheckCommand::class);
 
-    exit($command->run(
-        '--fix' === $mode,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        $config,
-        $format,
-        '',
-        '',
-        '',
-        ...$files,
-    ));
+    $arguments = [
+        'fix' => '--fix' === $mode,
+        'noProgressBar' => true,
+        'config' => $config,
+        'outputFormat' => $format,
+    ];
+    // Numbered names forward each file into ECS's variadic path list.
+    foreach ($files as $index => $file) {
+        $arguments['file' . $index] = $file;
+    }
+
+    exit($command->run(...$arguments));
 } catch (Throwable $exception) {
     fwrite(STDERR, 'ECS worker: ' . $exception->getMessage() . PHP_EOL);
 
