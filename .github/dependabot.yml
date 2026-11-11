@@ -1,6 +1,9 @@
 version: 2
 updates:
   - package-ecosystem: "composer"
+    labels:
+      - dependencies
+      - php
     directory: "/"
     schedule:
       interval: "weekly"
@@ -20,6 +23,9 @@ updates:
         update-types: ["minor", "patch"]
 
   - package-ecosystem: "github-actions"
+    labels:
+      - dependencies
+      - github_actions
     directory: "/"
     schedule:
       interval: "weekly"
