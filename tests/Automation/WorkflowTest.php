@@ -110,12 +110,11 @@ final class WorkflowTest extends TestCase
     public function testCompiledRefreshNeverExecutesPullRequestCodeWithTheWriter(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
-        $boundary = strpos($workflow, "\n  refresh:");
-        self::assertNotFalse($boundary);
-        self::assertStringNotContainsString('secrets.', substr($workflow, 0, $boundary));
-        $refresh = substr($workflow, $boundary);
-        self::assertStringContainsString('github.event.pull_request.head.repo.full_name == github.repository', $refresh);
-        self::assertStringContainsString('ref: ${{ github.event.pull_request.head.sha }}', $refresh);
+        self::assertStringNotContainsString('secrets.', $workflow);
+        $refresh = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-phar-refresh.yml');
+        self::assertStringContainsString('github.event.workflow_run.head_repository.full_name == github.repository', $refresh);
+        self::assertStringContainsString('ref: ${{ github.event.workflow_run.head_sha }}', $refresh);
+        self::assertStringContainsString('run-id: ${{ github.event.workflow_run.id }}', $refresh);
         self::assertStringContainsString('file_pattern: dist/code-standards', $refresh);
         self::assertStringContainsString('stefanzweifel/git-auto-commit-action@v7.2.1', $refresh);
         self::assertStringNotContainsString('php ', $refresh);

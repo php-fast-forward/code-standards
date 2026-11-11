@@ -80,7 +80,7 @@ authorize execution. Comparison read errors fail; differing bytes require a
 refresh. Fixed timestamps and sorted entries make repeat builds reproducible in
 the qualified CI environment, not every arbitrary toolchain.
 
-The PHP 8.3 job uploads its qualified build. A separate job accepts updates only
+The PHP 8.3 job uploads its qualified build. A separate workflow accepts updates only
 for same-repository PRs, downloads that run's artifact and invokes
 ``stefanzweifel/git-auto-commit-action`` for ``dist/code-standards`` only.
 It does not execute project PHP or the downloaded PHAR. The existing repository
@@ -88,6 +88,12 @@ App supplies contents-write access so its commit triggers normal checks again.
 The action pushes without force and does not pull or rebase concurrent changes.
 An automatic refresh cannot repeatedly refresh its own commit. Forks retain
 read-only checks. Missing update artifacts cause no commit.
+
+The existing ``release-channels`` environment rejects PR merge refs. The refresh
+therefore uses GitHub's ``workflow_run`` event from the trusted default branch,
+preserving that protection. Its definition must first reach the default branch
+before the first live autocommit can be qualified. The initial committed PHAR
+comes from the already-qualified PHP 8.3 CI artifact.
 
 Publication
 -----------
