@@ -39,7 +39,6 @@ final class WorkflowTest extends TestCase
         $references = [
             'Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb',
             'actions/create-github-app-token@v3.3.0',
-            'actions/github-script@v8',
             'actions/github-script@v9',
             'actions/checkout@v7',
             'actions/upload-artifact@v7',
