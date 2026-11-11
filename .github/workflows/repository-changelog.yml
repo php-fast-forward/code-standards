@@ -17,8 +17,8 @@ jobs:
       pull-requests: write
       issues: read
       statuses: write
-    # Verified published Changelog v0.5.0 includes the publication-only App API.
-    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@5e093cd2080165ed2a3d9a18ae12899b7be94b46
+    # Verified v0 currently supplies the publication-only App API.
+    uses: php-fast-forward/changelog/.github/workflows/changelog.yml@v0
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main

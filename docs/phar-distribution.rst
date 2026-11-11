@@ -104,27 +104,48 @@ standard GitHub zipball therefore contains the ready executable from the tagged
 tree. ``composer.json`` points directly at it. Neither a consumer build nor
 custom dist metadata nor discovery of release assets is necessary.
 
-The Repository Quality workflow builds and verifies a fresh executable on PHP
-8.3, 8.4 and 8.5. Its PHP 8.3 job uploads that build as an Actions artifact named
-after the exact commit SHA before checking the committed artifact. A stale
-committed binary therefore fails CI while the fresh reviewed build remains
-available to update that PR.
+The Repository Quality workflow checks out the exact PR head and builds and
+verifies a fresh executable on PHP 8.3, 8.4 and 8.5. Its PHP 8.3 job uploads the
+qualified build with a receipt binding the source SHA, run ID, run attempt and
+SHA-256 digest. A valid but stale committed binary produces an update artifact
+and fails CI. Malformed archives and unrelated build errors do not authorize
+an update. Developers can commit source changes without rebuilding locally.
 Before executing the committed candidate, CI opens it only as archive data and
 compares the entire stub and sorted path/content hashes with that fresh build.
 Extra/missing/changed entries, links and serialized metadata are rejected.
 Self-reported manifest digests are diagnostic bindings, not a trust anchor for
 the executable. Container timestamps/compression are not executable content.
-It uses contents-read permissions, does not write Git or tags, and runs no
-release. Maintainers can obtain the artifact from that reviewed run, restore
-executable mode with ``chmod +x builds/code-standards``, and include it in the
-same PR as source/manifest/lock/build-recipe changes. Alternatively ``composer build``
-replaces the tracked executable locally. CI rejects a missing or stale binary
-by comparing actual runtime identity, source/resource hashes, the original lock
-digest, Composer build manifest and PHP build recipe with the reviewed checkout.
+The build job has contents-read permissions and no secrets. The separate
+``repository-phar-refresh.yml`` callback runs trusted default-branch JavaScript
+after Quality completes. It accepts only an open same-repository PR still at the
+inspected source head, downloads the exact run/attempt artifact and validates its
+bounded payload as data. It never checks out PR code or executes the downloaded
+PHAR. Forks and superseded heads do not receive commits.
+
+The callback uses the existing repository App in the ``release-channels``
+environment with contents-write permission only. It changes only the already
+tracked executable with mode ``100755``. It creates the Git blob, tree and commit
+through the Git data API, then uses GitHub's atomic ``updateRefs`` mutation with
+``beforeOid`` and ``force: false`` to reject a concurrent head change. A rejected
+update can leave unreachable Git objects but cannot replace the branch head.
+The App-authored commit triggers the normal checks again; no merge
+is enabled. An automation marker prevents a second refresh if that new commit
+still fails parity. Identical payloads produce no commit. No token, App grant,
+branch protection or release setting is created by this workflow.
+
+This callback becomes available after its workflow and helper reach the default
+branch; a feature-branch test cannot prove its live write path. Local API fixtures
+exercise provenance, stale heads, payload validation and the atomic mutation.
+The first real callback must still qualify the existing App access and GitHub's
+binary upload path. Archive download size is bounded before download; exact file
+types, sizes and hashes are checked after the official download action extracts
+the archive. This does not impose a pre-extraction expansion limit. Until then,
+maintainers can obtain the qualified artifact,
+restore executable mode and commit it, or use ``composer build`` locally.
 
 This puts the binary in the reviewed commit before Changelog's existing
 version-PR/tag lifecycle operates. Changelog remains the only release/tag owner;
-no release workflow or token permissions are changed here. A future release's
+no release workflow is introduced here. A future release's
 tag retains the artifact already in its commit. A merge still does not itself
 prove a release has been published or indexed by Packagist.
 
@@ -137,7 +158,7 @@ workflows remain under ``.github/workflows`` for existing ``uses`` calls.
 it ignores export-ignore but still needs no consumer build. Contributors use
 the separate source entrypoint and dev dependencies when changing the tool.
 
-The binary is about 46.4 MiB with the current lock. This intentionally versions
+The binary is about 50 MiB with the current lock. This intentionally versions
 compiled library bytes in Git to support the default Packagist distribution.
 Source maintenance remains single, while binary bytes and outer resources are
 not deduplicated. A GitHub release asset alone would not automatically replace

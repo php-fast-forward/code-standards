@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: shivammathur/setup-php@v2
         with:
@@ -43,17 +44,32 @@ jobs:
         run: |
           php -d phar.readonly=0 scripts/phar/build.php "$RUNNER_TEMP/code-standards"
           php scripts/phar/verify.php "$RUNNER_TEMP/code-standards"
-      - name: Retain the reviewed PHP 8.3 build
-        if: matrix.php == '8.3'
-        uses: actions/upload-artifact@v7
-        with:
-          name: code-standards-${{ github.sha }}
-          path: ${{ runner.temp }}/code-standards
-          compression-level: 0
-          if-no-files-found: error
-      - name: Qualify the committed Composer distribution
+      - name: Compare the committed executable before execution
+        id: parity
+        shell: bash
         run: |
+          set +e
           php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards
+          status=$?
+          set -e
+          case "$status" in
+            0) echo 'stale=false' >> "$GITHUB_OUTPUT" ;;
+            2) echo 'stale=true' >> "$GITHUB_OUTPUT" ;;
+            *) exit "$status" ;;
+          esac
+      - name: Bind the reviewed PHP 8.3 build to this run
+        if: matrix.php == '8.3'
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/phar-update"
+          cp "$RUNNER_TEMP/code-standards" "$RUNNER_TEMP/phar-update/code-standards"
+          php .github/PharCommit/receipt.php "$RUNNER_TEMP/code-standards" "$SOURCE_SHA" "$RUN_ID" "$RUN_ATTEMPT" "$RUNNER_TEMP/phar-update/build-receipt.json"
+      - name: Qualify the committed Composer distribution
+        if: steps.parity.outputs.stale == 'false'
+        run: |
           php scripts/phar/verify.php builds/code-standards
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
@@ -67,3 +83,16 @@ jobs:
           TWIG_EVALUATION_AUTOLOAD: ${{ runner.temp }}/standards-twig-vendor/autoload.php
           TWIG_EVALUATION_TEMP: ${{ runner.temp }}
       - run: git diff --exit-code
+      - name: Retain the reviewed PHP 8.3 build
+        if: matrix.php == '8.3'
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-standards-${{ steps.parity.outputs.stale == 'true' && 'update-' || '' }}${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/phar-update/
+          compression-level: 0
+          if-no-files-found: error
+      - name: Require the compiled refresh to pass on its own commit
+        if: steps.parity.outputs.stale == 'true'
+        run: |
+          echo 'The committed executable is stale. The trusted refresh workflow may update this same-repository PR; CI must pass again on that commit.' >&2
+          exit 1

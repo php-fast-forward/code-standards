@@ -51,9 +51,16 @@ final class PharComparisonTest extends TestCase
         }
         $this->archive('committed', $files, $stub);
         $process = $this->compare();
-        self::assertNotSame(0, $process->getExitCode());
+        self::assertSame(2, $process->getExitCode());
         self::assertStringContainsString('from the fresh build', $process->getErrorOutput());
         self::assertFileDoesNotExist($this->directory . '/executed');
+    }
+
+    public function testMalformedArchiveDoesNotAuthorizeAnAutomaticRefresh(): void
+    {
+        $this->archive('fresh', ['payload.php' => '<?php echo "reviewed";'], '<?php __HALT_COMPILER();');
+        file_put_contents($this->directory . '/committed', 'not a PHAR');
+        self::assertNotContains($this->compare()->getExitCode(), [0, 2]);
     }
 
     /** @return iterable<string, array{string}> */

@@ -72,9 +72,9 @@ immutable release inputs for Composer/Packagist. ``latest`` is not a numeric
 stable Composer version: the installed Composer version parser rejects it as a
 version, unlike ``v0`` and ``v0.4.2``. No step exists solely to make latest a branch.
 
-The candidate workflow pins ``Actions-R-Us/actions-tagger`` to immutable commit
-``330ddfac760021349fef7ff62b372f2f691c20fb`` with ``v2.0.3`` as its version comment.
-The maintainer selected this pin after reviewing the moving-tag security finding.
+The workflow selects ``Actions-R-Us/actions-tagger@v2.0.3`` by the maintainer's
+version-reference policy. The tag was verified against
+``330ddfac760021349fef7ff62b372f2f691c20fb``; the workflow uses the version, not that SHA.
 The published, non-draft, stable v2.0.3 release and its tag were verified on
 2026-10-29; the tag resolved to that exact commit. The workflow runs on real
 ``release: published`` and ``release: edited`` events with
@@ -117,15 +117,18 @@ Publication-only App integration
 
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
-separate release workflow. The caller selects published Changelog v0.5.0 at
-immutable commit ``5e093cd2080165ed2a3d9a18ae12899b7be94b46``. Its actual
+separate release workflow. The caller selects Changelog's maintained ``v0``
+channel, verified at the published v0.5.0 revision
+``5e093cd2080165ed2a3d9a18ae12899b7be94b46``. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
 ``publish-app-private-key``. The older published v0.4.1 revision
 ``203db95e68fc974e95ba1a921f08d01f88851be1`` does not declare them.
 
 The public Client ID is a non-empty literal, so an absent repository variable
 cannot silently select the job-token fallback. Only publication receives that
-App selection and ``release-channels`` environment. The caller explicitly
+App selection and ``release-channels`` environment within the Changelog lifecycle.
+The separate compiled-executable refresh also uses this existing App, scoped to
+one binary commit; see :doc:`phar-distribution`. The caller explicitly
 forwards ``secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY`` under the logical
 ``publish-app-private-key`` workflow-call name. The nested publication job declares
 ``RELEASE_CHANNEL_APP_PRIVATE_KEY`` so its environment supplies that same-named

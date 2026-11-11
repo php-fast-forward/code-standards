@@ -15,9 +15,6 @@ copy($argv[1], $directory . '/fresh.phar');
 copy($argv[2], $directory . '/committed.phar');
 $fresh = new Phar($directory . '/fresh.phar');
 $committed = new Phar($directory . '/committed.phar');
-if ($fresh->getStub() !== $committed->getStub()) {
-    throw new RuntimeException('Committed PHAR stub differs from the fresh build.');
-}
 $contents = static function (Phar $archive): array {
     if (!$archive->isFileFormat(Phar::PHAR) || $archive->hasMetadata()) {
         throw new RuntimeException('Expected a native PHAR without serialized metadata.');
@@ -41,8 +38,13 @@ $contents = static function (Phar $archive): array {
 };
 $expected = $contents($fresh);
 $actual = $contents($committed);
+if ($fresh->getStub() !== $committed->getStub()) {
+    fwrite(STDERR, "Committed PHAR stub differs from the fresh build.\n");
+    exit(2);
+}
 if ($expected !== $actual) {
     $different = array_keys(array_diff_assoc($expected, $actual) + array_diff_assoc($actual, $expected));
-    throw new RuntimeException('Committed PHAR contents differ from the fresh build: ' . json_encode(array_slice($different, 0, 10), JSON_THROW_ON_ERROR));
+    fwrite(STDERR, 'Committed PHAR contents differ from the fresh build: ' . json_encode(array_slice($different, 0, 10), JSON_THROW_ON_ERROR) . "\n");
+    exit(2);
 }
 fwrite(STDOUT, "Committed PHAR stub and complete contents match the fresh build.\n");

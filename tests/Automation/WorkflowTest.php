@@ -37,13 +37,14 @@ final class WorkflowTest extends TestCase
     public function testExternalActionsUseVerifiedPublishedReferences(): void
     {
         $references = [
-            'Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb',
+            'Actions-R-Us/actions-tagger@v2.0.3',
             'actions/create-github-app-token@v3.3.0',
             'actions/github-script@v9',
             'actions/checkout@v7',
             'actions/upload-artifact@v7',
+            'actions/download-artifact@v8.0.2',
             'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@5e093cd2080165ed2a3d9a18ae12899b7be94b46',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
         ];
         $files = [
@@ -71,11 +72,28 @@ final class WorkflowTest extends TestCase
         self::assertLessThan($execution, $comparison);
     }
 
+    /** Keeps privileged refresh orchestration on trusted code and data-only artifact handling. */
+    public function testCompiledRefreshNeverExecutesPullRequestCodeWithTheWriter(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-phar-refresh.yml');
+        self::assertStringContainsString('ref: ${{ github.workflow_sha }}', $workflow);
+        self::assertStringContainsString('persist-credentials: false', $workflow);
+        self::assertStringContainsString('artifact-ids: ${{ steps.inspect.outputs.artifact-id }}', $workflow);
+        self::assertStringContainsString('run-id: ${{ github.event.workflow_run.id }}', $workflow);
+        self::assertStringNotContainsString('permission-workflows:', $workflow);
+        self::assertStringNotContainsString('pull_request_target:', $workflow);
+        self::assertStringNotContainsString('run: ', $workflow);
+        self::assertLessThan(
+            strpos($workflow, 'uses: actions/create-github-app-token@'),
+            strpos($workflow, ').validateCandidate('),
+        );
+    }
+
     /** Prevents silent GITHUB_TOKEN publication by keeping the App identity explicit and publication-only. */
     public function testChangelogCallerSelectsTheCompatiblePublicationOnlyApp(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
-        self::assertStringContainsString('changelog.yml@5e093cd2080165ed2a3d9a18ae12899b7be94b46', $workflow);
+        self::assertStringContainsString('changelog.yml@v0', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
         self::assertStringContainsString('managed-branch: changelog/version-recovery-98', $workflow);
