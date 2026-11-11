@@ -45,6 +45,7 @@ final class WorkflowTest extends TestCase
             'actions/checkout@v7',
             'actions/upload-artifact@v7',
             'actions/download-artifact@v8.0.2',
+            'stefanzweifel/git-auto-commit-action@v7.2.1',
             'shivammathur/setup-php@v2',
             'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
@@ -68,7 +69,7 @@ final class WorkflowTest extends TestCase
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
         $comparison = strpos($workflow, 'cmp "$RUNNER_TEMP/code-standards" dist/code-standards');
-        $execution = strpos($workflow, 'php scripts/phar/verify.php dist/code-standards');
+        $execution = strpos($workflow, 'STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards"');
         self::assertNotFalse($comparison);
         self::assertNotFalse($execution);
         self::assertLessThan($execution, $comparison);
@@ -105,21 +106,21 @@ final class WorkflowTest extends TestCase
         }
     }
 
-    /** Keeps privileged refresh orchestration on trusted code and data-only artifact handling. */
+    /** Keeps build execution separate from the narrowly scoped marketplace commit job. */
     public function testCompiledRefreshNeverExecutesPullRequestCodeWithTheWriter(): void
     {
-        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-phar-refresh.yml');
-        self::assertStringContainsString('ref: ${{ github.workflow_sha }}', $workflow);
-        self::assertStringContainsString('persist-credentials: false', $workflow);
-        self::assertStringContainsString('artifact-ids: ${{ steps.inspect.outputs.artifact-id }}', $workflow);
-        self::assertStringContainsString('run-id: ${{ github.event.workflow_run.id }}', $workflow);
-        self::assertStringNotContainsString('permission-workflows:', $workflow);
-        self::assertStringNotContainsString('pull_request_target:', $workflow);
-        self::assertStringNotContainsString('run: ', $workflow);
-        self::assertLessThan(
-            strpos($workflow, 'uses: actions/create-github-app-token@'),
-            strpos($workflow, ').validateCandidate('),
-        );
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        $boundary = strpos($workflow, "\n  refresh:");
+        self::assertNotFalse($boundary);
+        self::assertStringNotContainsString('secrets.', substr($workflow, 0, $boundary));
+        $refresh = substr($workflow, $boundary);
+        self::assertStringContainsString('github.event.pull_request.head.repo.full_name == github.repository', $refresh);
+        self::assertStringContainsString('ref: ${{ github.event.pull_request.head.sha }}', $refresh);
+        self::assertStringContainsString('file_pattern: dist/code-standards', $refresh);
+        self::assertStringContainsString('stefanzweifel/git-auto-commit-action@v7.2.1', $refresh);
+        self::assertStringNotContainsString('php ', $refresh);
+        self::assertStringNotContainsString('permission-workflows:', $refresh);
+        self::assertStringNotContainsString('--force', $refresh);
     }
 
     /** Prevents silent GITHUB_TOKEN publication by keeping the App identity explicit and publication-only. */

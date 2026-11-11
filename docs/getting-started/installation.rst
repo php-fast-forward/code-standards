@@ -32,9 +32,9 @@ Contributors retain the separate source entrypoint:
 
    composer install --no-plugins --no-scripts
    php bin/code-standards help
-   composer build
 
-Build dependencies live in ``require-dev``. Builds resolve locked runtime roots
-inside a disposable directory; they never consume Code Standards itself. Workflow
-tests additionally need Bash, jq and Node.js 24 or later. The contributor graph
+Bundled libraries live in ``require-dev``. CI prepares locked runtime roots in
+a disposable directory and compiles with Box; contributors do not need Box.
+The build never consumes Code Standards itself. Workflow tests additionally
+need Bash and jq. The contributor graph
 and compiled executable are tested on PHP 8.3, 8.4 and 8.5.

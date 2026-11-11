@@ -58,7 +58,7 @@ reusables under `.github/workflows/code-standards*.yml`, own event workflows use
   confirmed stable publications may promote their matching major channel. The
   actions-tagger branch/tag integration requires stable-version selection and
   approved publication/name-reservation setup; its mutation has no CAS.
-  GitHub channel refs are not Composer/CPX constraints.
+  GitHub channel refs are not Composer constraints.
 
 ## Work Guidance
 
@@ -89,7 +89,7 @@ for the exact local base/head before publication; do not claim remote CI evidenc
 - [Legacy fixer comparison](docs/legacy-fixer-comparison.rst): fixed-source inventory, loaded dependencies and remaining profile decisions.
 - [PHPDoc comparison](docs/phpdoc-comparison.rst): actual custom-rule registration, source contracts and remaining golden decisions.
 - [Static-analysis evaluation](docs/static-analysis-evaluation.rst): candidate engines, whole-project analysis and unresolved domain ownership.
-- [Architecture decision](docs/architecture.rst): library/tool dependencies, CPX/autoload limits and bootstrap without circular prerequisites.
+- [Architecture decision](docs/architecture.rst): library/tool dependencies, runtime/autoload limits and bootstrap without circular prerequisites.
 - [Automation](docs/automation.rst): trust, ref/bootstrap contracts and consumer adoption.
 - [Instruction map](docs/instruction-map.rst): single root scope and skill ownership.
 - [Consumer skill](resources/skills/fast-forward-code-standards/SKILL.md): portable consumption procedure; no automatic installation or rollout.

@@ -61,7 +61,7 @@ final class ECSConfig
         }
 
         $installation = dirname(__DIR__, 2);
-        $cacheRoot = is_file($installation . '/distribution-manifest.json')
+        $cacheRoot = is_file($installation . '/.phar-runtime')
             ? $installation . '/.cache/ecs'
             : sys_get_temp_dir() . '/fast-forward-code-standards';
 

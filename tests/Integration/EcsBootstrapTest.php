@@ -182,7 +182,7 @@ final class EcsBootstrapTest extends TestCase
     public static function installationLayouts(): iterable
     {
         yield 'checkout' => ['.build/checkout'];
-        yield 'installed package called directly by CPX' => ['.build/runtime/vendor/fast-forward/code-standards'];
+        yield 'installed package called directly' => ['.build/runtime/vendor/fast-forward/code-standards'];
     }
 
     /** The entrypoint resolves its installation even when cwd contains an unrelated autoloader. */

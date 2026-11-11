@@ -26,6 +26,7 @@ register_shutdown_function(static function () use ($runtime): void {
     rmdir($runtime);
 });
 (new Phar(__FILE__))->extractTo($runtime);
+touch($runtime . '/.phar-runtime');
 $_composer_autoload_path = $runtime . '/vendor/autoload.php';
 require $runtime . '/bin/code-standards';
 __HALT_COMPILER();

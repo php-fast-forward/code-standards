@@ -42,8 +42,8 @@ final class CacheLifetimeTest extends TestCase
     {
         $first = $this->installation('runtime-a');
         $second = $this->installation('runtime-b');
-        file_put_contents($first . '/distribution-manifest.json', '{"version":"a"}');
-        file_put_contents($second . '/distribution-manifest.json', '{"version":"b"}');
+        touch($first . '/.phar-runtime');
+        touch($second . '/.phar-runtime');
         $cache = $this->cache($first);
         self::assertStringStartsWith($first . '/.cache/ecs/', $cache);
         self::assertSame($cache, $this->cache($first));

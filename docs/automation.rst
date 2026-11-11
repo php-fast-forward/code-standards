@@ -84,9 +84,9 @@ returning actual branch names for branch queries. Alone, it force-downgrades
 ``v0`` when an older release is edited and can move ``latest`` backwards even
 after 1.x. Its latest ref is hardcoded as a tag in branch mode.
 
-A short inline ``github-script`` selection step compensates for that behavior.
-It parses concrete stable tags, paginates the tag catalog and compares their
-three numeric version components. An incomparable event version fails closed;
+A short inline PHP selection step compensates for that behavior.
+GitHub CLI paginates the tag catalog; PHP's native ``version_compare`` compares
+concrete stable versions. An incomparable event version fails closed;
 this parsing serves comparison rather than a second publication-format validator. The App token and action run only when that release is the newest
 stable full tag of its major. ``publish_latest_tag`` is true only when it is also
 the newest stable full tag globally. Therefore editing an older 0.x or 1.x release
@@ -94,8 +94,8 @@ performs no writes; a later 0.x release after 1.x can advance v0 while leaving
 latest unchanged. A 1.x publication updates v1/latest without moving v0. No PHP
 updater, checkout, substituted event context or separate latest-ref writer remains.
 
-Tests execute this actual inline selection and the byte-exact distributed bundle
-with local API fixtures. They verify older-release no-ops, late 0.x versus global
+PHPUnit executes this actual inline selection with local GitHub CLI fixtures.
+It verifies older-release no-ops, late 0.x versus global
 latest, transition to 1.x and preservation of every concrete version tag. Tags
 such as v0/v1/latest are ignored by the stable-version catalog. An unpublished
 full version tag can conservatively block promotion; this is a tag catalog, not
@@ -128,7 +128,7 @@ The public Client ID is a non-empty literal, so an absent repository variable
 cannot silently select the job-token fallback. Only publication receives that
 App selection and ``release-channels`` environment within the Changelog lifecycle.
 The separate compiled-executable refresh also uses this existing App, scoped to
-one binary commit; see :doc:`phar-distribution`. The caller explicitly
+one binary commit through the marketplace action; see :doc:`phar-distribution`. The caller explicitly
 forwards ``secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY`` under the logical
 ``publish-app-private-key`` workflow-call name. The nested publication job declares
 ``RELEASE_CHANNEL_APP_PRIVATE_KEY`` so its environment supplies that same-named

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/support.php';
+require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 $source = dirname(__DIR__, 2);
 $binary = realpath($argv[1] ?? $source . '/dist/code-standards');
@@ -18,6 +18,17 @@ $payload = new Phar($root . '/inspect.phar');
 foreach (inputHashes($source) as $path => $expected) {
     if (!isset($payload[$path]) || hash('sha256', $payload[$path]->getContent()) !== $expected) {
         throw new RuntimeException('Compiled source/resource bytes changed or disappeared: ' . $path);
+    }
+}
+$installed = json_decode($payload['vendor/composer/installed.json']->getContent(), true, flags: JSON_THROW_ON_ERROR);
+$lock = json_decode(file_get_contents($source . '/composer.lock'), true, flags: JSON_THROW_ON_ERROR);
+$locked = array_column(array_merge($lock['packages'], $lock['packages-dev']), null, 'name');
+if (false !== $installed['dev']) {
+    throw new RuntimeException('Compiled runtime contains development packages.');
+}
+foreach ($installed['packages'] as $package) {
+    if (($locked[$package['name']]['version'] ?? null) !== $package['version'] || 'phpunit/phpunit' === $package['name']) {
+        throw new RuntimeException('Compiled runtime differs from the locked production graph.');
     }
 }
 unset($payload);
@@ -99,7 +110,7 @@ if (getcwd() !== __DIR__) {
     throw new RuntimeException('Consumer cwd changed');
 }
 $runtime = dirname((new ReflectionClass(FastForward\CodeStandards\Config\ECSConfig::class))->getFileName(), 3);
-file_put_contents(__DIR__ . '/probe.json', json_encode(['runtime' => $runtime, 'mode' => fileperms($runtime) & 0777, 'identity' => json_decode(file_get_contents($runtime . '/distribution-manifest.json'), true)]));
+file_put_contents(__DIR__ . '/probe.json', json_encode(['runtime' => $runtime, 'mode' => fileperms($runtime) & 0777]));
 return FastForward\CodeStandards\Config\ECSConfig::configure();
 CONFIG);
     file_put_contents($consumer . '/composer.lock', '{"fixture":"untouched"}');
@@ -108,16 +119,7 @@ CONFIG);
     $before = array_map(static fn(string $path) => hash_file('sha256', $consumer . '/' . $path), $inputs);
     $check = runCommand([PHP_BINARY, $proxy, 'check', '--all', '--config=ecs.php'], $consumer, 2, $env);
     $probe = json_decode(file_get_contents($consumer . '/probe.json'), true, flags: JSON_THROW_ON_ERROR);
-    if (hash_file('sha256', $source . '/composer.lock') !== $probe['identity']['composer_lock_sha256'] || inputHashes($source) !== $probe['identity']['source_files_sha256']) {
-        throw new RuntimeException('Compiled payload does not match the current source and lock.');
-    }
-    if (buildHashes($source) !== ($probe['identity']['build_recipe_sha256'] ?? null)) {
-        throw new RuntimeException('Compiled payload does not match the current PHP build recipe.');
-    }
-    if (hash_file('sha256', $source . '/composer.json') !== ($probe['identity']['composer_json_sha256'] ?? null)) {
-        throw new RuntimeException('Compiled payload does not match the current Composer build manifest.');
-    }
-    if (0700 !== $probe['mode'] || file_exists($probe['runtime']) || 'fast-forward/code-standards' !== $probe['identity']['root']['name']) {
+    if (0700 !== $probe['mode'] || file_exists($probe['runtime'])) {
         throw new RuntimeException('Private runtime identity or cleanup failed.');
     }
     $rector = runCommand([PHP_BINARY, $proxy, 'refactor', '--config=policy.php'], $consumer, 2, $env);
@@ -252,4 +254,86 @@ CONFIG);
     }
 
     return ['autoload' => true, 'autoload_dev' => true, 'require_dev_rule' => true, 'check_exit' => 2, 'fix_exit' => 0, 'recheck_exit' => 0];
+}
+
+/** Copies complete inputs, rejecting nonportable symbolic links. */
+function copyTree(string $source, string $target): void
+{
+    if (is_link($source)) {
+        throw new RuntimeException('Symbolic build input: ' . $source);
+    }
+    $filesystem = new Symfony\Component\Filesystem\Filesystem();
+    if (is_dir($source)) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST) as $file) {
+            if ($file->isLink()) {
+                throw new RuntimeException('Symbolic build input: ' . $file->getPathname());
+            }
+        }
+        $filesystem->mirror($source, $target);
+
+        return;
+    }
+    $filesystem->copy($source, $target, true);
+}
+
+/** Removes an exclusively owned tree without following links. */
+function removeTree(string $path): void
+{
+    (new Symfony\Component\Filesystem\Filesystem())->remove($path);
+}
+
+/** @param array<mixed> $value */
+function writeJson(string $path, array $value): void
+{
+    file_put_contents($path, json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL);
+}
+
+/** @return array<string, string> Maintained inputs bound to the compiled payload. */
+function inputHashes(string $root): array
+{
+    $hashes = ['LICENSE' => hash_file('sha256', $root . '/LICENSE')];
+    foreach (['src', 'config', 'bin', 'resources'] as $path) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $path, FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file->isFile()) {
+                $hashes[substr($file->getPathname(), strlen($root) + 1)] = hash_file('sha256', $file->getPathname());
+            }
+        }
+    }
+    ksort($hashes);
+
+    return $hashes;
+}
+
+/**
+ * @param list<string> $arguments
+ * @param array<string, string|false> $environment Explicit isolated overrides.
+ */
+function runCommand(array $arguments, string $directory, int $expected = 0, array $environment = []): string
+{
+    static $home = null;
+    if (null === $home) {
+        $home = sys_get_temp_dir() . '/standards-composer-' . bin2hex(random_bytes(12));
+        mkdir($home, 0700);
+        register_shutdown_function(static fn() => removeTree($home));
+    }
+    $isolated = [];
+    foreach (array_keys(getenv()) as $name) {
+        if (str_starts_with($name, 'COMPOSER') || str_starts_with($name, 'GIT_')) {
+            $isolated[$name] = false;
+        }
+    }
+    $isolated = array_replace($isolated, [
+        'COMPOSER_HOME' => $home,
+        'COMPOSER_CACHE_DIR' => $home . '/cache',
+        'GIT_CONFIG_GLOBAL' => '/dev/null',
+        'GIT_CONFIG_SYSTEM' => '/dev/null',
+        'GIT_TERMINAL_PROMPT' => '0',
+    ], $environment);
+    $process = new Symfony\Component\Process\Process($arguments, $directory, $isolated, timeout: 300);
+    $process->run();
+    if ($expected !== $process->getExitCode()) {
+        throw new RuntimeException('Command failed: ' . implode(' ', $arguments) . PHP_EOL . $process->getOutput() . $process->getErrorOutput());
+    }
+
+    return $process->getOutput();
 }

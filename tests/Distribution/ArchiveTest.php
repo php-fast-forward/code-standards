@@ -14,6 +14,19 @@ final class ArchiveTest extends TestCase
 {
     private string $directory;
 
+    /** Runs the real installed CLI contract only when CI supplies a freshly compiled executable. */
+    public function testCompiledDistributionRunsInDisposableConsumers(): void
+    {
+        $binary = getenv('STANDARDS_PHAR');
+        if (false === $binary || '' === $binary) {
+            self::markTestSkipped('CI supplies STANDARDS_PHAR after Box compilation.');
+        }
+        $process = new Process([PHP_BINARY, dirname(__DIR__) . '/Fixtures/phar-consumer.php', $binary], timeout: 600);
+        $process->mustRun();
+        $result = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['local', 'global', 'source'], array_keys($result['results']));
+    }
+
     /** Copies only owned tracked source into an isolated fixture, including candidate export attributes. */
     protected function setUp(): void
     {
