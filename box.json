@@ -1,0 +1,25 @@
+{
+    "main": false,
+    "output": "dist/code-standards",
+    "stub": "stub.php",
+    "directories": [
+        "bin",
+        "config",
+        "resources",
+        "src",
+        "vendor"
+    ],
+    "files": [
+        "LICENSE",
+        "composer.json",
+        "composer.lock",
+        "distribution-manifest.json"
+    ],
+    "dump-autoload": false,
+    "exclude-composer-files": false,
+    "check-requirements": false,
+    "compression": "GZ",
+    "algorithm": "SHA256",
+    "chmod": "0755",
+    "timestamp": "2020-01-01T00:00:00+00:00"
+}

@@ -10,39 +10,24 @@ function copyTree(string $source, string $target): void
     if (is_link($source)) {
         throw new RuntimeException('Symbolic build input: ' . $source);
     }
-    if (is_file($source)) {
-        if (!is_dir(dirname($target))) {
-            mkdir(dirname($target), 0755, true);
+    $filesystem = new Symfony\Component\Filesystem\Filesystem();
+    if (is_dir($source)) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST) as $file) {
+            if ($file->isLink()) {
+                throw new RuntimeException('Symbolic build input: ' . $file->getPathname());
+            }
         }
-        copy($source, $target);
+        $filesystem->mirror($source, $target);
 
         return;
     }
-    mkdir($target, 0755, true);
-    foreach (new DirectoryIterator($source) as $file) {
-        if (!$file->isDot()) {
-            copyTree($file->getPathname(), $target . '/' . $file->getFilename());
-        }
-    }
+    $filesystem->copy($source, $target, true);
 }
 
 /** Removes an exclusively owned tree without following links. */
 function removeTree(string $path): void
 {
-    if (!file_exists($path) && !is_link($path)) {
-        return;
-    }
-    if (is_dir($path) && !is_link($path)) {
-        foreach (new DirectoryIterator($path) as $file) {
-            if (!$file->isDot()) {
-                removeTree($file->getPathname());
-            }
-        }
-        rmdir($path);
-
-        return;
-    }
-    unlink($path);
+    (new Symfony\Component\Filesystem\Filesystem())->remove($path);
 }
 
 /** @param array<mixed> $value */
@@ -75,6 +60,7 @@ function buildHashes(string $root): array
         $path = 'scripts/phar/' . $file;
         $hashes[$path] = hash_file('sha256', $root . '/' . $path);
     }
+    $hashes['box.json'] = hash_file('sha256', $root . '/box.json');
 
     return $hashes;
 }

@@ -9,7 +9,7 @@ Install a verified published Composer version in the consumer Git project:
    vendor/bin/code-standards list
    vendor/bin/code-standards check --all
 
-Composer's binary proxy targets ``builds/code-standards`` directly. The package
+Composer's binary proxy targets ``dist/code-standards`` directly. The package
 contains a ready executable; consumers run no build and resolve no internal tool
 libraries. PHP ^8.3, Git, and the extensions declared in ``composer.json`` are
 required, including Phar and zlib. Native XML magic-number reports also need DOM.

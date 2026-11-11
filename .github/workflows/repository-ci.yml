@@ -24,7 +24,7 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, posix
           coverage: none
-          tools: composer:v2
+          tools: composer:v2, box:4.7.1
       - run: composer install --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:
           COMPOSER_HOME: ${{ runner.temp }}/standards-composer-home
@@ -42,19 +42,19 @@ jobs:
           COMPOSER_HOME: ${{ runner.temp }}/standards-phar-composer-home
           COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
         run: |
-          php -d phar.readonly=0 scripts/phar/build.php "$RUNNER_TEMP/code-standards"
+          php scripts/phar/build.php "$RUNNER_TEMP/code-standards"
           php scripts/phar/verify.php "$RUNNER_TEMP/code-standards"
       - name: Compare the committed executable before execution
         id: parity
         shell: bash
         run: |
           set +e
-          php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards
+          cmp "$RUNNER_TEMP/code-standards" dist/code-standards
           status=$?
           set -e
           case "$status" in
             0) echo 'stale=false' >> "$GITHUB_OUTPUT" ;;
-            2) echo 'stale=true' >> "$GITHUB_OUTPUT" ;;
+            1) echo 'stale=true' >> "$GITHUB_OUTPUT" ;;
             *) exit "$status" ;;
           esac
       - name: Bind the reviewed PHP 8.3 build to this run
@@ -70,7 +70,7 @@ jobs:
       - name: Qualify the committed Composer distribution
         if: steps.parity.outputs.stale == 'false'
         run: |
-          php scripts/phar/verify.php builds/code-standards
+          php scripts/phar/verify.php dist/code-standards
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:

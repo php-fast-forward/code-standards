@@ -10,7 +10,7 @@ const {inspect, validateCandidate, commit} = require('../../.github/PharCommit/c
 
 const HEAD = 'a'.repeat(40);
 const NEW = 'c'.repeat(40);
-const TARGET = 'builds/code-standards';
+const TARGET = 'dist/code-standards';
 const blob = bytes => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 
 function fixture(t) {

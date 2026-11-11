@@ -17,7 +17,7 @@ Tools may bundle libraries at runtime. Libraries may consume tools as developmen
 
 The PHAR separates installation and dependency resolution. It does not isolate PHP namespaces when PHPUnit, Rector or executable configuration loads the consumer and tool in the same process. Version conflicts and global state still require explicit compatibility tests or a real process boundary. A separate Composer graph alone must never be described as runtime isolation. Analyzer/autoload fixtures must prove that the code under analysis comes from the consumer checkout, rather than another copy installed inside the tool. Syntax parsing uses ``php -n -l`` without application autoload. The formatter worker loads its own Composer runtime and uses ECS's public container factory and native check command. It does not invoke ECS's CLI bootstrap, which otherwise imports the working directory's vendor autoloader before config selection. The worker preserves consumer cwd, native config cache bookkeeping and absolute selected file arguments; executable user config can explicitly opt into consumer loaders and custom checkers. Engine paths are captured from the tool's installation before that config can change Composer's installed-package metadata.
 
-Composer points directly at ``builds/code-standards``. The compiled executable
+Composer points directly at ``dist/code-standards``. The compiled executable
 materializes a private temporary runtime before loading its own source entrypoint,
 autoloader, schema and subprocess tools. It preserves the consumer cwd and cleans
 its runtime at normal shutdown. The source entrypoint ``bin/code-standards`` remains

@@ -1,9 +1,10 @@
 Compiled distribution
 =====================
 
-The source is maintained once in this repository. ``composer build`` invokes the
-PHP builder at ``scripts/phar/build.php`` and writes the executable
-``builds/code-standards``. Composer's ``bin`` points directly at that file, following
+The source is maintained once in this repository. The CI invokes
+``scripts/phar/build.php`` to prepare the locked runtime and Box compiles it
+using the tracked ``box.json``, writing the executable
+``dist/code-standards``. Composer's ``bin`` points directly at that file, following
 the concrete ``builds/cpx`` layout in
 `CPX 2.1.0 <https://github.com/laravel/cpx/blob/124b3ad19cb98ef0cf6114e56ab9f580c8376ceb/composer.json>`__.
 The separate ``bin/code-standards`` remains the contributor source entrypoint.
@@ -12,14 +13,18 @@ There is no CPX dependency, installer, updater or consumer build hook.
 Build
 -----
 
+CI installs the official Box 4.7.1 PHAR through ``setup-php`` and owns the build
+and compiled refresh. Contributors do not need Box locally or a manual binary
+commit. For an optional local reproduction, put that same Box version on PATH:
+
 .. code-block:: console
 
    composer install --no-plugins --no-scripts
    composer build
-   php builds/code-standards list --raw
-   php scripts/phar/verify.php builds/code-standards
+   php dist/code-standards list --raw
+   php scripts/phar/verify.php dist/code-standards
 
-The builder uses an exclusive temporary tree, promotes the explicit runtime
+The small PHP preparation step uses an exclusive temporary tree, promotes the explicit runtime
 roots listed in ``extra.phar.runtime-packages`` to their exact locked versions,
 and asks Composer to resolve that graph using only locked package metadata.
 It invokes the Composer executable from the installed locked ``composer/composer``
@@ -33,6 +38,20 @@ its executable contents.
 This is the same necessary dependency promotion as
 `CPX's builder <https://github.com/laravel/cpx/blob/124b3ad19cb98ef0cf6114e56ab9f580c8376ceb/scripts/build.sh>`__;
 simply moving requires to require-dev would omit the runtime from a no-dev build.
+
+Box owns file assembly, GZ compression, SHA-256 signing and executable mode.
+Its configuration fixes the archive timestamp, keeps complete resources and
+Composer metadata, and preserves the prepared autoloader. No PHP compactor or
+namespace rewriting is enabled: consumer ECS rules need the existing APIs, and
+copyable resources must retain their original bytes. The native Composer
+platform check remains; Box's additional requirements checker is disabled for
+the custom extraction stub.
+
+Box runs as an isolated build tool, not as a dependency of this package or the
+compiled runtime. Installing its source package in the root development graph
+replaced PHP 8.0/8.1 polyfills needed by the separately resolved Composer runtime;
+using the official PHAR avoids that graph interaction and extra build manifests.
+Consumers do not download or execute Box.
 
 The GZ PHAR has a SHA-256 integrity signature, an embedded version/reference
 inventory and executable mode. Compression requires ext-zlib. Phar and all
@@ -99,7 +118,7 @@ proof of Composer-generated development autoloading in the PHAR.
 Standard Composer distribution
 -------------------------------
 
-``builds/code-standards`` is committed in this same repository. Packagist's
+``dist/code-standards`` is committed in this same repository. Packagist's
 standard GitHub zipball therefore contains the ready executable from the tagged
 tree. ``composer.json`` points directly at it. Neither a consumer build nor
 custom dist metadata nor discovery of release assets is necessary.
@@ -107,14 +126,15 @@ custom dist metadata nor discovery of release assets is necessary.
 The Repository Quality workflow checks out the exact PR head and builds and
 verifies a fresh executable on PHP 8.3, 8.4 and 8.5. Its PHP 8.3 job uploads the
 qualified build with a receipt binding the source SHA, run ID, run attempt and
-SHA-256 digest. A valid but stale committed binary produces an update artifact
-and fails CI. Malformed archives and unrelated build errors do not authorize
-an update. Developers can commit source changes without rebuilding locally.
-Before executing the committed candidate, CI opens it only as archive data and
-compares the entire stub and sorted path/content hashes with that fresh build.
-Extra/missing/changed entries, links and serialized metadata are rejected.
-Self-reported manifest digests are diagnostic bindings, not a trust anchor for
-the executable. Container timestamps/compression are not executable content.
+SHA-256 digest. A differing committed binary produces an update artifact and
+fails CI. Comparison I/O errors and unrelated build errors do not authorize an
+update. Developers can commit source changes without rebuilding locally.
+Before parsing or executing the committed candidate, CI compares every byte to
+the fresh build with native ``cmp``. A difference, including a modified stub or
+forged manifest, prevents execution. Self-reported digests are diagnostic
+bindings, not a trust anchor. Box's fixed timestamp and sorted entries remove
+variable archive timestamps/order. CI requires exact equality on PHP 8.3, 8.4
+and 8.5; this does not promise identical bytes across arbitrary toolchains.
 The build job has contents-read permissions and no secrets. The separate
 ``repository-phar-refresh.yml`` callback runs trusted default-branch JavaScript
 after Quality completes. It accepts only an open same-repository PR still at the
@@ -167,7 +187,8 @@ the tagged-tree zipball; no alternate transport is configured.
 Qualification
 -------------
 
-The PHP harness creates disposable Git/Composer ZIPs, compares every exported
+The PHP harness first verifies all compiled source/resource bytes against the
+checkout. It creates disposable Git/Composer ZIPs, compares every exported
 file hash, preserves the complete resource tree, and installs the actual ready
 ZIP through isolated Composer local/global directories. It checks the generated
 binary proxy points directly at the compiled file, a single consumer solver

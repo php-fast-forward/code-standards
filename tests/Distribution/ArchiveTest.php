@@ -39,7 +39,7 @@ final class ArchiveTest extends TestCase
             $this->put($path, $content);
         }
         $this->put('resources/templates/future-devtools/fixture.txt', 'copyable future resource');
-        $this->put('builds/code-standards', 'synthetic compiled payload for archive selection');
+        $this->put('dist/code-standards', 'synthetic compiled payload for archive selection');
         $readme = file_get_contents($this->directory . '/README.md');
         self::assertIsString($readme);
         $this->put('README.md', str_replace("\n", "\r\n", str_replace("\r\n", "\n", $readme)));
@@ -76,7 +76,7 @@ final class ArchiveTest extends TestCase
         $git = $this->contents($this->directory . '/.build/archives/git.zip');
         $composer = $this->contents($this->directory . '/.build/archives/composer.zip');
         self::assertSame($git, $composer);
-        foreach (['builds/code-standards', 'composer.json', 'composer.lock', 'README.md', 'CHANGELOG.md', 'LICENSE',
+        foreach (['dist/code-standards', 'composer.json', 'composer.lock', 'README.md', 'CHANGELOG.md', 'LICENSE',
             '.github/actions/check/action.yml', 'resources/workflows/code-standards.yml',
             'resources/skills/fast-forward-code-standards/SKILL.md',
             'resources/skills/fast-forward-code-standards/LICENSE', 'docs/_static/mascot-banner.png'] as $path) {
@@ -107,6 +107,7 @@ final class ArchiveTest extends TestCase
             self::assertDoesNotMatchRegularExpression('~^(?:src|config|bin|scripts/phar|vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
         self::assertArrayNotHasKey('skills.json', $git);
+        self::assertArrayNotHasKey('box.json', $git);
         self::assertArrayNotHasKey('archive', json_decode(file_get_contents($this->directory . '/composer.json'), true, flags: JSON_THROW_ON_ERROR));
     }
 

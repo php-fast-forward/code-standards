@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FastForward\CodeStandards\Tests\Automation;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Process;
 
 /** Contract assertions complement actionlint and real Git/CLI regressions. */
 final class WorkflowTest extends TestCase
@@ -65,11 +67,42 @@ final class WorkflowTest extends TestCase
     public function testCommittedPharComparisonPrecedesRuntimeQualification(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
-        $comparison = strpos($workflow, 'php scripts/phar/compare.php "$RUNNER_TEMP/code-standards" builds/code-standards');
-        $execution = strpos($workflow, 'php scripts/phar/verify.php builds/code-standards');
+        $comparison = strpos($workflow, 'cmp "$RUNNER_TEMP/code-standards" dist/code-standards');
+        $execution = strpos($workflow, 'php scripts/phar/verify.php dist/code-standards');
         self::assertNotFalse($comparison);
         self::assertNotFalse($execution);
         self::assertLessThan($execution, $comparison);
+    }
+
+    /** Runs the actual parity step against owned fixtures: differences authorize refresh, I/O errors do not. */
+    public function testBinaryComparisonNeverExecutesCandidateBytesOrMasksReadErrors(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        self::assertSame(1, preg_match('~id: parity\n        shell: bash\n        run: \|\n(.*?)      - name:~s', $workflow, $matches));
+        $script = preg_replace('/^          /m', '', $matches[1]);
+        $directory = sys_get_temp_dir() . '/standards-cmp-' . bin2hex(random_bytes(8));
+        mkdir($directory . '/dist', 0700, true);
+        try {
+            file_put_contents($directory . '/code-standards', 'reviewed bytes');
+            foreach (['reviewed bytes', '<?php file_put_contents("executed", "unreviewed");', null] as $candidate) {
+                if (null === $candidate) {
+                    unlink($directory . '/dist/code-standards');
+                } else {
+                    file_put_contents($directory . '/dist/code-standards', $candidate);
+                }
+                file_put_contents($directory . '/output', '');
+                $process = new Process(['bash', '-c', $script], $directory, [
+                    'RUNNER_TEMP' => $directory,
+                    'GITHUB_OUTPUT' => $directory . '/output',
+                ], timeout: 10);
+                $process->run();
+                self::assertSame(null === $candidate ? 2 : 0, $process->getExitCode(), $process->getErrorOutput());
+                self::assertSame(null === $candidate ? '' : ('reviewed bytes' === $candidate ? "stale=false\n" : "stale=true\n"), file_get_contents($directory . '/output'));
+                self::assertFileDoesNotExist($directory . '/executed');
+            }
+        } finally {
+            (new Filesystem())->remove($directory);
+        }
     }
 
     /** Keeps privileged refresh orchestration on trusted code and data-only artifact handling. */

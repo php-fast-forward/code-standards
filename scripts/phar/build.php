@@ -6,13 +6,11 @@ declare(strict_types=1);
 require __DIR__ . '/support.php';
 
 $root = dirname(__DIR__, 2);
-$output = $argv[1] ?? $root . '/builds/code-standards';
+$output = $argv[1] ?? $root . '/dist/code-standards';
 if ($argc > 2 || ($argc > 1 && file_exists($output))) {
-    throw new RuntimeException('Usage: php -d phar.readonly=0 scripts/phar/build.php [NEW_OUTPUT]');
+    throw new RuntimeException('Usage: php scripts/phar/build.php [NEW_OUTPUT]');
 }
 $recipe = buildHashes($root);
-$stub = file_get_contents(__DIR__ . '/stub.php');
-$recipe['scripts/phar/stub.php'] = hash('sha256', $stub);
 $runtime = sys_get_temp_dir() . '/standards-build-' . bin2hex(random_bytes(12));
 mkdir($runtime, 0700);
 register_shutdown_function(static fn() => removeTree($runtime));
@@ -57,25 +55,21 @@ writeJson($runtime . '/distribution-manifest.json', [
     'source_files_sha256' => inputHashes($runtime),
     'build_recipe_sha256' => $recipe,
     'packages' => $inventory,
-    'compression' => 'GZ',
+    'compression' => json_decode(file_get_contents($root . '/box.json'), true, flags: JSON_THROW_ON_ERROR)['compression'],
 ]);
 if (!is_dir(dirname($output))) {
     mkdir(dirname($output), 0755, true);
 }
-$temporary = $output . '.' . bin2hex(random_bytes(8)) . '.phar';
-register_shutdown_function(static function () use ($temporary): void {
-    if (is_file($temporary)) {
-        unlink($temporary);
-    }
-});
-$archive = new Phar($temporary);
-$archive->startBuffering();
-$archive->buildFromDirectory($runtime);
-$archive->setStub($stub);
-$archive->setSignatureAlgorithm(Phar::SHA256);
-$archive->compressFiles(Phar::GZ);
-$archive->stopBuffering();
-unset($archive);
-chmod($temporary, 0755);
-rename($temporary, $output);
+copy($root . '/box.json', $runtime . '/box.json');
+copy(__DIR__ . '/stub.php', $runtime . '/stub.php');
+runCommand(['box', 'compile', '--no-parallel', '--sort-compiled-files', '--config=box.json'], $runtime);
+$filesystem = new Symfony\Component\Filesystem\Filesystem();
+$staging = $filesystem->tempnam(dirname($output), '.code-standards-');
+try {
+    $filesystem->copy($runtime . '/dist/code-standards', $staging, true);
+    $filesystem->chmod($staging, fileperms($runtime . '/dist/code-standards') & 0777);
+    $filesystem->rename($staging, $output, true);
+} finally {
+    $filesystem->remove($staging);
+}
 fwrite(STDOUT, hash_file('sha256', $output) . '  ' . $output . PHP_EOL);

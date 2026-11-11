@@ -7,7 +7,7 @@ const {createHash} = require('node:crypto');
 const SHA = /^[0-9a-f]{40}$/;
 const DIGEST = /^[0-9a-f]{64}$/;
 const isSha = value => typeof value === 'string' && value.length === 40 && SHA.test(value);
-const TARGET = 'builds/code-standards';
+const TARGET = 'dist/code-standards';
 const MARKER = '[phar-ci]';
 const candidateFields = ['prNumber', 'headSha', 'branch', 'artifactId', 'runId', 'runAttempt'];
 const positiveInteger = value => Number.isSafeInteger(value) && value > 0;

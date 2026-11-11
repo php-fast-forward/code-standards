@@ -83,7 +83,7 @@
         ]
     },
     "bin": [
-        "builds/code-standards"
+        "dist/code-standards"
     ],
     "config": {
         "allow-plugins": {
@@ -117,7 +117,7 @@
         }
     },
     "scripts": {
-        "build": "@php -d phar.readonly=0 scripts/phar/build.php",
+        "build": "@php scripts/phar/build.php",
         "check": [
             "@composer validate --strict",
             "@composer check-platform-reqs",

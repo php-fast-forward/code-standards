@@ -29,7 +29,7 @@ vendor/bin/code-standards help check
 vendor/bin/code-standards check --all
 ```
 
-Composer installs the compiled `builds/code-standards` executable and creates
+Composer installs the compiled `dist/code-standards` executable and creates
 `vendor/bin/code-standards`; consumers do not build it or install its internal
 libraries. Adopt only a published version whose distribution contains that artifact.
 A source merge alone is insufficient. Optional Composer scripts can call
