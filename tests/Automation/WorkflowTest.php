@@ -200,6 +200,13 @@ final class WorkflowTest extends TestCase
                 $process->mustRun();
                 self::assertSame('build=' . ($expected ? 'true' : 'false') . "\n", file_get_contents($directory . '/output'), $event);
             }
+            $base = $git(['rev-parse', 'HEAD']);
+            $git(['mv', 'resources/template.txt', 'docs/retired.md']);
+            $git(['commit', '--quiet', '-m', 'retire bundled resource']);
+            file_put_contents($directory . '/output', '');
+            $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD']), 'EVENT' => 'pull_request']);
+            $process->mustRun();
+            self::assertSame("build=true\n", file_get_contents($directory . '/output'), 'Moving a resource out of the runtime must rebuild.');
         } finally {
             (new Filesystem())->remove($directory);
         }

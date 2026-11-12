@@ -28,7 +28,7 @@ jobs:
             if test "$EVENT" = pull_request; then
               BASE=$(git merge-base "$BASE" "$HEAD")
             fi
-            git diff --name-only -z "$BASE" "$HEAD" > "$RUNNER_TEMP/phar-inputs"
+            git diff --no-renames --name-only -z "$BASE" "$HEAD" > "$RUNNER_TEMP/phar-inputs"
             build=false
             while IFS= read -r -d '' path; do
               case "$path" in
