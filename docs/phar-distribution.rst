@@ -20,9 +20,13 @@ Documentation, ordinary tests, changelog fragments and unrelated workflow-only
 changes keep the existing executable. An unavailable comparison base requests
 a build. Dependabot updates therefore rebuild when they change the locked
 runtime; unchanged compiled bytes do not create an autocommit.
+PR input selection compares against the merge base, so unrelated changes on
+main do not turn an older documentation branch into a runtime change.
 
 The same built artifact is tested on PHP 8.3, 8.4 and 8.5. There are no three
 independent compiler runs. Source checks continue on all three PHP versions.
+Artifact consumers use the successful producer's artifact ID; retrying only
+failed jobs still downloads that build instead of a nonexistent newer attempt.
 Main invokes this same Quality workflow before Changelog prepares its version
 PR, so a failed source or executable qualification cannot prepare a release.
 The version commit changes history/fragments and reuses the already qualified

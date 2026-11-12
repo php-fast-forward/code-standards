@@ -139,6 +139,15 @@ final class WorkflowTest extends TestCase
         self::assertStringNotContainsString('box compile', $workflow);
     }
 
+    /** A failed-job rerun reuses the successful producer's artifact instead of inventing another attempt. */
+    public function testArtifactConsumersUseTheSuccessfulBuildIdentity(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        self::assertStringContainsString('artifact: ${{ steps.candidate.outputs.artifact-id }}', $workflow);
+        self::assertSame(2, substr_count($workflow, 'artifact-ids: ${{ needs.build.outputs.artifact }}'));
+        self::assertSame(1, substr_count($workflow, 'name: code-standards-build-'));
+    }
+
     /** Exercises the actual classifier with Git changes, including dependency and binary updates. */
     public function testRuntimeInputsRebuildButDocumentationAndOrdinaryTestsDoNot(): void
     {
@@ -174,6 +183,22 @@ final class WorkflowTest extends TestCase
                 $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD'])]);
                 $process->mustRun();
                 self::assertSame('build=' . ($expected ? 'true' : 'false') . "\n", file_get_contents($directory . '/output'), $path);
+            }
+            $ancestor = $git(['rev-parse', 'HEAD']);
+            $git(['checkout', '--quiet', '-b', 'main-advanced']);
+            (new Filesystem())->dumpFile($directory . '/src/main-only.php', 'main change');
+            $git(['add', 'src/main-only.php']);
+            $git(['commit', '--quiet', '-m', 'main runtime update']);
+            $base = $git(['rev-parse', 'HEAD']);
+            $git(['checkout', '--quiet', '-b', 'docs-branch', $ancestor]);
+            file_put_contents($directory . '/docs/example.rst', 'documentation update');
+            $git(['add', 'docs/example.rst']);
+            $git(['commit', '--quiet', '-m', 'documentation']);
+            foreach (['pull_request' => false, 'push' => true] as $event => $expected) {
+                file_put_contents($directory . '/output', '');
+                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD']), 'EVENT' => $event]);
+                $process->mustRun();
+                self::assertSame('build=' . ($expected ? 'true' : 'false') . "\n", file_get_contents($directory . '/output'), $event);
             }
         } finally {
             (new Filesystem())->remove($directory);
