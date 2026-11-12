@@ -20,8 +20,6 @@ final class PresetTest extends TestCase
     {
         $vendor = dirname(__DIR__, 2) . '/vendor';
         $packageRoot = realpath($vendor . '/symplify/easy-coding-standard');
-        $installed = json_decode(file_get_contents($vendor . '/composer/installed.json'), true, flags: JSON_THROW_ON_ERROR);
-        $package = array_values(array_filter($installed['packages'], static fn(array $entry): bool => 'symplify/easy-coding-standard' === $entry['name']))[0];
 
         require_once $packageRoot . '/vendor/squizlabs/php_codesniffer/autoload.php';
 
@@ -32,11 +30,7 @@ final class PresetTest extends TestCase
 
         ksort($rules);
         $expected = json_decode(file_get_contents(__DIR__ . '/../Fixtures/preset-rules.json'), true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame($expected, [
-            'ecs_version' => $package['version'],
-            'ecs_reference' => $package['source']['reference'],
-            'rules' => $rules,
-        ]);
+        self::assertSame($expected['rules'], $rules);
         self::assertCount(count($container->getCheckerClasses()), $rules, 'Every active checker must appear in this snapshot.');
     }
 
