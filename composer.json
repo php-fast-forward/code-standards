@@ -54,7 +54,7 @@
         "symplify/easy-coding-standard": "^13.3.8"
     },
     "require-dev": {
-        "llm/skills": "^1.15",
+        "llm/skills": "^1.16",
         "phpunit/phpunit": "^12.5",
         "symfony/filesystem": "^7.4 || ^8.0"
     },
