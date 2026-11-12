@@ -253,6 +253,14 @@ separate; changing a secret identifier does not repair or retry that transaction
 Version preparation recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The caller disables optional fragment pull-request inference with
+``resolve-pull-requests: false``. The repository's compiled-artifact history
+exceeds the current Changelog runtime's bounded Git-pack acquisition when it
+recovers original squash-merged PR heads. Historical tags remain the release
+source, and fragments can include explicit PR references. Signed Bot ownership
+and managed-file verification remain in force; increasing the transport limit
+is not part of this caller configuration.
+
 The original ``changelog/version`` branch of PR98 ends at the human merge
 ``48119d8d4bf3b77d488eba12b1f0515453b3f371``. Its content is the exact automatic
 merge of the signed Bot head and the then-current main: the remaining managed

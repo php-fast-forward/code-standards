@@ -13,6 +13,13 @@ CI installs the official Box 4.7.1 PHAR through ``setup-php``. Box is not a
 Composer dependency of this project or its consumers. Developers do not need to
 install it or commit a rebuilt executable manually.
 
+Ordinary Quality jobs run source tests and checks without compiling a PHAR.
+The release job depends on Changelog's native ``version-pr`` and ``version-head``
+outputs, runs only on trusted main preparation events, and checks out that
+immutable generated head. Its native ``Changelog-Base`` trailer must match the
+triggering source base before any build starts. This also handles version PRs
+created with ``GITHUB_TOKEN``, which do not trigger new pull-request workflows.
+
 ``scripts/phar/prepare.php`` has one purpose: prepare a disposable Composer
 runtime from the existing lock. Tool libraries live in ``require-dev`` alongside
 contributor tools, so their runtime roots must be selected explicitly from
@@ -67,7 +74,7 @@ omits development mappings/packages. See :doc:`api/configuration`.
 Validation and automatic refresh
 --------------------------------
 
-Quality runs on PHP 8.3, 8.4 and 8.5. Box validates its configuration and checks
+Source checks and release qualification run on PHP 8.3, 8.4 and 8.5. Box validates its configuration and checks
 the generated PHAR signature. PHPUnit exercises disposable Composer local,
 global and source installs, exact resource preservation, native check/fix,
 Rector and magic-number commands, consumer rule loading, CWD and cache cleanup.
@@ -80,20 +87,19 @@ authorize execution. Comparison read errors fail; differing bytes require a
 refresh. Fixed timestamps and sorted entries make repeat builds reproducible in
 the qualified CI environment, not every arbitrary toolchain.
 
-The PHP 8.3 job uploads its qualified build. A separate workflow accepts updates only
-for same-repository PRs, downloads that run's artifact and invokes
-``stefanzweifel/git-auto-commit-action`` for ``dist/code-standards`` only.
-It does not execute project PHP or the downloaded PHAR. The existing repository
-App supplies contents-write access so its commit triggers normal checks again.
-The action pushes without force and does not pull or rebase concurrent changes.
-An automatic refresh cannot repeatedly refresh its own commit. Forks retain
-read-only checks. Missing update artifacts cause no commit.
+The PHP 8.3 release job retains its qualified build and fails if the committed
+executable is stale.
 
-The existing ``release-channels`` environment rejects PR merge refs. The refresh
-therefore uses GitHub's ``workflow_run`` event from the trusted default branch,
-preserving that protection. Its definition must first reach the default branch
-before the first live autocommit can be qualified. The initial committed PHAR
-comes from the already-qualified PHP 8.3 CI artifact.
+Draft integration boundary
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The artifact-to-commit route is not connected in this draft. The old Quality
+refresh callback no longer has an artifact producer. Changelog currently owns
+only central history and consumed-fragment deletions on its managed branch, so
+a normal PHAR autocommit there is refused. Main requires a PR and signatures;
+the existing App cannot bypass those rules. Changelog's publisher also does
+not consult arbitrary CI statuses. This draft must not be merged until the
+artifact route and publication gate are completed and qualified together.
 
 Publication
 -----------

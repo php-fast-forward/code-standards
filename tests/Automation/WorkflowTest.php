@@ -33,6 +33,8 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString("  tests:\n    runs-on: ubuntu-latest", $quality);
         self::assertStringContainsString("php: ['8.3', '8.4', '8.5']", $quality);
         self::assertStringContainsString('run: composer check', $quality);
+        self::assertStringNotContainsString('box compile', $quality);
+        self::assertStringNotContainsString('STANDARDS_PHAR', $quality);
     }
 
     /** Keeps external Actions on verified published channels or reviewed release commits. */
@@ -67,7 +69,7 @@ final class WorkflowTest extends TestCase
     /** A candidate's self-reported manifest must not authorize its first execution. */
     public function testCommittedPharComparisonPrecedesRuntimeQualification(): void
     {
-        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
         $comparison = strpos($workflow, 'cmp "$RUNNER_TEMP/code-standards" dist/code-standards');
         $execution = strpos($workflow, 'STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards"');
         self::assertNotFalse($comparison);
@@ -78,7 +80,7 @@ final class WorkflowTest extends TestCase
     /** Runs the actual parity step against owned fixtures: differences authorize refresh, I/O errors do not. */
     public function testBinaryComparisonNeverExecutesCandidateBytesOrMasksReadErrors(): void
     {
-        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
         self::assertSame(1, preg_match('~id: parity\n        shell: bash\n        run: \|\n(.*?)      - name:~s', $workflow, $matches));
         $script = preg_replace('/^          /m', '', $matches[1]);
         $directory = sys_get_temp_dir() . '/standards-cmp-' . bin2hex(random_bytes(8));
