@@ -24,8 +24,7 @@ jobs:
       base-branch: main
       managed-branch: changelog/version-recovery-98
       source: tags
-      # The PHAR history exceeds the current optional provenance pack limit.
-      resolve-pull-requests: false
+      resolve-pull-requests: true
       prepare-release: true
       publish: true
       publish-app-client-id: 'Iv23liHqRng02H747IYa'

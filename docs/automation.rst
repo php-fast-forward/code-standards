@@ -253,13 +253,13 @@ separate; changing a secret identifier does not repair or retry that transaction
 Version preparation recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The caller disables optional fragment pull-request inference with
-``resolve-pull-requests: false``. The repository's compiled-artifact history
-exceeds the current Changelog runtime's bounded Git-pack acquisition when it
-recovers original squash-merged PR heads. Historical tags remain the release
-source, and fragments can include explicit PR references. Signed Bot ownership
-and managed-file verification remain in force; increasing the transport limit
-is not part of this caller configuration.
+The caller retains automatic fragment pull-request references with
+``resolve-pull-requests: true``. The repository's compiled-artifact history
+exceeds the currently published Changelog runtime's bounded Git-pack acquisition
+when it recovers original squash-merged PR heads. This draft requires a verified
+published resolver correction before adoption; disabling reference discovery is
+not the recovery policy. Historical tags remain the release source. Signed Bot
+ownership and managed-file verification remain in force.
 
 The original ``changelog/version`` branch of PR98 ends at the human merge
 ``48119d8d4bf3b77d488eba12b1f0515453b3f371``. Its content is the exact automatic
