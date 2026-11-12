@@ -24,11 +24,11 @@ The target is a required consumer decision, independent of the host PHP. Declare
 
 .. code-block:: console
 
-   php bin/code-standards refactor --config=rector.php --directory=/project
+   php vendor/bin/code-standards refactor --config=rector.php --directory=/project
    # After reviewing the proposed semantic diff:
-   php bin/code-standards refactor --config=rector.php --directory=/project --apply
+   php vendor/bin/code-standards refactor --config=rector.php --directory=/project --apply
    # For a larger project, choose an explicit finite per-subprocess budget:
-   php bin/code-standards refactor --config=rector.php --directory=/project --timeout=900
+   php vendor/bin/code-standards refactor --config=rector.php --directory=/project --timeout=900
 
 Preview passes native ``--dry-run``. Explicit apply performs one write pass and then a dry-run verification; remaining differences fail. Native exits are 0 for clean/success, 1 for processing errors or subprocess timeouts and 2 for proposed changes. Controlled invocation, empty-rule and invalid-inventory errors also return 2, with an error diagnostic. Other native fatal exits propagate unchanged. Rector 2.8.2 uses ``-n`` for dry-run and does not expose the ECS ``--no-interaction`` option; its native flags are not translated blindly.
 
@@ -46,7 +46,7 @@ documents. Text apply and its verification keep the existing behavior.
 
 .. code-block:: console
 
-   php bin/code-standards refactor --config=rector.php --format=json > rector-preview.json
+   php vendor/bin/code-standards refactor --config=rector.php --format=json > rector-preview.json
 
 The redirection writes only the explicitly selected report file. Native JSON
 has ``totals.changed_files`` and ``totals.errors``; available processing errors
