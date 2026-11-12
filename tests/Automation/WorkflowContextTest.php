@@ -90,32 +90,16 @@ final class WorkflowContextTest extends TestCase
         }
     }
 
-    /** A release build must use the native generated commit for the exact triggering source base. */
-    public function testReleaseBuildRejectsOtherOrAmbiguousNativeBaseTrailers(): void
+    /** An update may be handed to the writer only after all source and runtime jobs succeeded. */
+    public function testCompiledUpdateRejectsFailedSkippedOrCancelledQualification(): void
     {
-        $script = $this->guard('repository-changelog.yml', 'Bind the generated version head to this source base');
-        $directory = sys_get_temp_dir() . '/release-base-' . bin2hex(random_bytes(8));
-        mkdir($directory, 0700);
-        $git = static function (array $arguments) use ($directory): string {
-            $process = new Process(['git', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', ...$arguments], $directory, timeout: 10);
-            $process->mustRun();
-
-            return trim($process->getOutput());
-        };
-        try {
-            $git(['init', '-q']);
-            $git(['config', 'user.name', 'Release Fixture']);
-            $git(['config', 'user.email', 'fixture@example.invalid']);
-            $git(['commit', '--allow-empty', '-qm', 'Source base']);
-            $base = $git(['rev-parse', 'HEAD']);
-            foreach ([$base, str_repeat('0', 40), $base . "\nChangelog-Base: " . $base, ''] as $declared) {
-                $git(['commit', '--allow-empty', '-qm', "Version PR\n\nChangelog-Base: " . $declared]);
-                $process = new Process(['bash', '-c', $script], $directory, ['RELEASE_BASE' => $base], timeout: 10);
-                $process->run();
-                self::assertSame($declared === $base ? 0 : 1, $process->getExitCode());
+        $script = $this->guard('repository-ci.yml', 'Require successful source and artifact qualification');
+        $valid = ['BUILD' => 'success', 'TESTS' => 'success', 'RUNTIME' => 'success'];
+        self::assertSame(0, $this->guardResult($script, $valid)['status']);
+        foreach (array_keys($valid) as $job) {
+            foreach (['failure', 'skipped', 'cancelled', ''] as $result) {
+                self::assertNotSame(0, $this->guardResult($script, [...$valid, $job => $result])['status'], $job . ': ' . $result);
             }
-        } finally {
-            (new \Symfony\Component\Filesystem\Filesystem())->remove($directory);
         }
     }
 

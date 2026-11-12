@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-11-12
+
+### Added
+
+- Distribute Code Standards as a ready-to-run PHAR for project and global Composer
+  installations, keeping bundled libraries out of the consumer dependency graph.
+  Preserve the complete resources and skills payload, support explicitly loaded
+  consumer ECS rules, and remove invocation-owned formatter caches at shutdown.
+  Build from the locked runtime and verify the complete executable against a fresh
+  build before execution. Compile with Box and a tracked configuration, keeping
+  the compiler isolated in CI. Refresh stale compiled executables through a separate
+  CI autocommit on unchanged same-repository PR heads. Use the compatible published Changelog workflow for
+  contribution checks and the existing release lifecycle.
+
+  ([#97](https://github.com/php-fast-forward/code-standards/pull/97))
+
+### Changed
+
+- Composer(deps-dev): bump the composer-development group across 1 directory with 2 updates
+
+  Update dependencies: `llm/skills`, `symplify/easy-coding-standard`.
+
+  ([#114](https://github.com/php-fast-forward/code-standards/pull/114), @dependabot[bot])
+
+- Group Dependabot dependency updates by ecosystem and dependency type. ([#109](https://github.com/php-fast-forward/code-standards/pull/109))
+- Raise the minimum requirement of directly updated Composer dependencies in Dependabot version updates. ([#113](https://github.com/php-fast-forward/code-standards/pull/113))
+
+### Fixed
+
+- Allow compatible ECS dependency updates without editing the reviewed preset
+  snapshot solely for version or commit changes. Keep exact rule, configuration,
+  risk, source-origin and formatting behavior checks; Composer's lock remains the
+  source of the installed dependency identity.
+
+  Validate external Actions against the approved action identities and stable
+  version-label format instead of duplicating every selected release in tests.
+
+  ([#115](https://github.com/php-fast-forward/code-standards/pull/115))
+
+- Keep isolated ECS checks compatible with added optional engine arguments. ([#108](https://github.com/php-fast-forward/code-standards/pull/108))
+
 ## [0.10.0] - 2026-10-29
 
 ### Added
@@ -287,6 +328,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   ([#26](https://github.com/php-fast-forward/code-standards/pull/26))
 
+[0.11.0]: https://github.com/php-fast-forward/code-standards/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/php-fast-forward/code-standards/compare/v0.9.2...v0.10.0
 [0.9.2]: https://github.com/php-fast-forward/code-standards/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/php-fast-forward/code-standards/compare/v0.9.0...v0.9.1

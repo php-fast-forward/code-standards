@@ -13,12 +13,20 @@ CI installs the official Box 4.7.1 PHAR through ``setup-php``. Box is not a
 Composer dependency of this project or its consumers. Developers do not need to
 install it or commit a rebuilt executable manually.
 
-Ordinary Quality jobs run source tests and checks without compiling a PHAR.
-The release job depends on Changelog's native ``version-pr`` and ``version-head``
-outputs, runs only on trusted main preparation events, and checks out that
-immutable generated head. Its native ``Changelog-Base`` trailer must match the
-triggering source base before any build starts. This also handles version PRs
-created with ``GITHUB_TOKEN``, which do not trigger new pull-request workflows.
+Quality compiles once with PHP 8.3 when a PR changes runtime or build inputs,
+including the Composer manifests/lock, source, configuration, resources, stub,
+compiled executable or distribution tests. Unknown paths also request a build.
+Documentation, ordinary tests, changelog fragments and unrelated workflow-only
+changes keep the existing executable. An unavailable comparison base requests
+a build. Dependabot updates therefore rebuild when they change the locked
+runtime; unchanged compiled bytes do not create an autocommit.
+
+The same built artifact is tested on PHP 8.3, 8.4 and 8.5. There are no three
+independent compiler runs. Source checks continue on all three PHP versions.
+Main invokes this same Quality workflow before Changelog prepares its version
+PR, so a failed source or executable qualification cannot prepare a release.
+The version commit changes history/fragments and reuses the already qualified
+executable instead of compiling the release again.
 
 ``scripts/phar/prepare.php`` has one purpose: prepare a disposable Composer
 runtime from the existing lock. Tool libraries live in ``require-dev`` alongside
@@ -74,7 +82,7 @@ omits development mappings/packages. See :doc:`api/configuration`.
 Validation and automatic refresh
 --------------------------------
 
-Source checks and release qualification run on PHP 8.3, 8.4 and 8.5. Box validates its configuration and checks
+Source checks and artifact qualification run on PHP 8.3, 8.4 and 8.5. Box validates its configuration and checks
 the generated PHAR signature. PHPUnit exercises disposable Composer local,
 global and source installs, exact resource preservation, native check/fix,
 Rector and magic-number commands, consumer rule loading, CWD and cache cleanup.
@@ -87,19 +95,28 @@ authorize execution. Comparison read errors fail; differing bytes require a
 refresh. Fixed timestamps and sorted entries make repeat builds reproducible in
 the qualified CI environment, not every arbitrary toolchain.
 
-The PHP 8.3 release job retains its qualified build and fails if the committed
-executable is stale.
+Only after every source check and runtime qualification succeeds does CI retain
+an update artifact. A stale executable then fails the compiled check until the
+refresh commit passes its own checks. The trusted ``workflow_run`` callback
+copies those bytes with the marketplace autocommit Action; it executes neither
+the PHAR nor checkout PHP with its writer token. It checks that the same-repository
+PR remains open at the source head before checkout and immediately before the
+commit. Closed, deleted or advanced branches are not deliberately recreated or
+overwritten; a normal push rejects a concurrent non-fast-forward advance. This
+is not a compare-and-swap guarantee against a concurrent branch rewind.
 
-Draft integration boundary
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+The existing App token triggers checks on the refresh commit. This refresh route
+does not write to protected main or forks. A fork contributor can copy the
+qualified artifact into their branch. Installing a development branch gives the
+current executable after that branch's refresh and checks finish; an arbitrary
+older commit or unvalidated branch cannot contain a later build automatically.
 
-The artifact-to-commit route is not connected in this draft. The old Quality
-refresh callback no longer has an artifact producer. Changelog currently owns
-only central history and consumed-fragment deletions on its managed branch, so
-a normal PHAR autocommit there is refused. Main requires a PR and signatures;
-the existing App cannot bypass those rules. Changelog's publisher also does
-not consult arbitrary CI statuses. This draft must not be merged until the
-artifact route and publication gate are completed and qualified together.
+Changelog publication still uses its native owned-version-commit checks, rather
+than consulting arbitrary CI statuses. Merge only reviewed version PRs whose
+current-head checks pass. PRs created with ``GITHUB_TOKEN`` can generate
+``opened``, ``synchronize`` and ``reopened`` runs requiring approval; do not
+assume those runs execute automatically. Main's explicit Quality dependency
+qualifies the source base independently of that approval-dependent delivery.
 
 Publication
 -----------

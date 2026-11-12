@@ -57,7 +57,7 @@
         "ergebnis/json-normalizer": "^4.11.0",
         "ergebnis/json-printer": "^3.9.1",
         "fast-forward/container": "^1.10.1",
-        "llm/skills": "^1.15",
+        "llm/skills": "^1.16",
         "phpstan/phpstan": "^2.3.3",
         "phpunit/phpunit": "^12.5",
         "povils/phpmnd": "^3.6.1",
@@ -66,7 +66,7 @@
         "symfony/console": "^7.4 || ^8.0",
         "symfony/filesystem": "^7.4 || ^8.0",
         "symfony/process": "^7.4 || ^8.0",
-        "symplify/easy-coding-standard": "^13.3.8"
+        "symplify/easy-coding-standard": "^13.3.15"
     },
     "suggest": {
         "ext-dom": "Generate native XML reports for optional magic-number analysis.",

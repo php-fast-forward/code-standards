@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "35d70d2f5295eebbffc32d28e0a3259f",
+    "content-hash": "f7270d76c57ee18c4425ca14d1467f12",
     "packages": [],
     "packages-dev": [
         {
@@ -1494,16 +1494,16 @@
         },
         {
             "name": "llm/skills",
-            "version": "1.15.0",
+            "version": "1.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/roxblnfk/skills.git",
-                "reference": "3ee0a545bf3ab77591fd9c35f0317191d78203c5"
+                "reference": "81ea574f9f16396309d3bef6002633dcced75f7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/roxblnfk/skills/zipball/3ee0a545bf3ab77591fd9c35f0317191d78203c5",
-                "reference": "3ee0a545bf3ab77591fd9c35f0317191d78203c5",
+                "url": "https://api.github.com/repos/roxblnfk/skills/zipball/81ea574f9f16396309d3bef6002633dcced75f7b",
+                "reference": "81ea574f9f16396309d3bef6002633dcced75f7b",
                 "shasum": ""
             },
             "require": {
@@ -1520,6 +1520,10 @@
                 "testo/bridge-infection": "0.1 - 1",
                 "testo/testo": "0.10 - 1",
                 "vimeo/psalm": "^7"
+            },
+            "suggest": {
+                "ext-intl": "Detects skill names that differ only in Unicode composition; without it or its Symfony polyfill non-ASCII skill names are skipped",
+                "ext-mbstring": "Detects skill names that differ only in non-ASCII letter case; without it non-ASCII skill names are skipped"
             },
             "type": "composer-plugin",
             "extra": {
@@ -1562,7 +1566,7 @@
                     "type": "boosty"
                 }
             ],
-            "time": "2026-10-15T12:10:05+00:00"
+            "time": "2026-11-07T23:42:03+00:00"
         },
         {
             "name": "marc-mabe/php-enum",
@@ -5190,16 +5194,16 @@
         },
         {
             "name": "symplify/easy-coding-standard",
-            "version": "13.3.14",
+            "version": "13.3.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ecsphp/ecs.git",
-                "reference": "c6a379b5d5cce68c60d2dbd1211989bdf58eacaf"
+                "reference": "4a975bfa3cee8b4ddb3b1fae9934e8ffde155271"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ecsphp/ecs/zipball/c6a379b5d5cce68c60d2dbd1211989bdf58eacaf",
-                "reference": "c6a379b5d5cce68c60d2dbd1211989bdf58eacaf",
+                "url": "https://api.github.com/repos/ecsphp/ecs/zipball/4a975bfa3cee8b4ddb3b1fae9934e8ffde155271",
+                "reference": "4a975bfa3cee8b4ddb3b1fae9934e8ffde155271",
                 "shasum": ""
             },
             "require": {
@@ -5232,9 +5236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ecsphp/ecs/issues",
-                "source": "https://github.com/ecsphp/ecs/tree/13.3.14"
+                "source": "https://github.com/ecsphp/ecs/tree/13.3.15"
             },
-            "time": "2026-11-05T16:53:58+00:00"
+            "time": "2026-11-07T20:02:40+00:00"
         },
         {
             "name": "theseer/tokenizer",

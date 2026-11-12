@@ -254,12 +254,12 @@ Version preparation recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The caller retains automatic fragment pull-request references with
-``resolve-pull-requests: true``. The repository's compiled-artifact history
-exceeds the currently published Changelog runtime's bounded Git-pack acquisition
-when it recovers original squash-merged PR heads. This draft requires a verified
-published resolver correction before adoption; disabling reference discovery is
-not the recovery policy. Historical tags remain the release source. Signed Bot
-ownership and managed-file verification remain in force.
+``resolve-pull-requests: true``. Changelog v0.6.0, available through the verified
+``v0`` channel, supplies filtered acquisition of original squash-merged PR heads.
+This retains references through the repository's large compiled-artifact history
+without raising the bounded Git-pack limit or disabling discovery. Historical
+tags remain the release source. Signed Bot ownership and managed-file verification
+remain in force.
 
 The original ``changelog/version`` branch of PR98 ends at the human merge
 ``48119d8d4bf3b77d488eba12b1f0515453b3f371``. Its content is the exact automatic

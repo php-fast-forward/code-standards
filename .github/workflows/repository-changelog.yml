@@ -11,7 +11,14 @@ on:
   workflow_dispatch:
 permissions: {}
 jobs:
+  quality:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/repository-ci.yml
+    permissions:
+      contents: read
   changelog:
+    needs: quality
+    if: always() && (needs.quality.result == 'success' || needs.quality.result == 'skipped')
     permissions:
       contents: write
       pull-requests: write
@@ -31,81 +38,3 @@ jobs:
       publish-environment: release-channels
     secrets:
       publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}
-  phar:
-    name: Qualify release executable (${{ matrix.php }})
-    needs: changelog
-    if: >-
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      github.ref == 'refs/heads/main' &&
-      needs.changelog.outputs.version-pr != '' &&
-      needs.changelog.outputs.version-head != ''
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3', '8.4', '8.5']
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.changelog.outputs.version-head }}
-          persist-credentials: false
-      - name: Bind the generated version head to this source base
-        env:
-          RELEASE_BASE: ${{ github.sha }}
-        run: |
-          base=$(git log -1 --format=%B | git interpret-trailers --parse | sed -n 's/^Changelog-Base: //p')
-          test "$base" = "$RELEASE_BASE"
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, posix
-          coverage: none
-          tools: composer:v2, box:4.7.1
-      - run: composer install --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
-        env:
-          COMPOSER_HOME: ${{ runner.temp }}/standards-composer-home
-          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
-      - name: Qualify ready PHAR distribution and native runtime
-        env:
-          COMPOSER_HOME: ${{ runner.temp }}/standards-phar-composer-home
-          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
-        run: |
-          php scripts/phar/prepare.php "$RUNNER_TEMP/standards-runtime"
-          box validate "$RUNNER_TEMP/standards-runtime/box.json"
-          box compile --no-parallel --sort-compiled-files --config="$RUNNER_TEMP/standards-runtime/box.json"
-          install -m 755 "$RUNNER_TEMP/standards-runtime/dist/code-standards" "$RUNNER_TEMP/code-standards"
-          box verify "$RUNNER_TEMP/code-standards"
-          STANDARDS_PHAR="$RUNNER_TEMP/code-standards" vendor/bin/phpunit tests/Distribution/ArchiveTest.php --filter testCompiledDistributionRunsInDisposableConsumers
-      - name: Compare the committed executable before execution
-        id: parity
-        shell: bash
-        run: |
-          set +e
-          cmp "$RUNNER_TEMP/code-standards" dist/code-standards
-          status=$?
-          set -e
-          case "$status" in
-            0) echo 'stale=false' >> "$GITHUB_OUTPUT" ;;
-            1) echo 'stale=true' >> "$GITHUB_OUTPUT" ;;
-            *) exit "$status" ;;
-          esac
-      - name: Qualify the committed Composer distribution
-        if: steps.parity.outputs.stale == 'false'
-        run: |
-          STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards" vendor/bin/phpunit tests/Distribution/ArchiveTest.php --filter testCompiledDistributionRunsInDisposableConsumers
-      - name: Retain the reviewed release build
-        if: matrix.php == '8.3'
-        uses: actions/upload-artifact@v7
-        with:
-          name: code-standards-release-${{ needs.changelog.outputs.version-head }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/code-standards
-          compression-level: 0
-          if-no-files-found: error
-      - name: Require the release executable to match its source
-        if: steps.parity.outputs.stale == 'true'
-        run: |
-          echo 'The release needs the newly qualified executable before publication.' >&2
-          exit 1
