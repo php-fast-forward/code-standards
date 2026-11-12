@@ -35,20 +35,20 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('run: composer check', $quality);
     }
 
-    /** Keeps external Actions on verified published channels or reviewed release commits. */
-    public function testExternalActionsUseVerifiedPublishedReferences(): void
+    /** Keeps approved external Actions on stable version labels without duplicating their current versions. */
+    public function testExternalActionsUseAllowedProvidersAndStableVersionLabels(): void
     {
-        $references = [
-            'Actions-R-Us/actions-tagger@v2.0.3',
-            'actions/create-github-app-token@v3.3.0',
-            'actions/github-script@v9',
-            'actions/checkout@v7',
-            'actions/upload-artifact@v7',
-            'actions/download-artifact@v8.0.2',
-            'stefanzweifel/git-auto-commit-action@v7.2.1',
-            'shivammathur/setup-php@v2',
-            'php-fast-forward/changelog/.github/workflows/changelog.yml@v0',
-            'php-fast-forward/code-standards/.github/workflows/code-standards.yml@v0',
+        $actions = [
+            'Actions-R-Us/actions-tagger',
+            'actions/create-github-app-token',
+            'actions/github-script',
+            'actions/checkout',
+            'actions/upload-artifact',
+            'actions/download-artifact',
+            'stefanzweifel/git-auto-commit-action',
+            'shivammathur/setup-php',
+            'php-fast-forward/changelog/.github/workflows/changelog.yml',
+            'php-fast-forward/code-standards/.github/workflows/code-standards.yml',
         ];
         $files = [
             ...glob(dirname(__DIR__, 2) . '/.github/workflows/*.yml'),
@@ -58,7 +58,8 @@ final class WorkflowTest extends TestCase
             preg_match_all('~(?:^|\n)\s*(?:-\s*)?uses:\s*([^\s#]+)~', file_get_contents($file), $matches);
             foreach ($matches[1] as $reference) {
                 if (!str_starts_with($reference, './')) {
-                    self::assertContains($reference, $references, $file);
+                    self::assertSame(1, preg_match('~\A([^@]+)@v(?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*)){0,2}\z~', $reference, $parts), $file . ': ' . $reference);
+                    self::assertContains($parts[1], $actions, $file);
                 }
             }
         }
