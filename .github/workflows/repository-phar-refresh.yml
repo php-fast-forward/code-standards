@@ -1,0 +1,58 @@
+name: 'Repository: Refresh compiled executable'
+on:
+  workflow_run:
+    workflows: ['Repository: Quality']
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: phar-refresh-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: release-channels
+    steps:
+      - name: Download the qualified update, if one was produced
+        id: artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: code-standards-update-${{ github.event.workflow_run.head_sha }}-${{ github.event.workflow_run.run_attempt }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/phar-update
+      - if: steps.artifact.outcome == 'success'
+        id: writer
+        uses: actions/create-github-app-token@v3.3.0
+        with:
+          client-id: 'Iv23liHqRng02H747IYa'
+          private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}
+          owner: php-fast-forward
+          repositories: code-standards
+          permission-contents: write
+      - if: steps.artifact.outcome == 'success'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          token: ${{ steps.writer.outputs.token }}
+      - if: steps.artifact.outcome == 'success'
+        run: |
+          test "$(git log -1 --format=%s)" != 'build: refresh compiled executable'
+          test -f dist/code-standards && test ! -L dist && test ! -L dist/code-standards
+          test -f "$RUNNER_TEMP/phar-update/code-standards" && test ! -L "$RUNNER_TEMP/phar-update/code-standards"
+          install -m 755 "$RUNNER_TEMP/phar-update/code-standards" dist/code-standards
+      - if: steps.artifact.outcome == 'success'
+        uses: stefanzweifel/git-auto-commit-action@v7.2.1
+        with:
+          branch: ${{ github.event.workflow_run.head_branch }}
+          file_pattern: dist/code-standards
+          commit_message: 'build: refresh compiled executable'
+          skip_checkout: true
+          skip_fetch: true

@@ -103,7 +103,7 @@ jobs:
         env:
           COMPOSER_HOME: ${{ runner.temp }}/standards-analysis-composer-home
           COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-analysis-composer-cache
-        run: composer install --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
+        run: composer install --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
       - name: Check out exact consumer head
         if: inputs.magic-numbers || inputs.rector
         uses: actions/checkout@v7

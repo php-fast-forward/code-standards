@@ -20,27 +20,29 @@ jobs:
       - name: Select the newest stable release for its major
         id: release
         env:
+          GH_TOKEN: ${{ github.token }}
           FF_RELEASE_TAG: ${{ github.event.release.tag_name }}
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const tag = process.env.FF_RELEASE_TAG;
-            const version = name => {
-              const match = /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/.exec(name);
-              return match?.[0] === name ? match.slice(1).map(BigInt) : null;
-            };
-            const selected = version(tag);
-            if (!selected) throw new Error('The release version cannot be compared.');
-            const tags = await github.paginate(github.rest.repos.listTags, { ...context.repo, per_page: 100 });
-            const compare = (left, right) => {
-              for (let index = 0; index < 3; ++index) {
-                if (left[index] !== right[index]) return left[index] > right[index] ? 1 : -1;
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/tags?per_page=100" --jq '.[].name' > "$RUNNER_TEMP/release-tags"
+          php <<'PHP'
+          <?php
+          $tag = getenv('FF_RELEASE_TAG');
+          $pattern = '/^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/D';
+          if (!preg_match($pattern, $tag)) {
+              throw new RuntimeException('The release version cannot be compared.');
+          }
+          $major = explode('.', $tag)[0];
+          $promote = $latest = true;
+          foreach (file(getenv('RUNNER_TEMP') . '/release-tags', FILE_IGNORE_NEW_LINES) as $other) {
+              if (preg_match($pattern, $other) && version_compare(substr($other, 1), substr($tag, 1), '>')) {
+                  $latest = false;
+                  if (explode('.', $other)[0] === $major) {
+                      $promote = false;
+                  }
               }
-              return 0;
-            };
-            const stable = tags.map(item => version(item.name)).filter(Boolean);
-            core.setOutput('promote', !stable.some(item => item[0] === selected[0] && compare(item, selected) > 0));
-            core.setOutput('latest', !stable.some(item => compare(item, selected) > 0));
+          }
+          file_put_contents(getenv('GITHUB_OUTPUT'), 'promote=' . ($promote ? 'true' : 'false') . "\nlatest=" . ($latest ? 'true' : 'false') . "\n", FILE_APPEND);
+          PHP
       - name: Create the repository-scoped channel token
         if: steps.release.outputs.promote == 'true'
         id: channel-app
@@ -55,7 +57,7 @@ jobs:
           skip-token-revoke: 'false'
       - name: Update the released major branch
         if: steps.release.outputs.promote == 'true'
-        uses: Actions-R-Us/actions-tagger@330ddfac760021349fef7ff62b372f2f691c20fb # v2.0.3
+        uses: Actions-R-Us/actions-tagger@v2.0.3
         with:
           token: ${{ steps.channel-app.outputs.token }}
           prefer_branch_releases: 'true'

@@ -14,6 +14,19 @@ final class ArchiveTest extends TestCase
 {
     private string $directory;
 
+    /** Runs the real installed CLI contract only when CI supplies a freshly compiled executable. */
+    public function testCompiledDistributionRunsInDisposableConsumers(): void
+    {
+        $binary = getenv('STANDARDS_PHAR');
+        if (false === $binary || '' === $binary) {
+            self::markTestSkipped('CI supplies STANDARDS_PHAR after Box compilation.');
+        }
+        $process = new Process([PHP_BINARY, dirname(__DIR__) . '/Fixtures/phar-consumer.php', $binary], timeout: 600);
+        $process->mustRun();
+        $result = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['local', 'global', 'source'], array_keys($result['results']));
+    }
+
     /** Copies only owned tracked source into an isolated fixture, including candidate export attributes. */
     protected function setUp(): void
     {
@@ -22,9 +35,9 @@ final class ArchiveTest extends TestCase
         $root = dirname(__DIR__, 2);
         $paths = explode("\0", $this->execute(['git', 'ls-files', '-z'], $root));
         $paths[] = '.gitattributes';
-        $skillFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/resources/skills', \FilesystemIterator::SKIP_DOTS));
-        foreach ($skillFiles as $file) {
-            self::assertFalse($file->isLink(), 'Canonical skills must be regular, portable files.');
+        $resourceFiles = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/resources', \FilesystemIterator::SKIP_DOTS));
+        foreach ($resourceFiles as $file) {
+            self::assertFalse($file->isLink(), 'Canonical resources must be regular, portable files.');
             if ($file->isFile()) {
                 $paths[] = substr($file->getPathname(), strlen($root) + 1);
             }
@@ -38,6 +51,8 @@ final class ArchiveTest extends TestCase
             self::assertIsString($content);
             $this->put($path, $content);
         }
+        $this->put('resources/templates/future-devtools/fixture.txt', 'copyable future resource');
+        $this->put('dist/code-standards', 'synthetic compiled payload for archive selection');
         $readme = file_get_contents($this->directory . '/README.md');
         self::assertIsString($readme);
         $this->put('README.md', str_replace("\n", "\r\n", str_replace("\r\n", "\n", $readme)));
@@ -74,11 +89,18 @@ final class ArchiveTest extends TestCase
         $git = $this->contents($this->directory . '/.build/archives/git.zip');
         $composer = $this->contents($this->directory . '/.build/archives/composer.zip');
         self::assertSame($git, $composer);
-        foreach (['bin/code-standards', 'config/ecs.php', 'composer.lock', 'README.md', 'CHANGELOG.md', 'LICENSE',
+        foreach (['dist/code-standards', 'composer.json', 'composer.lock', 'README.md', 'CHANGELOG.md', 'LICENSE',
             '.github/actions/check/action.yml', 'resources/workflows/code-standards.yml',
             'resources/skills/fast-forward-code-standards/SKILL.md',
             'resources/skills/fast-forward-code-standards/LICENSE', 'docs/_static/mascot-banner.png'] as $path) {
             self::assertArrayHasKey($path, $git);
+        }
+        self::assertSame(hash('sha256', 'copyable future resource'), $git['resources/templates/future-devtools/fixture.txt']);
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/resources', \FilesystemIterator::SKIP_DOTS)) as $file) {
+            if ($file->isFile()) {
+                $path = substr($file->getPathname(), strlen(dirname(__DIR__, 2)) + 1);
+                self::assertSame(hash_file('sha256', $file->getPathname()), $git[$path] ?? null, $path);
+            }
         }
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/LICENSE'), $git['resources/skills/fast-forward-code-standards/LICENSE']);
         self::assertSame(hash_file('sha256', dirname(__DIR__, 2) . '/resources/skills/fast-forward-code-standards/SKILL.md'), $git['resources/skills/fast-forward-code-standards/SKILL.md']);
@@ -95,9 +117,10 @@ final class ArchiveTest extends TestCase
         }
         self::assertArrayNotHasKey('resources/skills/fast-forward-phpdoc/NOTICE', $git);
         foreach (array_keys($git) as $path) {
-            self::assertDoesNotMatchRegularExpression('~^(?:vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
+            self::assertDoesNotMatchRegularExpression('~^(?:src|config|bin|scripts/phar|vendor|\.agents|\.build|\.phpunit\.cache|tests|\.github/workflows)/~', $path);
         }
         self::assertArrayNotHasKey('skills.json', $git);
+        self::assertArrayNotHasKey('box.json', $git);
         self::assertArrayNotHasKey('archive', json_decode(file_get_contents($this->directory . '/composer.json'), true, flags: JSON_THROW_ON_ERROR));
     }
 

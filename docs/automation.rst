@@ -72,9 +72,9 @@ immutable release inputs for Composer/Packagist. ``latest`` is not a numeric
 stable Composer version: the installed Composer version parser rejects it as a
 version, unlike ``v0`` and ``v0.4.2``. No step exists solely to make latest a branch.
 
-The candidate workflow pins ``Actions-R-Us/actions-tagger`` to immutable commit
-``330ddfac760021349fef7ff62b372f2f691c20fb`` with ``v2.0.3`` as its version comment.
-The maintainer selected this pin after reviewing the moving-tag security finding.
+The workflow selects ``Actions-R-Us/actions-tagger@v2.0.3`` by the maintainer's
+version-reference policy. The tag was verified against
+``330ddfac760021349fef7ff62b372f2f691c20fb``; the workflow uses the version, not that SHA.
 The published, non-draft, stable v2.0.3 release and its tag were verified on
 2026-10-29; the tag resolved to that exact commit. The workflow runs on real
 ``release: published`` and ``release: edited`` events with
@@ -84,9 +84,9 @@ returning actual branch names for branch queries. Alone, it force-downgrades
 ``v0`` when an older release is edited and can move ``latest`` backwards even
 after 1.x. Its latest ref is hardcoded as a tag in branch mode.
 
-A short inline ``github-script`` selection step compensates for that behavior.
-It parses concrete stable tags, paginates the tag catalog and compares their
-three numeric version components. An incomparable event version fails closed;
+A short inline PHP selection step compensates for that behavior.
+GitHub CLI paginates the tag catalog; PHP's native ``version_compare`` compares
+concrete stable versions. An incomparable event version fails closed;
 this parsing serves comparison rather than a second publication-format validator. The App token and action run only when that release is the newest
 stable full tag of its major. ``publish_latest_tag`` is true only when it is also
 the newest stable full tag globally. Therefore editing an older 0.x or 1.x release
@@ -94,8 +94,8 @@ performs no writes; a later 0.x release after 1.x can advance v0 while leaving
 latest unchanged. A 1.x publication updates v1/latest without moving v0. No PHP
 updater, checkout, substituted event context or separate latest-ref writer remains.
 
-Tests execute this actual inline selection and the byte-exact distributed bundle
-with local API fixtures. They verify older-release no-ops, late 0.x versus global
+PHPUnit executes this actual inline selection with local GitHub CLI fixtures.
+It verifies older-release no-ops, late 0.x versus global
 latest, transition to 1.x and preservation of every concrete version tag. Tags
 such as v0/v1/latest are ignored by the stable-version catalog. An unpublished
 full version tag can conservatively block promotion; this is a tag catalog, not
@@ -117,16 +117,18 @@ Publication-only App integration
 
 Code Standards v0.9.2 was published by ``github-actions[bot]`` through the old
 Changelog lifecycle's GITHUB_TOKEN fallback. That token cannot trigger the
-separate release workflow. The caller now selects immutable candidate
-``42bc58fbab55596ee03d480ebf71d2a3dfc48fb4`` combining Changelog PR76 and PR77
-in the review-only integration PR78. Its actual
+separate release workflow. The caller selects Changelog's maintained ``v0``
+channel, verified at the published v0.5.0 revision
+``5e093cd2080165ed2a3d9a18ae12899b7be94b46``. Its actual
 workflow API declares ``publish-app-client-id``, ``publish-environment`` and
-``publish-app-private-key``. The existing published v0 revision
+``publish-app-private-key``. The older published v0.4.1 revision
 ``203db95e68fc974e95ba1a921f08d01f88851be1`` does not declare them.
 
 The public Client ID is a non-empty literal, so an absent repository variable
 cannot silently select the job-token fallback. Only publication receives that
-App selection and ``release-channels`` environment. The caller explicitly
+App selection and ``release-channels`` environment within the Changelog lifecycle.
+The separate compiled-executable refresh also uses this existing App, scoped to
+one binary commit through the marketplace action; see :doc:`phar-distribution`. The caller explicitly
 forwards ``secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY`` under the logical
 ``publish-app-private-key`` workflow-call name. The nested publication job declares
 ``RELEASE_CHANNEL_APP_PRIVATE_KEY`` so its environment supplies that same-named
@@ -139,16 +141,12 @@ publication. Managed PR authorship remains ``github-actions[bot]``; the publishe
 App is not required to be that PR's author. No global App credential input or
 ``secrets: inherit`` is added, and the release-channel selector remains unchanged.
 
-**This is a blocked draft integration, not an activated release path.** The SHA
-is an inspectable PR candidate, not a published Changelog version. The compatible
-adoption order is:
+The published revision replaces the previous integration-candidate pin. Its
+workflow declares the three inputs and routes publication credentials to the
+nested publication job. This reference correction does not prove deployment
+configuration or end-to-end publication. The remaining adoption gates are:
 
-#. Review and qualify both upstream changes and the integrated candidate.
-   Let the owner merge/publish a compatible release. Verify that released revision actually
-   contains the three inputs and nested publication/authentication routing.
-#. Replace this candidate pin with that verified published revision before stable
-   adoption, or obtain explicit acceptance of using the reviewed unreleased SHA.
-   Never send the new inputs to the old v0 and assume compatibility.
+#. Qualify checks on the caller's actual HEAD using the published revision.
 #. Verify the separately authorized configuration owner's staged environment,
    valid secret name and protection rules through metadata; key validity and
    actual publication remain separate evidence. This caller patch does not
@@ -194,7 +192,7 @@ The activation plan preserves branches, without branch-to-tag migration:
   release is changed as a test.
 
 GitHub v0 can span breaking development minors and is independent of Composer
-constraints and CPX resolution. No channel is precreated at main.
+constraints and Composer resolution. No channel is precreated at main.
 
 
 Checking can fail the workflow. Making it a required status is a separate GitHub protection decision. ``fix`` has no automatic push workflow and never runs during PR checks. Full tracked scans occur for Composer/ECS/EditorConfig/root or nested ``.gitignore`` changes, including removal and rename. Policy-name invalidation is case-insensitive: a case-folding filesystem can let Git read ``.GiTiGnOrE`` as ``.gitignore``. On a case-sensitive filesystem, this conservative detection can cause an extra full scan; it does not change which ignore rules Git applies. After other policy imports change, run an explicit full check in addition to PR checks.

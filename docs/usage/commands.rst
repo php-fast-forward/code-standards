@@ -32,7 +32,7 @@ optional DOM requirements, bounded execution, finding statuses and adoption.
 
 .. code-block:: console
 
-   php bin/code-standards check --base=BASE_40_CHARACTER_SHA --head=HEAD_40_CHARACTER_SHA
+   php vendor/bin/code-standards check --base=BASE_40_CHARACTER_SHA --head=HEAD_40_CHARACTER_SHA
 
 Replace the placeholders with existing immutable commit SHAs. Changed mode
 requires HEAD to equal the requested head and a clean tracked checkout. It

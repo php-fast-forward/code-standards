@@ -3,7 +3,7 @@ Explicit semantic refactoring
 
 The opt-in ``refactor`` command previews native semantic transformations and applies them only when explicitly requested. It does not select a migration profile or authorize publication. ``check`` and ``fix`` never invoke the semantic runner. The separate invocable command uses the existing container factories and process transport.
 
-The manifest requires Rector ``^2.8.2`` and PHPStan ``^2.3.3``. Rector 2.4.2 accessed PHPStan's internal ``RichParser::$container`` property, which is absent in newer PHPStan versions; that older combination failed before rule execution. Rector 2.8.2 creates its parser through a native factory compatible with PHPStan 2.3.3. The minimum versions advance together so consumers cannot resolve the older incompatible Rector with newer PHPStan. Both constraints permit subsequent compatible minor releases. PHPStan is an engine dependency here, not a newly exposed analysis command. Dependency updates require the real integration fixtures below. Native configuration is the only extension point; no PHP parser, configuration translator or engine framework is introduced. Configuration paths resolve from ``--directory`` or the current directory. This command deliberately uses the configuration's whole-project paths rather than borrowing the formatter's changed-file list.
+The build manifest requires Rector ``^2.8.2`` and PHPStan ``^2.3.3``. Rector 2.4.2 accessed PHPStan's internal ``RichParser::$container`` property, which is absent in newer PHPStan versions; that older combination failed before rule execution. Rector 2.8.2 creates its parser through a native factory compatible with PHPStan 2.3.3. The minimum versions advance together so contributor builds cannot resolve the older incompatible Rector with newer PHPStan. Consumers receive that locked pair inside the ready executable. Both constraints permit subsequent compatible minor releases. PHPStan is an engine dependency here, not a newly exposed analysis command. Dependency updates require the real integration fixtures below. Native configuration is the only extension point; no PHP parser, configuration translator or engine framework is introduced. Configuration paths resolve from ``--directory`` or the current directory. This command deliberately uses the configuration's whole-project paths rather than borrowing the formatter's changed-file list.
 
 .. code-block:: php
 
@@ -24,11 +24,11 @@ The target is a required consumer decision, independent of the host PHP. Declare
 
 .. code-block:: console
 
-   php bin/code-standards refactor --config=rector.php --directory=/project
+   php vendor/bin/code-standards refactor --config=rector.php --directory=/project
    # After reviewing the proposed semantic diff:
-   php bin/code-standards refactor --config=rector.php --directory=/project --apply
+   php vendor/bin/code-standards refactor --config=rector.php --directory=/project --apply
    # For a larger project, choose an explicit finite per-subprocess budget:
-   php bin/code-standards refactor --config=rector.php --directory=/project --timeout=900
+   php vendor/bin/code-standards refactor --config=rector.php --directory=/project --timeout=900
 
 Preview passes native ``--dry-run``. Explicit apply performs one write pass and then a dry-run verification; remaining differences fail. Native exits are 0 for clean/success, 1 for processing errors or subprocess timeouts and 2 for proposed changes. Controlled invocation, empty-rule and invalid-inventory errors also return 2, with an error diagnostic. Other native fatal exits propagate unchanged. Rector 2.8.2 uses ``-n`` for dry-run and does not expose the ECS ``--no-interaction`` option; its native flags are not translated blindly.
 
@@ -46,7 +46,7 @@ documents. Text apply and its verification keep the existing behavior.
 
 .. code-block:: console
 
-   php bin/code-standards refactor --config=rector.php --format=json > rector-preview.json
+   php vendor/bin/code-standards refactor --config=rector.php --format=json > rector-preview.json
 
 The redirection writes only the explicitly selected report file. Native JSON
 has ``totals.changed_files`` and ``totals.errors``; available processing errors

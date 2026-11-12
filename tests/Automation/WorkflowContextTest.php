@@ -59,8 +59,35 @@ final class WorkflowContextTest extends TestCase
     /** Exercises the actual inline release selection without contacting GitHub or mutating refs. */
     public function testReleaseSelectionPreventsOlderMajorAndGlobalPromotions(): void
     {
-        $process = new Process(['node', '--test', __DIR__ . '/ReleaseChannelGuardTest.cjs'], timeout: 20);
-        self::assertSame(0, $process->run(), $process->getOutput() . $process->getErrorOutput());
+        $script = $this->guard('repository-release-channels.yml', 'Select the newest stable release for its major');
+        $directory = sys_get_temp_dir() . '/release-selection-' . bin2hex(random_bytes(8));
+        mkdir($directory, 0700);
+        file_put_contents($directory . '/gh', "#!/bin/sh\ncat \"\$FF_TAG_FIXTURE\"\n");
+        chmod($directory . '/gh', 0755);
+        $environment = ['RUNNER_TEMP' => $directory, 'GITHUB_REPOSITORY' => 'fixture/repo',
+            'FF_TAG_FIXTURE' => $directory . '/tags', 'PATH' => $directory . PATH_SEPARATOR . getenv('PATH')];
+        try {
+            foreach ([
+                ['v0.4.1', ['v0.4.1', 'v0.4.2', 'v1.0.0'], false, false],
+                ['v1.0.0', ['v1.0.0', 'v1.0.1'], false, false],
+                ['v0.4.3', ['v0.4.2', 'v0.4.3', 'v1.0.0'], true, false],
+                ['v1.0.0', ['v0.4.2', 'v1.0.0'], true, true],
+                ['v0.10.0', ['v0.9.0', 'v0.10.0'], true, true],
+                ['v0.4.2', ['v0', 'v1', 'latest', 'v0.4.2'], true, true],
+            ] as [$tag, $tags, $promote, $latest]) {
+                file_put_contents($directory . '/tags', implode("\n", $tags) . "\n");
+                $result = $this->guardResult($script, [...$environment, 'FF_RELEASE_TAG' => $tag]);
+                self::assertSame(0, $result['status']);
+                self::assertSame('promote=' . ($promote ? 'true' : 'false') . "\nlatest=" . ($latest ? 'true' : 'false') . "\n", $result['output']);
+            }
+            foreach (['v0', '0.4.2', 'v0.04.2', 'v0.4.2-rc1', 'v0.4.2+build', "v0.4.2\n", '$(exit 0)'] as $tag) {
+                $result = $this->guardResult($script, [...$environment, 'FF_RELEASE_TAG' => $tag]);
+                self::assertNotSame(0, $result['status']);
+                self::assertSame('', $result['output']);
+            }
+        } finally {
+            (new \Symfony\Component\Filesystem\Filesystem())->remove($directory);
+        }
     }
 
     /** Rejects malformed or ambiguous native identity protocols before emitting any checkout output. */

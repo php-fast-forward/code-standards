@@ -25,6 +25,7 @@ Architecture, policy and evidence
    :maxdepth: 1
 
    architecture
+   phar-distribution
    automation
    composer-normalization
    instruction-map

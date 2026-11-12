@@ -33,7 +33,7 @@ The consumer wrapper in ``resources/workflows/code-standards.yml`` provides the
 basic PR style check through the published ``v0`` channel. The fragment below
 describes the optional-analysis inputs. The selected workflow revision defines
 its supported input contract; callers supply inputs belonging to that revision.
-GitHub workflow channels and Composer/CPX package constraints are separate
+GitHub workflow channels and Composer package constraints are separate
 distribution choices. The unprivileged PR event and runtime/ref provenance
 contract apply to both basic checks and explicitly enabled analyses.
 

@@ -5,9 +5,9 @@ Run these commands at the Git checkout root after installation:
 
 .. code-block:: console
 
-   php bin/code-standards check --all
-   php bin/code-standards fix --all
-   php bin/code-standards check --all
+   php vendor/bin/code-standards check --all
+   php vendor/bin/code-standards fix --all
+   php vendor/bin/code-standards check --all
 
 ``check`` reports syntax/style violations without changing source. ``fix``
 explicitly allows ECS to edit selected sources. It does not commit, push, update
@@ -20,8 +20,8 @@ reported as failure, not hidden behind a successful formatter exit.
 
 .. code-block:: console
 
-   php bin/code-standards help check
-   php bin/code-standards check --all --directory=/absolute/project/path
+   php vendor/bin/code-standards help check
+   php vendor/bin/code-standards check --all --directory=/absolute/project/path
 
 The selected directory must be a Git checkout root. Nested directories, bare
 repositories and projects without Git are rejected with an objective error.

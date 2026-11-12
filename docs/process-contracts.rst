@@ -57,8 +57,8 @@ control characters inside diagnostic strings remain escaped JSON data.
 
 .. code-block:: console
 
-   cpx fast-forward/code-standards check --all --format=json
-   cpx fast-forward/code-standards check --all --format=json-pretty
+   vendor/bin/code-standards check --all --format=json
+   vendor/bin/code-standards check --all --format=json-pretty
 
 The schema contains ``schema_version``, ``command``, ``status``, ``exit_code``,
 ``complete``, selection coverage, native ECS ``files``, operational ``errors``

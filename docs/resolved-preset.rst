@@ -213,7 +213,10 @@ The native ECS spacing service supplies two/four-space or tab indentation and
 LF/CRLF endings after the consumer callback. Native ``withSkip()`` can disable the
 owned checker explicitly; it replaces the skip list, so callers preserve their
 other intentional skips. The default cache fingerprints all three installed policy
-source paths and bytes (preset plus both Sniffs), in addition to checkout isolation. An explicit
+source paths and bytes (preset plus both Sniffs), in addition to checkout isolation.
+Source installations reuse that identity. A compiled distribution keeps its
+default cache inside its exclusive extracted runtime, whose shutdown cleanup
+removes the cache; random extraction paths cannot leak persistent policy directories. An explicit
 ``withCache()`` override remains authoritative.
 
 CLI regressions cover the reported mixed-line guard, groups/calls/indexes,

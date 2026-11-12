@@ -17,13 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, posix
           coverage: none
-          tools: composer:v2
+          tools: composer:v2, box:4.7.1
       - run: composer install --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:
           COMPOSER_HOME: ${{ runner.temp }}/standards-composer-home
@@ -36,6 +37,34 @@ jobs:
         run: |
           php "$STANDARDS_ROOT/bin/code-standards" normalize-composer "--directory=$STANDARDS_DIRECTORY"
       - run: composer check
+      - name: Qualify ready PHAR distribution and native runtime
+        env:
+          COMPOSER_HOME: ${{ runner.temp }}/standards-phar-composer-home
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/standards-composer-cache
+        run: |
+          php scripts/phar/prepare.php "$RUNNER_TEMP/standards-runtime"
+          box validate "$RUNNER_TEMP/standards-runtime/box.json"
+          box compile --no-parallel --sort-compiled-files --config="$RUNNER_TEMP/standards-runtime/box.json"
+          install -m 755 "$RUNNER_TEMP/standards-runtime/dist/code-standards" "$RUNNER_TEMP/code-standards"
+          box verify "$RUNNER_TEMP/code-standards"
+          STANDARDS_PHAR="$RUNNER_TEMP/code-standards" vendor/bin/phpunit tests/Distribution/ArchiveTest.php --filter testCompiledDistributionRunsInDisposableConsumers
+      - name: Compare the committed executable before execution
+        id: parity
+        shell: bash
+        run: |
+          set +e
+          cmp "$RUNNER_TEMP/code-standards" dist/code-standards
+          status=$?
+          set -e
+          case "$status" in
+            0) echo 'stale=false' >> "$GITHUB_OUTPUT" ;;
+            1) echo 'stale=true' >> "$GITHUB_OUTPUT" ;;
+            *) exit "$status" ;;
+          esac
+      - name: Qualify the committed Composer distribution
+        if: steps.parity.outputs.stale == 'false'
+        run: |
+          STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards" vendor/bin/phpunit tests/Distribution/ArchiveTest.php --filter testCompiledDistributionRunsInDisposableConsumers
       - name: Provision isolated Twig evaluation dependencies
         run: composer install --working-dir=tests/Evaluation/Twig --no-dev --no-plugins --no-scripts --no-interaction --prefer-dist --no-progress
         env:
@@ -48,3 +77,16 @@ jobs:
           TWIG_EVALUATION_AUTOLOAD: ${{ runner.temp }}/standards-twig-vendor/autoload.php
           TWIG_EVALUATION_TEMP: ${{ runner.temp }}
       - run: git diff --exit-code
+      - name: Retain the reviewed PHP 8.3 build
+        if: matrix.php == '8.3'
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-standards-${{ steps.parity.outputs.stale == 'true' && 'update-' || '' }}${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/code-standards
+          compression-level: 0
+          if-no-files-found: error
+      - name: Require the compiled refresh to pass on its own commit
+        if: steps.parity.outputs.stale == 'true'
+        run: |
+          echo 'The committed executable is stale. The trusted refresh workflow may update this same-repository PR; CI must pass again on that commit.' >&2
+          exit 1
