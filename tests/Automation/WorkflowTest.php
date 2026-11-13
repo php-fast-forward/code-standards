@@ -29,10 +29,14 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString("      magic-numbers: true\n      magic-numbers-policy: report", $consumer);
 
         $quality = file_get_contents($directory . '/repository-ci.yml');
-        self::assertMatchesRegularExpression('~^on:\n  pull_request:\n  push:\n    branches: \[main\]\n  workflow_dispatch:\npermissions:~m', $quality);
+        self::assertMatchesRegularExpression('~^on:\n  pull_request:\n  workflow_dispatch:\n  workflow_call:\n~m', $quality);
+        self::assertStringContainsString('value: ${{ jobs.compiled.outputs.artifact }}', $quality);
         self::assertStringContainsString("  tests:\n    runs-on: ubuntu-latest", $quality);
         self::assertStringContainsString("php: ['8.3', '8.4', '8.5']", $quality);
         self::assertStringContainsString('run: composer check', $quality);
+        self::assertSame(1, substr_count($quality, 'box compile'));
+        self::assertStringContainsString('needs: build', $quality);
+        self::assertStringContainsString('needs: [build, tests, runtime]', $quality);
     }
 
     /** Keeps approved external Actions on stable version labels without duplicating their current versions. */
@@ -48,6 +52,8 @@ final class WorkflowTest extends TestCase
             'stefanzweifel/git-auto-commit-action',
             'shivammathur/setup-php',
             'php-fast-forward/changelog/.github/workflows/changelog.yml',
+            'php-fast-forward/changelog/.github/workflows/changelog-pr-status.yml',
+            'php-fast-forward/changelog/.github/actions/version',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml',
         ];
         $files = [
@@ -70,17 +76,18 @@ final class WorkflowTest extends TestCase
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
         $comparison = strpos($workflow, 'cmp "$RUNNER_TEMP/code-standards" dist/code-standards');
-        $execution = strpos($workflow, 'STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards"');
+        $execution = strpos($workflow, 'STANDARDS_PHAR="$RUNNER_TEMP/phar/code-standards"');
         self::assertNotFalse($comparison);
         self::assertNotFalse($execution);
         self::assertLessThan($execution, $comparison);
+        self::assertStringNotContainsString('STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards"', $workflow);
     }
 
     /** Runs the actual parity step against owned fixtures: differences authorize refresh, I/O errors do not. */
     public function testBinaryComparisonNeverExecutesCandidateBytesOrMasksReadErrors(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
-        self::assertSame(1, preg_match('~id: parity\n        shell: bash\n        run: \|\n(.*?)      - name:~s', $workflow, $matches));
+        self::assertSame(1, preg_match('~id: parity\n        shell: bash\n        run: \|\n(.*?)(?=      - )~s', $workflow, $matches));
         $script = preg_replace('/^          /m', '', $matches[1]);
         $directory = sys_get_temp_dir() . '/standards-cmp-' . bin2hex(random_bytes(8));
         mkdir($directory . '/dist', 0700, true);
@@ -114,13 +121,156 @@ final class WorkflowTest extends TestCase
         self::assertStringNotContainsString('secrets.', $workflow);
         $refresh = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-phar-refresh.yml');
         self::assertStringContainsString('github.event.workflow_run.head_repository.full_name == github.repository', $refresh);
-        self::assertStringContainsString('ref: ${{ github.event.workflow_run.head_sha }}', $refresh);
+        self::assertStringContainsString('ref: ${{ steps.pull-request.outputs.branch }}', $refresh);
+        self::assertStringContainsString('select(.state == "open"', $refresh);
+        self::assertStringContainsString('test "$(git rev-parse HEAD)" = "$SOURCE_SHA"', $refresh);
         self::assertStringContainsString('run-id: ${{ github.event.workflow_run.id }}', $refresh);
         self::assertStringContainsString('file_pattern: dist/code-standards', $refresh);
-        self::assertStringContainsString('stefanzweifel/git-auto-commit-action@v7.2.1', $refresh);
+        self::assertStringContainsString('uses: stefanzweifel/git-auto-commit-action@', $refresh);
         self::assertStringNotContainsString('php ', $refresh);
         self::assertStringNotContainsString('permission-workflows:', $refresh);
         self::assertStringNotContainsString('--force', $refresh);
+    }
+
+    /** Keeps preparation behind the source/compiled check instead of publishing a stale base. */
+    public function testVersionPreparationRequiresSuccessfulBaseQuality(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
+        self::assertStringContainsString('uses: ./.github/workflows/repository-ci.yml', $workflow);
+        self::assertStringContainsString("  version:\n    needs: quality\n", $workflow);
+        self::assertStringContainsString('base-ref: ${{ github.sha }}', $workflow);
+        self::assertStringContainsString('artifact-ids: ${{ needs.quality.outputs.artifact }}', $workflow);
+        self::assertStringContainsString('uses: php-fast-forward/changelog/.github/actions/version@v0', $workflow);
+        self::assertSame(3, substr_count($workflow, "generated-files: '[\"dist/code-standards\"]'"));
+        self::assertStringContainsString('head-sha: ${{ needs.version.outputs.head-sha }}', $workflow);
+        self::assertStringContainsString('base-sha: ${{ github.sha }}', $workflow);
+        self::assertStringContainsString('uses: php-fast-forward/changelog/.github/workflows/changelog-pr-status.yml@v0', $workflow);
+        self::assertStringContainsString('prepare-release: false', $workflow);
+        self::assertStringContainsString('group: changelog-${{ github.repository }}-main', $workflow);
+        self::assertSame(5, substr_count($workflow, "if: steps.base.outputs.current == 'true'"));
+        self::assertStringContainsString('resolve-pull-requests: true', $workflow);
+        self::assertStringNotContainsString('box compile', $workflow);
+    }
+
+    /** A failed-job rerun reuses the successful producer's artifact instead of inventing another attempt. */
+    public function testArtifactConsumersUseTheSuccessfulBuildIdentity(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        self::assertStringContainsString('artifact: ${{ steps.candidate.outputs.artifact-id }}', $workflow);
+        self::assertSame(2, substr_count($workflow, 'artifact-ids: ${{ needs.build.outputs.artifact }}'));
+        self::assertSame(1, substr_count($workflow, 'name: code-standards-build-'));
+    }
+
+    /** Exercises the actual classifier with Git changes, including dependency and binary updates. */
+    public function testRuntimeInputsRebuildButDocumentationAndOrdinaryTestsDoNot(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
+        self::assertSame(1, preg_match('~      - id: inputs\n.*?        run: \|\n(.*?)  build:\n~s', $workflow, $matches));
+        $script = preg_replace('/^          /m', '', $matches[1]);
+        $directory = sys_get_temp_dir() . '/standards-inputs-' . bin2hex(random_bytes(8));
+        mkdir($directory, 0700);
+        $environment = [
+            'GIT_DIR' => false,
+            'GIT_WORK_TREE' => false,
+            'GIT_INDEX_FILE' => false,
+            'GIT_CONFIG_NOSYSTEM' => '1',
+            'GIT_CONFIG_GLOBAL' => '/dev/null',
+            'GITHUB_OUTPUT' => $directory . '/output',
+            'RUNNER_TEMP' => $directory,
+        ];
+        $git = static function (array $arguments) use ($directory, $environment): string {
+            $process = new Process(['git', '-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgsign=false', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', ...$arguments], $directory, $environment);
+            $process->mustRun();
+
+            return trim($process->getOutput());
+        };
+        try {
+            $git(['init', '--quiet']);
+            $git(['commit', '--quiet', '--allow-empty', '-m', 'base']);
+            foreach (['docs/example.rst' => false, 'tests/UnitTest.php' => false, '.changelog/example.md' => false, 'composer.lock' => true, 'resources/template.txt' => true, 'dist/code-standards' => true, 'tests/Distribution/ArchiveTest.php' => true, 'unknown-input' => true] as $path => $expected) {
+                $base = $git(['rev-parse', 'HEAD']);
+                (new Filesystem())->dumpFile($directory . '/' . $path, 'fixture');
+                $git(['add', '--', $path]);
+                $git(['commit', '--quiet', '-m', 'change']);
+                file_put_contents($directory . '/output', '');
+                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD']), 'EVENT' => 'pull_request']);
+                $process->mustRun();
+                self::assertSame('build=' . ($expected ? 'true' : 'false') . "\n", file_get_contents($directory . '/output'), $path);
+            }
+            $ancestor = $git(['rev-parse', 'HEAD']);
+            $git(['checkout', '--quiet', '-b', 'main-advanced']);
+            (new Filesystem())->dumpFile($directory . '/src/main-only.php', 'main change');
+            $git(['add', 'src/main-only.php']);
+            $git(['commit', '--quiet', '-m', 'main runtime update']);
+            $base = $git(['rev-parse', 'HEAD']);
+            $git(['checkout', '--quiet', '-b', 'docs-branch', $ancestor]);
+            file_put_contents($directory . '/docs/example.rst', 'documentation update');
+            $git(['add', 'docs/example.rst']);
+            $git(['commit', '--quiet', '-m', 'documentation']);
+            foreach (['pull_request' => false, 'push' => true] as $event => $expected) {
+                file_put_contents($directory . '/output', '');
+                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD']), 'EVENT' => $event]);
+                $process->mustRun();
+                self::assertSame('build=' . ($expected ? 'true' : 'false') . "\n", file_get_contents($directory . '/output'), $event);
+            }
+            $base = $git(['rev-parse', 'HEAD']);
+            $git(['mv', 'resources/template.txt', 'docs/retired.md']);
+            $git(['commit', '--quiet', '-m', 'retire bundled resource']);
+            file_put_contents($directory . '/output', '');
+            $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD']), 'EVENT' => 'pull_request']);
+            $process->mustRun();
+            self::assertSame("build=true\n", file_get_contents($directory . '/output'), 'Moving a resource out of the runtime must rebuild.');
+        } finally {
+            (new Filesystem())->remove($directory);
+        }
+    }
+
+    /** Executes the real selector without network; protected and owned version branches are never App targets. */
+    public function testRefreshSelectsOnlyOneOpenPullRequestAtTheQualifiedHead(): void
+    {
+        $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-phar-refresh.yml');
+        self::assertSame(1, preg_match('~name: Locate the still-open source pull request\n.*?        run: \|\n(.*?)(?=      - )~s', $workflow, $matches));
+        $script = <<<'BASH'
+gh() {
+    case "$2" in
+        repos/fixture/standards/commits/*/pulls) printf '%s\n' "$MOCK_PRS" ;;
+        repos/fixture/standards/branches/*) printf '%s\n' "$MOCK_PROTECTED" ;;
+        *) return 71 ;;
+    esac
+}
+BASH;
+        $script .= "\n" . preg_replace('/^          /m', '', $matches[1]);
+        $pullRequest = ['state' => 'open', 'base' => ['ref' => 'main'], 'head' => ['sha' => str_repeat('a', 40), 'ref' => 'dependabot/composer/runtime', 'repo' => ['full_name' => 'fixture/standards']]];
+        $closed = $pullRequest;
+        $closed['state'] = 'closed';
+        $advanced = $pullRequest;
+        $advanced['head']['sha'] = str_repeat('b', 40);
+        $fork = $pullRequest;
+        $fork['head']['repo']['full_name'] = 'fork/standards';
+        $otherBase = $pullRequest;
+        $otherBase['base']['ref'] = 'other-line';
+        $main = $pullRequest;
+        $main['head']['ref'] = 'main';
+        $managed = $pullRequest;
+        $managed['head']['ref'] = 'changelog/version-phar';
+        $output = tempnam(sys_get_temp_dir(), 'standards-refresh-');
+        try {
+            foreach (['valid' => [$pullRequest], 'closed' => [$closed], 'advanced' => [$advanced], 'fork' => [$fork], 'other-base' => [$otherBase], 'main' => [$main], 'managed' => [$managed], 'protected' => [$pullRequest], 'missing' => [], 'ambiguous' => [$pullRequest, $pullRequest]] as $case => $fixture) {
+                file_put_contents($output, '');
+                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], env: [
+                    'SOURCE_SHA' => $pullRequest['head']['sha'],
+                    'SOURCE_BRANCH' => $fixture[0]['head']['ref'] ?? $pullRequest['head']['ref'],
+                    'GH_REPO' => $pullRequest['head']['repo']['full_name'],
+                    'GITHUB_OUTPUT' => $output,
+                    'MOCK_PRS' => json_encode($fixture, JSON_THROW_ON_ERROR),
+                    'MOCK_PROTECTED' => 'protected' === $case ? 'true' : 'false',
+                ]);
+                self::assertSame('protected' === $case ? 1 : 0, $process->run(), $process->getErrorOutput());
+                self::assertSame('valid' === $case ? 'branch=' . $pullRequest['head']['ref'] . "\n" : '', file_get_contents($output), $case);
+            }
+        } finally {
+            unlink($output);
+        }
     }
 
     /** Prevents silent GITHUB_TOKEN publication by keeping the App identity explicit and publication-only. */
@@ -130,7 +280,7 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('changelog.yml@v0', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
-        self::assertStringContainsString('managed-branch: changelog/version-recovery-98', $workflow);
+        self::assertStringContainsString('managed-branch: changelog/version-phar', $workflow);
         self::assertStringContainsString('publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-client-id:/m', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-private-key:/m', $workflow);

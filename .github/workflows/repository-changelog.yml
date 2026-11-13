@@ -11,7 +11,13 @@ on:
   workflow_dispatch:
 permissions: {}
 jobs:
+  quality:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/repository-ci.yml
+    permissions:
+      contents: read
   changelog:
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     permissions:
       contents: write
       pull-requests: write
@@ -22,11 +28,99 @@ jobs:
     with:
       runs-on: '["ubuntu-latest"]'
       base-branch: main
-      managed-branch: changelog/version-recovery-98
+      managed-branch: changelog/version-phar
       source: tags
-      prepare-release: true
+      resolve-pull-requests: true
+      generated-files: '["dist/code-standards"]'
+      prepare-release: false
       publish: true
       publish-app-client-id: 'Iv23liHqRng02H747IYa'
       publish-environment: release-channels
     secrets:
       publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}
+  version:
+    needs: quality
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: changelog-${{ github.repository }}-main
+      cancel-in-progress: false
+    outputs:
+      pull-request: ${{ steps.version.outputs.pull-request }}
+      head-sha: ${{ steps.version.outputs.head-sha }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+    steps:
+      - name: Skip a qualification superseded by a newer main
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          QUALIFIED_BASE: ${{ github.sha }}
+        shell: bash
+        run: |
+          current=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')
+          [[ "$current" =~ ^[0-9a-f]{40}$ ]]
+          if test "$current" = "$QUALIFIED_BASE"; then
+            echo 'current=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'current=false' >> "$GITHUB_OUTPUT"
+            echo 'A newer main superseded this qualification; its run prepares the version.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - if: steps.base.outputs.current == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require the successful qualification's artifact identity
+        if: steps.base.outputs.current == 'true'
+        env:
+          QUALIFIED_ARTIFACT: ${{ needs.quality.outputs.artifact }}
+        run: test -n "$QUALIFIED_ARTIFACT"
+      - if: steps.base.outputs.current == 'true'
+        uses: actions/download-artifact@v8.0.2
+        with:
+          artifact-ids: ${{ needs.quality.outputs.artifact }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/phar
+      - name: Stage the qualified executable as data
+        if: steps.base.outputs.current == 'true'
+        run: |
+          test -f dist/code-standards && test ! -L dist && test ! -L dist/code-standards
+          test -f "$RUNNER_TEMP/phar/code-standards" && test ! -L "$RUNNER_TEMP/phar/code-standards"
+          install -m 755 "$RUNNER_TEMP/phar/code-standards" dist/code-standards
+      - name: Prepare the version with the qualified executable
+        if: steps.base.outputs.current == 'true'
+        id: version
+        uses: php-fast-forward/changelog/.github/actions/version@v0
+        with:
+          base-branch: main
+          base-ref: ${{ github.sha }}
+          managed-branch: changelog/version-phar
+          source: tags
+          generated-files: '["dist/code-standards"]'
+          resolve-pull-requests: true
+  feedback:
+    needs: version
+    if: needs.version.outputs.pull-request != '' && needs.version.outputs.head-sha != ''
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      statuses: write
+    uses: php-fast-forward/changelog/.github/workflows/changelog-pr-status.yml@v0
+    with:
+      pull-request: ${{ fromJSON(needs.version.outputs.pull-request) }}
+      head-sha: ${{ needs.version.outputs.head-sha }}
+      base-sha: ${{ github.sha }}
+      base-branch: main
+      managed-branch: changelog/version-phar
+      source: tags
+      generated-files: '["dist/code-standards"]'
+      resolve-pull-requests: true
