@@ -51,7 +51,7 @@
     },
     "require-dev": {
         "composer-runtime-api": "^2.2",
-        "composer/composer": "^2.10.3",
+        "composer/composer": "^2.11.2",
         "container-interop/service-provider": "^0.4.1",
         "ergebnis/json": "^1.7.0",
         "ergebnis/json-normalizer": "^4.11.0",
