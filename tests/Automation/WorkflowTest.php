@@ -249,7 +249,7 @@ BASH;
         $fork['head']['repo']['full_name'] = 'fork/standards';
         $otherBase = $pullRequest;
         $otherBase['base']['ref'] = 'other-line';
-        $main = $otherBase;
+        $main = $pullRequest;
         $main['head']['ref'] = 'main';
         $managed = $pullRequest;
         $managed['head']['ref'] = 'changelog/version-phar';
