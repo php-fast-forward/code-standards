@@ -103,6 +103,30 @@ final class WorkflowContextTest extends TestCase
         }
     }
 
+    /** Superseded qualifications skip preparation, while malformed or failed API reads remain errors. */
+    public function testVersionPreparationSkipsOnlyAConfirmedNewerMain(): void
+    {
+        $script = <<<'BASH'
+gh() {
+    test "$MOCK_FAILURE" = 0 || return "$MOCK_FAILURE"
+    printf '%s\n' "$MOCK_MAIN"
+}
+BASH;
+        $script .= "\n" . $this->guard('repository-changelog.yml', 'Skip a qualification superseded by a newer main');
+        $qualified = str_repeat('a', 40);
+        foreach ([[$qualified, '0', 0, "current=true\n"], [str_repeat('b', 40), '0', 0, "current=false\n"], ['null', '0', 1, ''], [$qualified, '23', 23, '']] as [$current, $failure, $status, $output]) {
+            $result = $this->guardResult($script, [
+                'MOCK_MAIN' => $current,
+                'MOCK_FAILURE' => $failure,
+                'QUALIFIED_BASE' => $qualified,
+                'GH_REPO' => 'fixture/repo',
+                'GITHUB_STEP_SUMMARY' => '/dev/null',
+            ]);
+            self::assertSame($status, $result['status']);
+            self::assertSame($output, $result['output']);
+        }
+    }
+
     /** Rejects malformed or ambiguous native identity protocols before emitting any checkout output. */
     public function testIdentityProtocolFailsClosedWithoutOutput(): void
     {

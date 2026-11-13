@@ -27,10 +27,24 @@ The same built artifact is tested on PHP 8.3, 8.4 and 8.5. There are no three
 independent compiler runs. Source checks continue on all three PHP versions.
 Artifact consumers use the successful producer's artifact ID; retrying only
 failed jobs still downloads that build instead of a nonexistent newer attempt.
-Main invokes this same Quality workflow before Changelog prepares its version
-PR, so a failed source or executable qualification cannot prepare a release.
-The version commit changes history/fragments and reuses the already qualified
-executable instead of compiling the release again.
+
+Main always qualifies its final merged tree before version preparation. Its
+successful Quality call exports the qualified artifact ID. A separate job checks
+out that exact source SHA, stages the artifact as data and calls Changelog's
+existing Version Action with the same immutable ``base-ref``. The native writer
+includes the selected executable, history and fragment removals in one signed
+commit and version PR. An advanced main is refused; a different unqualified
+base cannot silently replace the validated commit. No compiler or project PHP
+runs with the writer token. The artifact is not rebuilt in the writer.
+Version writers share native concurrency without cancelling in-flight writes.
+A qualification already superseded by another main is skipped before staging;
+native preflight still refuses a later advance during the transaction.
+
+Preparation, exact-head feedback and publication share
+``generated-files: '["dist/code-standards"]'``. This native policy binds the
+artifact digest and executable mode to the owned version transaction. The new
+exclusive ``changelog/version-phar`` branch starts this policy without adopting
+the older recovery branch under a different settings fingerprint.
 
 ``scripts/phar/prepare.php`` has one purpose: prepare a disposable Composer
 runtime from the existing lock. Tool libraries live in ``require-dev`` alongside
@@ -100,8 +114,8 @@ refresh. Fixed timestamps and sorted entries make repeat builds reproducible in
 the qualified CI environment, not every arbitrary toolchain.
 
 Only after every source check and runtime qualification succeeds does CI retain
-an update artifact. A stale executable then fails the compiled check until the
-refresh commit passes its own checks. The trusted ``workflow_run`` callback
+an update artifact for a stale PR. Its compiled check fails until the refresh
+commit passes its own checks. The trusted ``workflow_run`` callback
 copies those bytes with the marketplace autocommit Action; it executes neither
 the PHAR nor checkout PHP with its writer token. It checks that the same-repository
 PR remains open at the source head before checkout and immediately before the
@@ -109,18 +123,27 @@ commit. Closed, deleted or advanced branches are not deliberately recreated or
 overwritten; a normal push rejects a concurrent non-fast-forward advance. This
 is not a compare-and-swap guarantee against a concurrent branch rewind.
 
-The existing App token triggers checks on the refresh commit. This refresh route
-does not write to protected main or forks. A fork contributor can copy the
+The existing App token triggers checks on the refresh commit. This route selects
+unprotected source PR branches targeting main, and excludes main, forks and
+native version branches. Only the native version writer changes its owned
+transaction. A fork contributor can copy the
 qualified artifact into their branch. Installing a development branch gives the
 current executable after that branch's refresh and checks finish; an arbitrary
 older commit or unvalidated branch cannot contain a later build automatically.
+If a merge produces stale committed bytes, main's qualified candidate goes into
+the atomic version PR instead of requiring a separate binary repair PR. Until
+that PR is merged, the main branch still contains its previous executable.
 
-Changelog publication still uses its native owned-version-commit checks, rather
-than consulting arbitrary CI statuses. Merge only reviewed version PRs whose
-current-head checks pass. PRs created with ``GITHUB_TOKEN`` can generate
+Changelog publication verifies the owned transaction and exact approved/merged
+trees. The version job explicitly invokes native feedback for the returned PR
+number and head SHA, independently of automatic event delivery. Merge only
+reviewed version PRs whose current-head checks pass. PRs created with
+``GITHUB_TOKEN`` can generate
 ``opened``, ``synchronize`` and ``reopened`` runs requiring approval; do not
-assume those runs execute automatically. Main's explicit Quality dependency
-qualifies the source base independently of that approval-dependent delivery.
+assume those runs execute automatically. Native feedback validates ownership
+and generated files; it does not replace code review or the project's Quality
+checks. Main's explicit Quality dependency qualifies the immutable source base
+independently of that approval-dependent delivery.
 
 Publication
 -----------

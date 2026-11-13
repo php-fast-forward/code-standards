@@ -29,7 +29,8 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString("      magic-numbers: true\n      magic-numbers-policy: report", $consumer);
 
         $quality = file_get_contents($directory . '/repository-ci.yml');
-        self::assertMatchesRegularExpression('~^on:\n  pull_request:\n  workflow_dispatch:\n  workflow_call:\npermissions:~m', $quality);
+        self::assertMatchesRegularExpression('~^on:\n  pull_request:\n  workflow_dispatch:\n  workflow_call:\n~m', $quality);
+        self::assertStringContainsString('value: ${{ jobs.compiled.outputs.artifact }}', $quality);
         self::assertStringContainsString("  tests:\n    runs-on: ubuntu-latest", $quality);
         self::assertStringContainsString("php: ['8.3', '8.4', '8.5']", $quality);
         self::assertStringContainsString('run: composer check', $quality);
@@ -51,6 +52,8 @@ final class WorkflowTest extends TestCase
             'stefanzweifel/git-auto-commit-action',
             'shivammathur/setup-php',
             'php-fast-forward/changelog/.github/workflows/changelog.yml',
+            'php-fast-forward/changelog/.github/workflows/changelog-pr-status.yml',
+            'php-fast-forward/changelog/.github/actions/version',
             'php-fast-forward/code-standards/.github/workflows/code-standards.yml',
         ];
         $files = [
@@ -73,17 +76,18 @@ final class WorkflowTest extends TestCase
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
         $comparison = strpos($workflow, 'cmp "$RUNNER_TEMP/code-standards" dist/code-standards');
-        $execution = strpos($workflow, 'STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards"');
+        $execution = strpos($workflow, 'STANDARDS_PHAR="$RUNNER_TEMP/phar/code-standards"');
         self::assertNotFalse($comparison);
         self::assertNotFalse($execution);
         self::assertLessThan($execution, $comparison);
+        self::assertStringNotContainsString('STANDARDS_PHAR="$GITHUB_WORKSPACE/dist/code-standards"', $workflow);
     }
 
     /** Runs the actual parity step against owned fixtures: differences authorize refresh, I/O errors do not. */
     public function testBinaryComparisonNeverExecutesCandidateBytesOrMasksReadErrors(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-ci.yml');
-        self::assertSame(1, preg_match('~id: parity\n        shell: bash\n        run: \|\n(.*?)      - name:~s', $workflow, $matches));
+        self::assertSame(1, preg_match('~id: parity\n        shell: bash\n        run: \|\n(.*?)(?=      - )~s', $workflow, $matches));
         $script = preg_replace('/^          /m', '', $matches[1]);
         $directory = sys_get_temp_dir() . '/standards-cmp-' . bin2hex(random_bytes(8));
         mkdir($directory . '/dist', 0700, true);
@@ -133,8 +137,17 @@ final class WorkflowTest extends TestCase
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-changelog.yml');
         self::assertStringContainsString('uses: ./.github/workflows/repository-ci.yml', $workflow);
-        self::assertStringContainsString("    needs: quality\n", $workflow);
-        self::assertStringContainsString("needs.quality.result == 'success' || needs.quality.result == 'skipped'", $workflow);
+        self::assertStringContainsString("  version:\n    needs: quality\n", $workflow);
+        self::assertStringContainsString('base-ref: ${{ github.sha }}', $workflow);
+        self::assertStringContainsString('artifact-ids: ${{ needs.quality.outputs.artifact }}', $workflow);
+        self::assertStringContainsString('uses: php-fast-forward/changelog/.github/actions/version@v0', $workflow);
+        self::assertSame(3, substr_count($workflow, "generated-files: '[\"dist/code-standards\"]'"));
+        self::assertStringContainsString('head-sha: ${{ needs.version.outputs.head-sha }}', $workflow);
+        self::assertStringContainsString('base-sha: ${{ github.sha }}', $workflow);
+        self::assertStringContainsString('uses: php-fast-forward/changelog/.github/workflows/changelog-pr-status.yml@v0', $workflow);
+        self::assertStringContainsString('prepare-release: false', $workflow);
+        self::assertStringContainsString('group: changelog-${{ github.repository }}-main', $workflow);
+        self::assertSame(5, substr_count($workflow, "if: steps.base.outputs.current == 'true'"));
         self::assertStringContainsString('resolve-pull-requests: true', $workflow);
         self::assertStringNotContainsString('box compile', $workflow);
     }
@@ -180,7 +193,7 @@ final class WorkflowTest extends TestCase
                 $git(['add', '--', $path]);
                 $git(['commit', '--quiet', '-m', 'change']);
                 file_put_contents($directory . '/output', '');
-                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD'])]);
+                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], $directory, $environment + ['BASE' => $base, 'HEAD' => $git(['rev-parse', 'HEAD']), 'EVENT' => 'pull_request']);
                 $process->mustRun();
                 self::assertSame('build=' . ($expected ? 'true' : 'false') . "\n", file_get_contents($directory . '/output'), $path);
             }
@@ -212,27 +225,51 @@ final class WorkflowTest extends TestCase
         }
     }
 
-    /** Reproduces delayed refreshes after a merge, branch advance or repository mismatch. */
+    /** Executes the real selector without network; protected and owned version branches are never App targets. */
     public function testRefreshSelectsOnlyOneOpenPullRequestAtTheQualifiedHead(): void
     {
         $workflow = file_get_contents(dirname(__DIR__, 2) . '/.github/workflows/repository-phar-refresh.yml');
-        self::assertSame(1, preg_match("~jq -r '([^']+)'~", $workflow, $matches));
-        $pullRequest = ['state' => 'open', 'head' => ['sha' => str_repeat('a', 40), 'ref' => 'dependabot/composer/runtime', 'repo' => ['full_name' => 'fixture/standards']]];
+        self::assertSame(1, preg_match('~name: Locate the still-open source pull request\n.*?        run: \|\n(.*?)(?=      - )~s', $workflow, $matches));
+        $script = <<<'BASH'
+gh() {
+    case "$2" in
+        repos/fixture/standards/commits/*/pulls) printf '%s\n' "$MOCK_PRS" ;;
+        repos/fixture/standards/branches/*) printf '%s\n' "$MOCK_PROTECTED" ;;
+        *) return 71 ;;
+    esac
+}
+BASH;
+        $script .= "\n" . preg_replace('/^          /m', '', $matches[1]);
+        $pullRequest = ['state' => 'open', 'base' => ['ref' => 'main'], 'head' => ['sha' => str_repeat('a', 40), 'ref' => 'dependabot/composer/runtime', 'repo' => ['full_name' => 'fixture/standards']]];
         $closed = $pullRequest;
         $closed['state'] = 'closed';
         $advanced = $pullRequest;
         $advanced['head']['sha'] = str_repeat('b', 40);
         $fork = $pullRequest;
         $fork['head']['repo']['full_name'] = 'fork/standards';
-        foreach ([[$pullRequest], [$closed], [$advanced], [$fork], [], [$pullRequest, $pullRequest]] as $index => $fixture) {
-            $process = new Process(['jq', '-r', $matches[1]], env: [
-                'SOURCE_SHA' => $pullRequest['head']['sha'],
-                'SOURCE_BRANCH' => $pullRequest['head']['ref'],
-                'GH_REPO' => $pullRequest['head']['repo']['full_name'],
-            ]);
-            $process->setInput(json_encode($fixture, JSON_THROW_ON_ERROR));
-            $process->mustRun();
-            self::assertSame(0 === $index ? $pullRequest['head']['ref'] . "\n" : '', $process->getOutput());
+        $otherBase = $pullRequest;
+        $otherBase['base']['ref'] = 'other-line';
+        $main = $otherBase;
+        $main['head']['ref'] = 'main';
+        $managed = $pullRequest;
+        $managed['head']['ref'] = 'changelog/version-phar';
+        $output = tempnam(sys_get_temp_dir(), 'standards-refresh-');
+        try {
+            foreach (['valid' => [$pullRequest], 'closed' => [$closed], 'advanced' => [$advanced], 'fork' => [$fork], 'other-base' => [$otherBase], 'main' => [$main], 'managed' => [$managed], 'protected' => [$pullRequest], 'missing' => [], 'ambiguous' => [$pullRequest, $pullRequest]] as $case => $fixture) {
+                file_put_contents($output, '');
+                $process = new Process(['bash', '-e', '-o', 'pipefail', '-c', $script], env: [
+                    'SOURCE_SHA' => $pullRequest['head']['sha'],
+                    'SOURCE_BRANCH' => $fixture[0]['head']['ref'] ?? $pullRequest['head']['ref'],
+                    'GH_REPO' => $pullRequest['head']['repo']['full_name'],
+                    'GITHUB_OUTPUT' => $output,
+                    'MOCK_PRS' => json_encode($fixture, JSON_THROW_ON_ERROR),
+                    'MOCK_PROTECTED' => 'protected' === $case ? 'true' : 'false',
+                ]);
+                self::assertSame('protected' === $case ? 1 : 0, $process->run(), $process->getErrorOutput());
+                self::assertSame('valid' === $case ? 'branch=' . $pullRequest['head']['ref'] . "\n" : '', file_get_contents($output), $case);
+            }
+        } finally {
+            unlink($output);
         }
     }
 
@@ -243,7 +280,7 @@ final class WorkflowTest extends TestCase
         self::assertStringContainsString('changelog.yml@v0', $workflow);
         self::assertStringContainsString("publish-app-client-id: 'Iv23liHqRng02H747IYa'", $workflow);
         self::assertStringContainsString('publish-environment: release-channels', $workflow);
-        self::assertStringContainsString('managed-branch: changelog/version-recovery-98', $workflow);
+        self::assertStringContainsString('managed-branch: changelog/version-phar', $workflow);
         self::assertStringContainsString('publish-app-private-key: ${{ secrets.RELEASE_CHANNEL_APP_PRIVATE_KEY }}', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-client-id:/m', $workflow);
         self::assertDoesNotMatchRegularExpression('/^\s+app-private-key:/m', $workflow);
