@@ -253,6 +253,14 @@ separate; changing a secret identifier does not repair or retry that transaction
 Version preparation recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The caller retains automatic fragment pull-request references with
+``resolve-pull-requests: true``. Changelog v0.6.0, available through the verified
+``v0`` channel, supplies filtered acquisition of original squash-merged PR heads.
+This retains references through the repository's large compiled-artifact history
+without raising the bounded Git-pack limit or disabling discovery. Historical
+tags remain the release source. Signed Bot ownership and managed-file verification
+remain in force.
+
 The original ``changelog/version`` branch of PR98 ends at the human merge
 ``48119d8d4bf3b77d488eba12b1f0515453b3f371``. Its content is the exact automatic
 merge of the signed Bot head and the then-current main: the remaining managed
@@ -260,14 +268,14 @@ patch is byte-identical to the Bot patch, and the human delta is byte-identical
 to the integrated main delta. This preserves the human work but does not grant
 the human commit signed Bot ownership. No trailers are forged or waived.
 
-The caller reserves ``changelog/version-recovery-98`` for fresh automation. After
-this reviewed caller and a compatible corrected runtime are integrated, the next
-trusted main event plans from the fresh main and creates a new signed Bot commit
-and version PR on that exclusive branch. The old branch, commit, PR body and
+The recovery used ``changelog/version-recovery-98``. The compiled-artifact policy
+now reserves ``changelog/version-phar``: its generated-file allowlist changes the
+native ownership fingerprint, so it starts an exclusive transaction instead of
+adopting the historical recovery head. The old branches, commits, PR bodies and
 review history remain available. Do not reset, force-update or delete PR98's
-branch. If either the fresh main or the reserved recovery branch changes during
-preparation, fail closed and re-inspect before proceeding. Close the superseded
-PR only after separate authorization and verification of the replacement.
+branch. If either main or the managed version branch advances during preparation,
+native preflight refuses the stale transaction. See :doc:`phar-distribution` for
+the qualified artifact and immutable base binding.
 
 A version PR on the recovery branch still requires successful current-head
 checks, ownership proof and review before an approved merge/publication. This
